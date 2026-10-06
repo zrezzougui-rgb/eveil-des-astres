@@ -12,6 +12,7 @@ Chaque modification envoyée sur `main` reconstruit l'APK automatiquement (ongle
 
 ## Structure
 
-- `www/index.html` : le jeu (HTML, CSS et JavaScript dans un seul fichier).
+- `src/game.html` : le jeu (HTML, CSS et JavaScript dans un seul fichier).
+- `scripts/build.py` : reconstruit `www/index.html`, la page embarquée dans l'appli Android.
 - `android/` : projet Android généré par Capacitor.
 - `.github/workflows/build-apk.yml` : construction automatique de l'APK.
