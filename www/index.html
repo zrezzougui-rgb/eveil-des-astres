@@ -606,6 +606,38 @@ body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.s
   animation: dropin 2.6s cubic-bezier(.2,1.4,.4,1) both; pointer-events: none; }
 .relicdrop .ico { width: 40px; height: 40px; } .relicdrop span { display: grid; } .relicdrop small { color: var(--rc); font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; } .relicdrop b { color: var(--gold-1); font-size: .9rem; }
 @keyframes dropin { 0% { opacity: 0; transform: translateX(-50%) translateY(-20px) scale(.6); } 12% { opacity: 1; transform: translateX(-50%) scale(1.05); } 20% { transform: translateX(-50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) translateY(-10px); } }
+/* ---------- Dérive céleste ---------- */
+.adv-card.derive-card { border-color: color-mix(in srgb, #8fa8ff 50%, var(--line)); background: radial-gradient(circle at 90% 0%, rgba(143,168,255,.22), transparent 55%), linear-gradient(160deg, var(--ink-2), var(--ink)); }
+.derive-intro { display: grid; gap: 10px; padding: 16px; border-radius: 18px; border: 1px solid var(--line); background: radial-gradient(circle at 50% 0%, rgba(143,168,255,.25), transparent 60%), linear-gradient(170deg, var(--ink-2), var(--ink)); text-align: left; }
+.derive-intro h3 { margin: 0; text-align: center; font-family: var(--serif, serif); font-size: 1.4rem; color: var(--gold-1); }
+.derive-intro .dsky { display: grid; place-items: center; height: 90px; } .derive-intro .dsky .ico { height: 86px; width: 86px; filter: drop-shadow(0 0 18px rgba(143,168,255,.6)); }
+.derive-intro p, .derive-intro li { font-size: .85rem; margin: 0; } .derive-intro ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.dmap { display: grid; gap: 6px; padding: 10px 12px; border-radius: 14px; background: rgba(0,0,0,.25); border: 1px solid var(--line); }
+.dact { display: grid; grid-template-columns: 118px 1fr; align-items: center; gap: 8px; font-size: .75rem; opacity: .55; }
+.dact.cur { opacity: 1; color: var(--gold-1); font-weight: 700; } .dact.done { opacity: .8; }
+.dsteps { display: flex; align-items: center; gap: 6px; }
+.dsteps i { flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,.14); }
+.dsteps i.g { flex: 0 0 14px; height: 14px; border-radius: 50%; border: 2px solid var(--brass, #d9ad62); background: transparent; }
+.dsteps i.done { background: linear-gradient(90deg, #8fa8ff, #d6c3ff); } .dsteps i.g.done { background: var(--brass, #d9ad62); }
+.dsteps i.cur { background: var(--gold-1); box-shadow: 0 0 8px var(--gold-1); animation: dpulse 1.4s infinite; }
+@keyframes dpulse { 50% { opacity: .45; } }
+.dteam { display: flex; gap: 8px; justify-content: center; margin: 10px 0 6px; }
+.dh { width: 56px; display: grid; gap: 3px; } .dh img { width: 56px; height: 56px; object-fit: cover; border-radius: 12px; border: 2px solid var(--el); background: var(--ink-2); }
+.dh.ko img { filter: grayscale(1) brightness(.45); border-color: #555; }
+.dbar { height: 5px; border-radius: 3px; background: rgba(0,0,0,.5); overflow: hidden; } .dbar b { display: block; height: 100%; background: #5fd38a; } .dbar b.low { background: #e5574f; }
+.dboonlist { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 10px; font-size: .75rem; }
+.boon { padding: 3px 9px; border-radius: 999px; background: rgba(214,195,255,.14); border: 1px solid rgba(214,195,255,.4); color: #e6dcff; }
+.dnodes, .dboons { display: grid; gap: 8px; }
+.dnode, .dboon { display: grid; grid-template-columns: 44px 1fr; grid-template-rows: auto auto; column-gap: 10px; row-gap: 2px; align-items: center; text-align: left; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--line); background: linear-gradient(160deg, var(--ink-2), var(--ink)); color: var(--text); font: inherit; cursor: pointer; }
+.dnode:active, .dboon:active { transform: scale(.98); }
+.dnode .ico { grid-row: 1 / span 3; width: 44px; height: 44px; } .dnode b { font-size: .95rem; color: var(--gold-1); } .dnode span { font-size: .78rem; color: var(--muted); } .dnode em { font-style: normal; font-size: .75rem; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.dnode.elite { border-color: rgba(229,87,79,.6); } .dnode.gardien { border-color: var(--brass, #d9ad62); background: radial-gradient(circle at 15% 50%, rgba(217,173,98,.25), transparent 60%), linear-gradient(160deg, var(--ink-2), var(--ink)); }
+.dnode.etoile, .dnode.source, .dnode.coffre { border-color: rgba(143,168,255,.5); }
+.dboon { grid-template-columns: 1fr; border-color: rgba(214,195,255,.5); background: radial-gradient(circle at 90% 10%, rgba(214,195,255,.2), transparent 60%), linear-gradient(160deg, var(--ink-2), var(--ink)); }
+.dboon b { color: #e6dcff; } .dboon span { font-size: .8rem; color: var(--muted); }
+.dlog { margin-top: 10px; font-size: .75rem; color: var(--muted); display: grid; gap: 2px; } .dlog div:first-child { color: var(--text); }
+.dend { text-align: center; padding: 16px; border-radius: 16px; border: 1px solid var(--line); display: grid; gap: 8px; justify-items: center; } .dend.win { border-color: var(--gold-1); } .dend h3 { margin: 0; color: var(--gold-1); }
+#dquit { margin-top: 12px; justify-self: center; width: 100%; opacity: .7; }
 </style>
 
 <div class="game">
@@ -647,6 +679,7 @@ body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.s
       <div class="panel" id="p-adv"></div>
       <div class="panel" id="p-forge"></div>
       <div class="panel" id="p-relics"></div>
+      <div class="panel" id="p-derive"></div>
       <div class="panel" id="p-heroes"></div>
       <div class="panel" id="p-summon"></div>
       <div class="panel" id="p-missions"></div>
@@ -1044,7 +1077,8 @@ function monsterSVG(el, boss) {
 const RANGED = { Mage: true, Archer: true, Soigneur: true };
 function simulate(E0) {
   const res = resonance();
-  const A = S.team.map((id, slot) => { if (!id) return null; const s = unitStats(id, slot, res), o = S.heroes[id]; return { id, slot, front: isFront(slot), el: H[id].el, name: evolved(o) ? H[id].evo : H[id].name, cls: H[id].cls, hp: s.hp, max: s.hp, atk: s.atk, evo: evolved(o), lvl: o.lvl }; }).filter(Boolean);
+  let A = S.team.map((id, slot) => { if (!id) return null; const s = unitStats(id, slot, res), o = S.heroes[id]; return { id, slot, front: isFront(slot), el: H[id].el, name: evolved(o) ? H[id].evo : H[id].name, cls: H[id].cls, hp: s.hp, max: s.hp, atk: s.atk, evo: evolved(o), lvl: o.lvl }; }).filter(Boolean);
+  if (ui.special && ui.special.prep) A = ui.special.prep(A); // modificateurs de mode (Dérive céleste : PV conservés, bénédictions)
   const E = (E0 || makeFoes(S.stage)).map(f => ({ ...f })), frames = [];
   const alive = arr => arr.filter(u => u.hp > 0);
   const snap = (text, kind, ev) => frames.push({ a: A.map(u => u.hp), e: E.map(u => u.hp), text, kind, ev });
@@ -1056,7 +1090,7 @@ function simulate(E0) {
     A.forEach((u, ai) => {
       if (u.hp <= 0 || !alive(E).length) return;
       const src = "a" + ai;
-      if (u.evo && turn % 3 === 0) {
+      if (u.evo && turn % (u.sk || 3) === 0) {
         const tg = alive(E), v = tg.map(e => { const d = Math.round(u.atk * 1.6 * elMult(u.el, e.el) * rnd()); e.hp = Math.max(0, e.hp - d); return d; });
         snap(`✦ ${u.name} déclenche sa compétence d'éveil !`, "skillline", { s: src, t: tg.map(e => "e" + E.indexOf(e)), v, type: "skill", el: u.el, ranged: true });
         return;
@@ -1071,6 +1105,7 @@ function simulate(E0) {
       }
       if (u.cls === "Mage") {
         const tg = alive(E), ms = tg.map(e => elMult(u.el, e.el)), v = tg.map((e, i) => { const d = Math.round(u.atk * 0.6 * ms[i] * rnd()); e.hp = Math.max(0, e.hp - d); return d; });
+        if (u.ls) u.hp = Math.min(u.max, u.hp + Math.round(v.reduce((a, b) => a + b, 0) * u.ls));
         snap(`${u.name} frappe tous les ennemis.`, "", { s: src, t: tg.map(e => "e" + E.indexOf(e)), v, ms, type: "aoe", el: u.el, ranged: true });
         return;
       }
@@ -1078,9 +1113,10 @@ function simulate(E0) {
       const pool = u.cls === "Archer" || u.cls === "Assassin" || !frontFoes.length ? tgts : frontFoes; // la mêlée frappe d'abord la ligne avant ennemie
       const t = u.cls === "Archer" ? tgts.sort((x, y) => x.hp - y.hp)[0] : pool[Math.floor(Math.random() * pool.length)];
       const m = elMult(u.el, t.el);
-      let dmg = Math.round(u.atk * m * rnd()), crit = u.cls === "Assassin" && Math.random() < 0.3;
+      let dmg = Math.round(u.atk * m * rnd()), crit = (u.cls === "Assassin" && Math.random() < 0.3) || Math.random() < (u.crit || 0);
       if (crit) dmg = Math.round(dmg * 1.8);
       t.hp = Math.max(0, t.hp - dmg);
+      if (u.ls) u.hp = Math.min(u.max, u.hp + Math.round(dmg * u.ls));
       snap(`${u.name} → ${t.name} : ${dmg}${crit ? " (critique)" : ""}${tag(m)}${t.hp === 0 ? " — vaincu" : ""}`, m > 1 ? "eff" : m < 1 ? "weak" : "",
         { s: src, t: ["e" + E.indexOf(t)], v: [dmg], ms: [m], crit, type: "hit", el: u.el, ranged: !!RANGED[u.cls] });
     });
@@ -1396,10 +1432,11 @@ function startBattle(spec) {
   ui.special = spec || null;
   if (!teamIds().length) { renderHUD(); return toast("Ajoutez au moins un héros à l'équipe (menu Héros)."); }
   const b = simulate(ui.special ? ui.special.foes() : null); ui.battle = { ...b, i: 0, done: false };
+  if (ui.special && ui.special.onSim) ui.special.onSim(b); // issue enregistrée dès le départ (impossible de fuir un combat perdu)
   const bossFight = !!b.E[0].boss;
   buildStage(b);
   const lg = $("#log"); if (lg) lg.innerHTML = "";
-  b.A.forEach((u, i) => setBar("a" + i, u.max, u.max)); b.E.forEach((u, i) => setBar("e" + i, u.max, u.max));
+  b.A.forEach((u, i) => setBar("a" + i, b.frames[0].a[i], u.max)); b.E.forEach((u, i) => setBar("e" + i, u.max, u.max));
   $("#stage").classList.add("walking"); BG.target = 1;
   $("#banner").hidden = true;
   if (bossFight) setTimeout(() => banner("BOSS", "boss"), 300);
@@ -1421,7 +1458,7 @@ function finish() {
   let msg;
   if (ui.special) {
     const sp = ui.special; ui.special = null;
-    msg = sp.onEnd(b.win);
+    msg = sp.onEnd(b.win, b);
     banner(b.win ? "VICTOIRE" : "DÉFAITE", b.win ? "win" : "lose");
     if (b.win) { gemBurst(8); toast(msg); } else toast(msg);
     b.result = { win: b.win, msg };
@@ -1869,15 +1906,211 @@ function renderAdv() {
       <p class="muted">Un sanctuaire par jour (lundi Feu, mardi Eau, mercredi Nature, jeudi Terre, vendredi Lumière, samedi Ombre). ${SANCT_TRIES} essais par jour. Un niveau réussi peut être balayé sans combattre.</p>
       ${sanctHTML}
     </div>
+    ${deriveCardHTML()}
     <div class="adv-card soon">
       <div class="adv-head"><h3>${ico("shard", "big")} Éclats errants : ${S.shards || 0}</h3></div>
-      <p class="muted">Gagnés dans la Tour et les Sanctuaires. Dans la Forge stellaire, chaque éclat remplace un doublon lors des montées d'étoiles. Prochainement : Reliques, Dérive céleste.</p>
+      <p class="muted">Gagnés dans la Tour et les Sanctuaires. Dans la Forge stellaire, chaque éclat remplace un doublon lors des montées d'étoiles. Les Reliques s'équipent depuis l'onglet Héros.</p>
       <button class="btn" id="advforge" style="justify-self:start">Ouvrir la Forge stellaire</button>
     </div>`;
   $("#advforge").onclick = () => openForge(null);
+  $("#derivego").onclick = () => openTab("derive");
   $("#towergo").onclick = startTower;
   box.querySelectorAll("[data-sanct]").forEach(b => b.onclick = () => startSanct(b.dataset.sanct, +b.dataset.l));
   box.querySelectorAll(".sweep").forEach(b => b.onclick = () => sweepSanct(b.dataset.el));
+}
+
+/* ================== DÉRIVE CÉLESTE (expédition quotidienne, chemin au choix) ================== */
+// 3 actes de 5 carrefours + 1 Gardien. Les PV des héros sont conservés d'un combat à l'autre,
+// les héros tombés restent hors combat (sauf passage par une Source). Bénédictions cumulables.
+const DACTS = [
+  { n: "Voile d'azur", els: ["Eau", "Nature"] },
+  { n: "Brasier stellaire", els: ["Feu", "Terre"] },
+  { n: "Cœur du néant", els: ["Ombre", "Lumière"] },
+];
+const DMULT = { elite: 1.15, gardien: 0.55 }; // calibré : ~10 étapes en moyenne, dérive complète rare
+const DROWS = 5; // carrefours par acte (+ Gardien)
+const DNODES = {
+  combat:  { n: "Rencontre",   ico: "sword",  d: "Un groupe d'ennemis. Butin : gemmes." },
+  elite:   { n: "Élite",       ico: "shield", d: "Ennemis redoutables. Butin : gemmes et une bénédiction." },
+  etoile:  { n: "Étoile filante", ico: "moon", d: "Aucun combat : choisissez une bénédiction." },
+  source:  { n: "Source d'astre", ico: "potion", d: "Soigne 40 % des PV de l'équipe et relève les héros tombés (30 %)." },
+  coffre:  { n: "Épave dorée", ico: "chest",  d: "Aucun combat : gemmes et une chance de relique." },
+  gardien: { n: "Gardien",     ico: "crown",  d: "Le gardien de l'acte. Butin : relique, éclats, bénédiction." },
+};
+const BOONS = {
+  lame:    { n: "Lame d'étoile",    d: "+20 % ATQ pour toute l'équipe.", stack: 1 },
+  egide:   { n: "Égide lunaire",    d: "+25 % PV max pour toute l'équipe.", stack: 1 },
+  eveil:   { n: "Éveil précoce",    d: "Les héros éveillés (★6) lancent leur compétence tous les 2 tours au lieu de 3." },
+  oeil:    { n: "Œil du chasseur",  d: "+15 % de chance de coup critique (×1,8) pour tous." },
+  soif:    { n: "Soif astrale",     d: "Les héros récupèrent 15 % des dégâts qu'ils infligent." },
+  rempart: { n: "Rempart d'aube",   d: "Ligne avant : +35 % PV max." },
+  volee:   { n: "Volée céleste",    d: "Ligne arrière : +30 % ATQ." },
+  seve:    { n: "Sève vive",        d: "Après chaque victoire, l'équipe récupère 15 % de ses PV." },
+  bourse:  { n: "Bourse des comètes", d: "+50 % de gemmes gagnées pendant cette dérive." },
+};
+["Feu", "Eau", "Nature", "Terre", "Lumière", "Ombre"].forEach(el => BOONS["aff" + el] = { n: `Affinité ${el}`, d: `Héros ${el} : +30 % ATQ et PV.`, el });
+const has = (r, k) => r.boons.filter(b => b === k).length;
+
+function derive() {
+  if (!S.derive) S.derive = { day: "", best: 0, run: null, runs: 0 };
+  return S.derive;
+}
+const dDepth = r => r.act * (DROWS + 1) + r.row; // 0 … 17
+const DTOTAL = DACTS.length * (DROWS + 1);
+function dRow(r) {
+  const A = DACTS[r.act];
+  const mk = t => ({ t, els: Math.random() < .35 ? A.els.slice() : [A.els[Math.floor(Math.random() * 2)]] });
+  if (r.row === DROWS) return [{ t: "gardien", els: [A.els[Math.floor(Math.random() * 2)]] }];
+  const pool = ["combat", "combat", "combat", "elite", "etoile", "source", "coffre"].filter(t => !(r.row === 0 && t === "elite") && !(r.row === 0 && r.act === 0 && t === "source"));
+  const n = r.row === 0 ? 2 : 3, out = [mk("combat")];
+  while (out.length < n) { const t = pool[Math.floor(Math.random() * pool.length)]; if (t === "combat" || !out.some(o => o.t === t)) out.push(mk(t)); }
+  return out.sort(() => Math.random() - .5);
+}
+function dFoes(r, node) {
+  const d = dDepth(r), mult = node.t === "elite" ? DMULT.elite : node.t === "gardien" ? DMULT.gardien : 1;
+  const target = r.p0 * (0.5 + d * 0.036) * mult, boss = node.t === "gardien";
+  let L = 1; while (L < 300 && foePowerOf(genFoes(L, node.els, boss)) < target) L++;
+  return genFoes(L, node.els, boss);
+}
+function dGems(r, base) { return Math.round(base * (1 + .5 * has(r, "bourse"))); }
+function prepDerive(r) {
+  return A => A.filter(u => (r.hp[u.id] ?? 1) > 0).map(u => {
+    let atk = 1 + .2 * has(r, "lame"), hp = 1 + .25 * has(r, "egide");
+    if (u.front && has(r, "rempart")) hp += .35;
+    if (!u.front && has(r, "volee")) atk += .3;
+    if (has(r, "aff" + u.el)) { atk += .3; hp += .3; }
+    const max = Math.round(u.max * hp);
+    return { ...u, atk: Math.round(u.atk * atk), max, hp: Math.max(1, Math.round(max * (r.hp[u.id] ?? 1))),
+      sk: has(r, "eveil") ? 2 : 3, crit: has(r, "oeil") ? .15 : 0, ls: has(r, "soif") ? .15 : 0 };
+  });
+}
+function boonChoices(r) {
+  const els = [...new Set(r.slots.filter(Boolean).map(id => H[id].el))];
+  const keys = Object.keys(BOONS).filter(k => (BOONS[k].stack || !has(r, k)) && (!BOONS[k].el || els.includes(BOONS[k].el)));
+  const out = []; while (out.length < 3 && keys.length) out.push(keys.splice(Math.floor(Math.random() * keys.length), 1)[0]);
+  return out;
+}
+function dAdvance(r) {
+  r.row++;
+  if (r.row > DROWS) { r.row = 0; r.act++; }
+  if (r.act >= DACTS.length) { r.over = "win"; return dFinish(r); }
+  r.choices = dRow(r);
+}
+function dFinish(r) {
+  const D = derive(); D.best = Math.max(D.best, dDepth(r) + (r.over === "win" ? 0 : 0));
+  if (r.over === "win") { D.best = DTOTAL; const g = dGems(r, 600); S.gems += g; S.shards = (S.shards || 0) + 3; r.gems += g; r.log.unshift(`Dérive accomplie ! +${g} gemmes, +3 éclats errants.`); setTimeout(() => gainRelic(3), 1400); }
+  save();
+}
+function dReward(r, g, text) { const v = dGems(r, g); S.gems += v; r.gems += v; r.log.unshift(`${text} +${v} gemmes.`); return v; }
+function startDerive() {
+  const D = derive();
+  if (D.day === today()) return toast("Une seule dérive par jour : revenez demain.");
+  if (!teamIds().length) return toast("Composez d'abord une équipe.");
+  D.day = today(); D.runs++;
+  const r = D.run = { act: 0, row: 0, slots: S.team.slice(), hp: {}, boons: [], pick: null, gems: 0, log: [], over: null, p0: teamPower() };
+  r.choices = dRow(r);
+  save(); renderDerive(); $("#sheet .drawer-body").scrollTop = 0;
+}
+function pickNode(i) {
+  const r = derive().run; if (!r || r.over || r.pick) return;
+  const node = r.choices[i], d = dDepth(r);
+  if (node.t === "etoile") { r.pick = boonChoices(r); r.log.unshift("Une étoile filante traverse le ciel."); dAdvance(r); save(); return renderDerive(); }
+  if (node.t === "source") {
+    r.slots.filter(Boolean).forEach(id => { const v = r.hp[id] ?? 1; r.hp[id] = v <= 0 ? .3 : Math.min(1, v + .4); });
+    r.log.unshift("La Source d'astre soigne l'équipe."); dAdvance(r); save(); return renderDerive();
+  }
+  if (node.t === "coffre") {
+    dReward(r, 120 + d * 18, "Épave dorée fouillée :");
+    if (Math.random() < .5) setTimeout(() => gainRelic(rollRarity(10 + d * 4)), 600);
+    dAdvance(r); save(); return renderDerive();
+  }
+  const foes = dFoes(r, node), label = `${DACTS[r.act].n} · ${node.t === "gardien" ? "Gardien" : `${r.row + 1}/${DROWS}`}`;
+  let won = false;
+  const keep = S.team; S.team = r.slots.slice();
+  try {
+    launchSpecial({ kind: "derive", label, foes: () => foes, back: "derive", prep: prepDerive(r),
+      onSim: b => {
+        won = b.win;
+        b.A.forEach(u => r.hp[u.id] = Math.max(0, u.hp) / u.max);
+        if (!won) { r.over = "lose"; r.log.unshift(`L'équipe tombe : ${label}.`); dFinish(r); return; }
+        if (has(r, "seve")) Object.keys(r.hp).forEach(id => { if (r.hp[id] > 0) r.hp[id] = Math.min(1, r.hp[id] + .15); });
+        if (node.t === "combat") dReward(r, 50 + d * 12, "Rencontre gagnée :");
+        if (node.t === "elite") { dReward(r, 110 + d * 18, "Élite terrassée :"); r.pick = boonChoices(r); }
+        if (node.t === "gardien") {
+          dReward(r, 250 + r.act * 200, `Gardien de ${DACTS[r.act].n} vaincu :`); S.shards = (S.shards || 0) + r.act + 1;
+          r.pick = boonChoices(r); r.relicRar = Math.min(3, r.act + 1); passXP(20);
+        }
+        dAdvance(r); save();
+      },
+      onEnd: win => {
+        if (win && r.relicRar != null) { const rr = r.relicRar; r.relicRar = null; setTimeout(() => gainRelic(rr), 900); save(); }
+        return win ? (r.over === "win" ? "Dérive céleste accomplie !" : r.log[0]) : "La dérive s'achève. Rendez-vous demain !";
+      } });
+  } finally { S.team = keep; renderHUD(); }
+}
+function pickBoon(k) {
+  const r = derive().run; if (!r || !r.pick) return;
+  r.boons.push(k); r.pick = null; r.log.unshift(`Bénédiction obtenue : ${BOONS[k].n}.`); save(); renderDerive();
+  toast(`✦ ${BOONS[k].n}`);
+}
+function deriveCardHTML() {
+  const D = derive(), r = D.run, live = r && !r.over;
+  return `<div class="adv-card derive-card">
+    <div class="adv-head"><h3>Dérive céleste</h3><span class="floor">${live ? `En cours · ${dDepth(r) + 1}/${DTOTAL}` : D.day === today() ? "Revenez demain" : "Disponible"}</span></div>
+    <p class="muted">Une expédition par jour à travers 3 actes. Choisissez votre chemin, gagnez des bénédictions, et attention : les PV de vos héros ne remontent pas entre les combats.</p>
+    <p class="rw">Record : ${D.best}/${DTOTAL} étapes</p>
+    <button class="btn primary big" id="derivego">${live ? "Reprendre la dérive" : "Ouvrir la Dérive céleste"}</button>
+  </div>`;
+}
+function dMapHTML(r) {
+  return DACTS.map((A, a) => `<div class="dact${a === r.act ? " cur" : a < r.act ? " done" : ""}"><span>${A.n}</span><div class="dsteps">${
+    Array.from({ length: DROWS + 1 }, (_, i) => { const st = a < r.act || (a === r.act && i < r.row) ? "done" : a === r.act && i === r.row ? "cur" : ""; return `<i class="${st}${i === DROWS ? " g" : ""}"></i>`; }).join("")}</div></div>`).join("");
+}
+function dTeamHTML(r) {
+  return `<div class="dteam">${r.slots.filter(Boolean).map(id => { const v = r.hp[id] ?? 1;
+    return `<div class="dh${v <= 0 ? " ko" : ""}" style="--el:var(${EL[H[id].el]})"><img src="${artOf(id)}" alt=""><div class="dbar"><b style="width:${Math.max(0, v * 100)}%" class="${v < .3 ? "low" : ""}"></b></div></div>`; }).join("")}</div>`;
+}
+function renderDerive() {
+  const box = $("#p-derive"); if (!box) return;
+  const D = derive(), r = D.run;
+  if (!r) {
+    const ok = D.day !== today();
+    box.innerHTML = `<div class="derive-intro">
+      <div class="dsky">${ico("moon")}</div>
+      <h3>Dérive céleste</h3>
+      <p>Traversez <b>3 actes</b> (${DACTS.map(a => a.n).join(", ")}). À chaque carrefour, choisissez votre route : combats, élites, étoiles filantes, sources ou épaves. Chaque acte se termine par un <b>Gardien</b>.</p>
+      <ul><li>Les PV perdus <b>restent perdus</b> d'un combat à l'autre.</li><li>Les <b>bénédictions</b> se cumulent jusqu'à la fin de la dérive.</li><li>L'équipe actuelle est engagée pour toute l'expédition.</li><li>Une défaite met fin à la dérive, mais tout le butin est conservé.</li></ul>
+      <p class="rw">Équipe : ⚔ ${teamPower().toLocaleString("fr-FR")} · Record ${D.best}/${DTOTAL}</p>
+      <button class="btn primary big" id="dstart" ${ok ? "" : "disabled"}>${ok ? "Lancer la dérive" : "Prochaine dérive demain"}</button>
+    </div>`;
+    $("#dstart").onclick = startDerive; return;
+  }
+  const boons = r.boons.length ? r.boons.map(k => `<span class="boon" title="${BOONS[k].d}">✦ ${BOONS[k].n}</span>`).join("") : `<span class="muted">Aucune bénédiction pour l'instant.</span>`;
+  let main;
+  if (r.over) {
+    main = `<div class="dend ${r.over}"><h3>${r.over === "win" ? "Dérive accomplie !" : "La dérive s'achève"}</h3>
+      <p>Étapes franchies : <b>${r.over === "win" ? DTOTAL : dDepth(r)}/${DTOTAL}</b> · Gemmes gagnées : <b>${r.gems.toLocaleString("fr-FR")}</b></p>
+      <button class="btn primary" id="dclose">Terminer</button></div>`;
+  } else if (r.pick) {
+    main = `<p class="eyebrow">Choisissez une bénédiction</p><div class="dboons">${r.pick.map(k => `<button class="dboon" data-b="${k}"><b>✦ ${BOONS[k].n}</b><span>${BOONS[k].d}</span></button>`).join("")}</div>`;
+  } else {
+    const keep = S.team; S.team = r.slots.slice(); const tp = teamPower(); S.team = keep;
+    main = `<p class="eyebrow">${r.row === DROWS ? "Le Gardien vous attend" : `Carrefour ${r.row + 1}/${DROWS} · choisissez votre route`}</p>
+      <div class="dnodes">${r.choices.map((n, i) => { const N = DNODES[n.t], fight = ["combat", "elite", "gardien"].includes(n.t);
+        const fp = fight ? foePowerOf(dFoes(r, n)) : 0, ps = fight ? (tp / fp >= 1.15 ? "ok" : tp / fp >= .85 ? "mid" : "bad") : "";
+        return `<button class="dnode ${n.t}" data-n="${i}">${ico(N.ico)}<b>${N.n}</b><span>${N.d}</span>
+          ${fight ? `<em>${n.els.map(e => `<span class="elc" style="--el:var(${EL[e]})">${e}</span>`).join(" ")} <span class="pw ${ps}">⚔ ${fp.toLocaleString("fr-FR")}</span></em>` : ""}</button>`; }).join("")}</div>`;
+  }
+  box.innerHTML = `<div class="dmap">${dMapHTML(r)}</div>
+    ${dTeamHTML(r)}
+    <div class="dboonlist">${boons}</div>
+    ${main}
+    ${r.log.length ? `<div class="dlog">${r.log.slice(0, 4).map(t => `<div>${t}</div>`).join("")}</div>` : ""}
+    ${r.over ? "" : `<button class="btn" id="dquit">Abandonner la dérive</button>`}`;
+  box.querySelectorAll(".dnode").forEach(b => b.onclick = () => pickNode(+b.dataset.n));
+  box.querySelectorAll(".dboon").forEach(b => b.onclick = () => pickBoon(b.dataset.b));
+  const q = $("#dquit"); if (q) q.onclick = () => { if (q.dataset.c) { r.over = "lose"; r.log.unshift("Dérive abandonnée."); dFinish(r); renderDerive(); } else { q.dataset.c = 1; q.textContent = "Touchez encore pour confirmer"; } };
+  const c = $("#dclose"); if (c) c.onclick = () => { D.run = null; save(); renderDerive(); };
 }
 
 /* ================== FORGE STELLAIRE ET AUTEL DE DISSOLUTION ================== */
@@ -2218,7 +2451,7 @@ function toast(msg) {
   const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); t.textContent = msg; document.body.appendChild(t);
   clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2600);
 }
-const SHEET_TITLES = { relics: "Reliques", missions: "Missions & Carnet lunaire", forge: "Forge stellaire", adv: "Aventures", team: "Équipe", heroes: "Héros", summon: "Invocation", info: "Journal & infos" };
+const SHEET_TITLES = { derive: "Dérive céleste", relics: "Reliques", missions: "Missions & Carnet lunaire", forge: "Forge stellaire", adv: "Aventures", team: "Équipe", heroes: "Héros", summon: "Invocation", info: "Journal & infos" };
 function renderInfo() {
   const r = idleRate(), p = pending();
   $("#p-info-top").innerHTML = `
@@ -2232,7 +2465,7 @@ function render() {
   $("#sheet").hidden = !open; document.body.classList.toggle("sheet-open", open);
   if (open) $("#sheet-title").textContent = SHEET_TITLES[ui.tab] || "";
   document.querySelectorAll(".dock button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === ui.tab));
-  ["relics", "forge", "adv", "team", "summon", "heroes", "missions", "info"].forEach(t => { $("#p-" + t).hidden = ui.tab !== t; });
+  ["derive", "relics", "forge", "adv", "team", "summon", "heroes", "missions", "info"].forEach(t => { $("#p-" + t).hidden = ui.tab !== t; });
   if (ui.tab === "summon") renderSummon();
   if (ui.tab === "heroes") renderHeroes();
   if (ui.tab === "missions") renderMissions();
@@ -2241,6 +2474,7 @@ function render() {
   if (ui.tab === "adv") renderAdv();
   if (ui.tab === "forge") renderForge();
   if (ui.tab === "relics") renderRelics();
+  if (ui.tab === "derive") renderDerive();
 }
 function openTab(t) {
   daily();
