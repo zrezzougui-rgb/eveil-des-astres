@@ -212,12 +212,12 @@ body.sheet-open #world { transform: translateY(-36vh); }
 .stagepill b { font-family: var(--f-display); font-weight: 400; font-size: 1.1rem; color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,.7); letter-spacing: .03em; }
 .stagepill .pw { font-size: .72rem; font-variant-numeric: tabular-nums; padding: 2px 8px; border-radius: 999px; background: rgba(10,12,32,.6); }
 .pw.ok { color: var(--ok); } .pw.mid { color: #f2a83b; } .pw.bad { color: var(--bad); }
-.bossbar { position: absolute; z-index: 39; left: 50%; transform: translateX(-50%); top: calc(64px + env(safe-area-inset-top, 0px)); width: min(86vw, 520px); display: grid; gap: 4px; text-align: center; }
+.bossbar { position: absolute; z-index: 39; left: 50%; transform: translateX(-50%); top: calc(64px + env(safe-area-inset-top, 0px)); width: min(58vw, 520px); display: grid; gap: 4px; text-align: center; }
 .bossbar .nm { font-family: var(--f-display); font-size: 1rem; color: #ffd6d6; text-shadow: 0 2px 6px #000; }
 .bossbar .bar { height: 14px; border-radius: 8px; background: rgba(0,0,0,.6); border: 2px solid rgba(255,200,200,.35); overflow: hidden; box-shadow: 0 0 16px rgba(255,60,60,.35); }
 .bossbar .bar b { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #b3122e, #ef4f4f); transition: width .35s; }
 body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.sheet-open .fight { opacity: 0; pointer-events: none; }
-.ctl-l, .ctl-r { position: absolute; z-index: 41; bottom: calc(92px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 10px; transition: opacity .3s; }
+.ctl-l, .ctl-r { position: absolute; z-index: 41; top: calc(72px + env(safe-area-inset-top, 0px)); display: grid; gap: 10px; transition: opacity .3s; }
 .ctl-l { left: 12px; } .ctl-r { right: 12px; }
 .rb { width: 46px; height: 46px; border-radius: 50%; border: 2px solid rgba(255,255,255,.25); background: rgba(10,12,32,.62); backdrop-filter: blur(6px); color: #fff; font-weight: 800; display: grid; place-items: center; }
 .rb svg { width: 22px; height: 22px; }
@@ -232,7 +232,7 @@ body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.s
 .btn.fight { position: absolute; z-index: 41; left: 50%; transform: translateX(-50%); bottom: calc(100px + env(safe-area-inset-bottom, 0px)); padding: 13px 26px; font-size: 1.05rem; box-shadow: 0 6px 20px rgba(0,0,0,.45); }
 
 /* Combattants */
-.u { position: absolute; transform: translate(-50%, -100%); display: grid; justify-items: center; gap: 4px; transition: opacity .6s, filter .6s; --h: clamp(84px, min(17vh, 34vw), 220px); }
+.u { position: absolute; transform: translate(-50%, -100%); display: grid; justify-items: center; gap: 4px; transition: opacity .6s, filter .6s; --h: clamp(70px, min(14.5vh, 26vw), 200px); }
 .u .body { animation: bob 1.8s ease-in-out infinite; transform-origin: 50% 100%; display: grid; justify-items: center; }
 .u.foe .body { animation-duration: 1.35s; }
 .spr { height: var(--h); width: auto; max-width: none; display: block; filter: drop-shadow(0 4px 2px rgba(0,0,0,.35)); }
@@ -242,7 +242,7 @@ body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.s
 .tok { width: calc(var(--h) * .7); aspect-ratio: 1; border-radius: 50%; border: 3px solid var(--el); background: var(--ink-3); display: grid; place-items: center; }
 .tok span { font-family: var(--f-display); font-size: 1.8rem; }
 .u.foe .body svg { width: calc(var(--h) * .82); height: auto; display: block; overflow: visible; filter: drop-shadow(0 4px 2px rgba(0,0,0,.35)); }
-.u.boss { --h: clamp(150px, min(30vh, 56vw), 400px); }
+.u.boss { --h: clamp(150px, min(30vh, 52vw), 400px); }
 .u .shadow { width: 64%; height: 10px; margin-top: -9px; border-radius: 50%; background: rgba(0,0,0,.35); }
 .u.hero .shadow { background: radial-gradient(ellipse, color-mix(in srgb, var(--el) 55%, transparent), rgba(0,0,0,.3) 60%, transparent 72%); width: 80%; height: 14px; margin-top: -12px; }
 .hpbar { width: min(84px, 70%); height: 7px; border-radius: 4px; background: rgba(0,0,0,.6); border: 1px solid rgba(0,0,0,.7); overflow: hidden; }
@@ -362,6 +362,30 @@ body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.s
 .teambtn { width: 54px; height: 54px; border-radius: 50%; border: 2px solid var(--brass); background: rgba(10,12,32,.7); backdrop-filter: blur(6px); color: var(--brass-hi); display: grid; place-items: center; padding: 0; box-shadow: 0 4px 10px rgba(0,0,0,.4); }
 .teambtn svg { width: 26px; height: 26px; }
 .u.hero { cursor: pointer; }
+/* Formation 5 héros */
+.formation { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 6px 0 8px; background: linear-gradient(180deg, var(--ink) 88%, transparent); }
+.frow { display: grid; gap: 6px; align-content: start; min-width: 0; }
+.frow.front { align-content: center; }
+.rlab { margin: 0; font-size: .74rem; font-weight: 700; color: var(--brass-hi); text-transform: uppercase; letter-spacing: .06em; display: grid; }
+.rlab small { text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--muted); font-size: .66rem; }
+.formation .tslot { grid-template-rows: none; grid-template-columns: auto 1fr; justify-items: start; align-items: center; text-align: left; padding: 6px 26px 6px 6px; gap: 8px; min-height: 64px; border-radius: 14px; }
+.formation .tslot .av { width: 50px; height: 50px; border-radius: 50%; overflow: hidden; border: 2px solid var(--el); flex: none; background: var(--ink-3); }
+.formation .tslot .av img { width: 100%; height: 100%; object-fit: cover; }
+.formation .tslot.evo .av { border-color: var(--r5); box-shadow: 0 0 10px var(--r5); }
+.formation .tslot .info { justify-items: start; text-align: left; }
+.formation .tslot .info b { font-size: .8rem; }
+.formation .tslot small { font-size: .62rem; }
+.formation .tslot small.warn { color: #f2a83b; }
+.formation .tslot.empty { min-height: 64px; grid-template-columns: auto 1fr; place-content: center start; padding-left: 14px; }
+.formation .tslot .plus { font-size: 1.6rem; }
+.formation .mu { top: auto; bottom: 5px; left: auto; right: 6px; }
+.formation .tslot .rm { width: 22px; height: 22px; }
+.reso { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.rchip { font-size: .74rem; padding: 4px 10px; border-radius: 999px; background: color-mix(in srgb, var(--el, var(--brass)) 22%, var(--ink-2)); border: 1px solid var(--el, var(--brass)); }
+.rchip b { color: var(--el, var(--brass-hi)); margin-right: 4px; }
+.rchip.off { --el: var(--line); color: var(--muted); }
+.rchip.off b { color: var(--text); }
+.rhint { font-size: .74rem; color: var(--muted); }
 </style>
 
 <div class="game">
@@ -511,8 +535,8 @@ const CLASS_NOTE = {
 const KEY = "eveil-des-astres-v1";
 function fresh() {
   return { gems: 3200, pots: 12, pity5: 0, pity4: 0, stage: 1, pulls: 0, lastCollect: Date.now(), auto: true,
-    heroes: { pip:{lvl:1,stars:3,dupes:0}, gorm:{lvl:1,stars:3,dupes:0}, mira:{lvl:1,stars:3,dupes:0} },
-    team: ["gorm","mira","pip"] };
+    heroes: { pip:{lvl:1,stars:3,dupes:0}, gorm:{lvl:1,stars:3,dupes:0}, mira:{lvl:1,stars:3,dupes:0}, fenn:{lvl:1,stars:3,dupes:0}, rook:{lvl:1,stars:3,dupes:0} },
+    team: ["gorm", "fenn", "mira", "rook", "pip"] };
 }
 let S, ui = { tab:"battle", sel:null, lastPull:[], battle:null };
 function load() { try { const raw = localStorage.getItem(KEY); if (raw) return Object.assign(fresh(), JSON.parse(raw)); } catch(e) {} return fresh(); }
@@ -621,7 +645,7 @@ function renderHeroes() {
   $("#p-heroes").innerHTML = `
     ${ui.sel ? sheetHTML(ui.sel) : ""}
     <button class="btn primary" id="goteam" style="justify-self:start">Modifier l'équipe</button>
-    <div class="toolbar"><div><p class="eyebrow">Collection</p><h2>${owned.length} / ${HEROES.length} héros</h2></div><span class="muted">Point doré = dans l'équipe (${S.team.length}/3)</span></div>
+    <div class="toolbar"><div><p class="eyebrow">Collection</p><h2>${owned.length} / ${HEROES.length} héros</h2></div><span class="muted">Point doré = dans l'équipe (${teamIds().length}/3)</span></div>
     <div class="roster">${sorted.map(h => cardHTML(h.id, { button: true, showTeam: true })).join("")}${missing.map(h => cardHTML(h.id, { locked: true })).join("")}</div>
   `;
   document.querySelectorAll("#p-heroes [data-hero]").forEach(b => b.onclick = () => { ui.sel = b.dataset.hero; renderHeroes(); $("#p-heroes .sheet")?.scrollIntoView({ behavior: "smooth", block: "nearest" }); });
@@ -679,9 +703,9 @@ function bindSheet() {
     render();
   };
   $("#teamtg").onclick = () => {
-    if (S.team.includes(id)) { if (S.team.length <= 1) return toast("Gardez au moins un héros dans l'équipe."); S.team = S.team.filter(x => x !== id); }
-    else if (S.team.length >= 3) { toast("Touchez le héros à remplacer."); return openTeam(null, id); }
-    else S.team.push(id);
+    if (S.team.includes(id)) { if (teamIds().length <= 1) return toast("Gardez au moins un héros dans l'équipe."); S.team[S.team.indexOf(id)] = null; }
+    else if (!S.team.includes(null)) { toast("Touchez le héros à remplacer."); return openTeam(null, id); }
+    else S.team[S.team.indexOf(null)] = id;
     teamChanged(); render();
   };
 }
@@ -716,10 +740,12 @@ const isBoss = stage => stage % 5 === 0;
 function makeFoes(stage) {
   const hp = Math.round(520 * Math.pow(1.22, stage - 1)), atk = Math.round(62 * Math.pow(1.2, stage - 1));
   if (isBoss(stage)) {
-    const b = BOSSES[(stage / 5 - 1) % BOSSES.length], bhp = Math.round(hp * 3.4);
-    return [{ ...b, hp: bhp, max: bhp, atk: Math.round(atk * 1.9), foe: true, boss: true }];
+    const b = BOSSES[(stage / 5 - 1) % BOSSES.length], bhp = Math.round(hp * 4.6);
+    return [{ ...b, hp: bhp, max: bhp, atk: Math.round(atk * 2.3), foe: true, boss: true, front: true }];
   }
-  return [0, 1, 2].map(i => { const f = FOES[(stage * 2 + i) % FOES.length]; return { ...f, hp, max: hp, atk: Math.round(atk * (i === 1 ? 1.15 : 1)), foe: true }; });
+  // 5 ennemis : 2 devant (plus résistants), 3 derrière (plus offensifs)
+  return [0, 1, 2, 3, 4].map(i => { const f = FOES[(stage * 2 + i) % FOES.length], front = i < 2, h = Math.round(hp * (front ? .95 : .72));
+    return { ...f, hp: h, max: h, atk: Math.round(atk * (front ? .72 : .88)), foe: true, front }; });
 }
 
 /* ---- Monstres dessinés en SVG ---- */
@@ -764,7 +790,8 @@ function monsterSVG(el, boss) {
 /* ---- Simulation (calcul instantané, rejoué ensuite en animation) ---- */
 const RANGED = { Mage: true, Archer: true, Soigneur: true };
 function simulate() {
-  const A = S.team.map(id => { const s = stats(id), o = S.heroes[id]; return { id, el: H[id].el, name: evolved(o) ? H[id].evo : H[id].name, cls: H[id].cls, hp: s.hp, max: s.hp, atk: s.atk, evo: evolved(o), lvl: o.lvl }; });
+  const res = resonance();
+  const A = S.team.map((id, slot) => { if (!id) return null; const s = unitStats(id, slot, res), o = S.heroes[id]; return { id, slot, front: isFront(slot), el: H[id].el, name: evolved(o) ? H[id].evo : H[id].name, cls: H[id].cls, hp: s.hp, max: s.hp, atk: s.atk, evo: evolved(o), lvl: o.lvl }; }).filter(Boolean);
   const E = makeFoes(S.stage), frames = [];
   const alive = arr => arr.filter(u => u.hp > 0);
   const snap = (text, kind, ev) => frames.push({ a: A.map(u => u.hp), e: E.map(u => u.hp), text, kind, ev });
@@ -794,8 +821,9 @@ function simulate() {
         snap(`${u.name} frappe tous les ennemis.`, "", { s: src, t: tg.map(e => "e" + E.indexOf(e)), v, ms, type: "aoe", el: u.el, ranged: true });
         return;
       }
-      const tgts = alive(E);
-      const t = u.cls === "Archer" ? tgts.sort((x, y) => x.hp - y.hp)[0] : tgts[Math.floor(Math.random() * tgts.length)];
+      const tgts = alive(E), frontFoes = tgts.filter(e => e.front);
+      const pool = u.cls === "Archer" || u.cls === "Assassin" || !frontFoes.length ? tgts : frontFoes; // la mêlée frappe d'abord la ligne avant ennemie
+      const t = u.cls === "Archer" ? tgts.sort((x, y) => x.hp - y.hp)[0] : pool[Math.floor(Math.random() * pool.length)];
       const m = elMult(u.el, t.el);
       let dmg = Math.round(u.atk * m * rnd()), crit = u.cls === "Assassin" && Math.random() < 0.3;
       if (crit) dmg = Math.round(dmg * 1.8);
@@ -805,8 +833,9 @@ function simulate() {
     });
     for (const e of E.flatMap(x => x.boss ? [x, x] : [x])) {
       if (e.hp <= 0 || !alive(A).length) continue;
-      const al = alive(A), guard = al.find(u => u.cls === "Gardien");
-      const t = guard && Math.random() < 0.5 ? guard : al[Math.floor(Math.random() * al.length)];
+      const al = alive(A), fr = al.filter(u => u.front), guard = al.find(u => u.cls === "Gardien");
+      const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+      const t = guard && Math.random() < 0.3 ? guard : fr.length && Math.random() < 0.75 ? pick(fr) : pick(al);
       const m = elMult(e.el, t.el), dmg = Math.round(e.atk * m * rnd()); t.hp = Math.max(0, t.hp - dmg);
       snap(`${e.name} → ${t.name} : ${dmg}${tag(m)}${t.hp === 0 ? " — K.O." : ""}`, "",
         { s: "e" + E.indexOf(e), t: ["a" + A.indexOf(t)], v: [dmg], ms: [m], type: "hit", el: e.el, ranged: false });
@@ -944,19 +973,20 @@ function bgFrame(now) {
 }
 
 /* ---- Combattants (DOM au-dessus du décor) ---- */
-const HERO_POS = [[36, 76], [20, 68], [21, 85]];
-const FOE_POS  = [[67, 76], [83, 68], [82, 85]];
-const BOSS_POS = [70, 82];
+// Index = emplacement : 0-1 ligne avant, 2-4 ligne arrière
+const HERO_POS = [[38, 73], [36, 87], [20, 63], [14, 76], [20, 89]];
+const FOE_POS  = [[62, 73], [64, 87], [80, 63], [86, 76], [80, 89]];
+const BOSS_POS = [72, 85];
 const speed = () => (S.speed === 2 ? 2 : 1);
 const frameMs = () => 640 / speed();
 const spriteOf = id => (S.heroes[id] && evolved(S.heroes[id]) && SPRITES[id + "_evo"]) || SPRITES[id];
 
 function buildStage(b) {
   const foes = b ? b.E : makeFoes(S.stage);
-  const allies = b ? b.A : S.team.map(id => ({ id, el: H[id].el, name: H[id].name, evo: evolved(S.heroes[id]) }));
+  const allies = b ? b.A : S.team.map((id, slot) => id && ({ id, slot, el: H[id].el, name: H[id].name, evo: evolved(S.heroes[id]) })).filter(Boolean);
   setBiome(foes[0].el); BG.boss = !!foes[0].boss;
   const heroes = allies.map((u, i) => {
-    const [x, y] = HERO_POS[i], spr = spriteOf(u.id);
+    const [x, y] = HERO_POS[u.slot ?? i], spr = spriteOf(u.id);
     return `<div class="u hero${u.evo ? " evo" : ""}" id="u-a${i}" style="left:${x}%;top:${y}%;--el:var(${EL[u.el]});z-index:${y}">
       <div class="hpbar"><b></b></div>
       <div class="body">${spr ? `<img class="spr" src="${spr}" alt="">` : `<div class="tok"><span>${u.name[0]}</span></div>`}</div>
@@ -1059,7 +1089,7 @@ function gemBurst(n, fromEl) {
 
 /* ---- Déroulement ---- */
 function startBattle() {
-  if (!S.team.length) { renderHUD(); return toast("Ajoutez au moins un héros à l'équipe (menu Héros)."); }
+  if (!teamIds().length) { renderHUD(); return toast("Ajoutez au moins un héros à l'équipe (menu Héros)."); }
   const b = simulate(); ui.battle = { ...b, i: 0, done: false };
   buildStage(b);
   const lg = $("#log"); if (lg) lg.innerHTML = "";
@@ -1096,11 +1126,11 @@ function finish() {
 }
 function logLine(t, kind) { const lg = $("#log"); if (!lg) return; const d = document.createElement("div"); d.textContent = t; if (kind) d.className = kind; lg.appendChild(d); while (lg.children.length > 120) lg.firstChild.remove(); lg.scrollTop = lg.scrollHeight; }
 function renderHUD() {
-  const teamPower = S.team.reduce((s, id) => s + stats(id).power, 0);
+  const tp = teamPower();
   const foes = makeFoes(S.stage), foePower = foes.reduce((s, f) => s + Math.round(f.max / 4 + f.atk * 2), 0);
-  const ratio = teamPower / foePower, state = ratio >= 1.15 ? "ok" : ratio >= 0.85 ? "mid" : "bad";
+  const ratio = tp / foePower, state = ratio >= 1.15 ? "ok" : ratio >= 0.85 ? "mid" : "bad";
   const el = $("#stagepill");
-  if (el) el.innerHTML = `<b>${isBoss(S.stage) ? "BOSS · " : ""}Étape ${S.stage}</b><span class="pw ${state}" title="Puissance de l'équipe contre puissance ennemie">⚔ ${teamPower.toLocaleString("fr-FR")} / ${foePower.toLocaleString("fr-FR")}</span>`;
+  if (el) el.innerHTML = `<b>${isBoss(S.stage) ? "BOSS · " : ""}Étape ${S.stage}</b><span class="pw ${state}" title="Puissance de l'équipe contre puissance ennemie">⚔ ${tp.toLocaleString("fr-FR")} / ${foePower.toLocaleString("fr-FR")}</span>`;
   const b = ui.battle, fb = $("#fightbtn");
   if (fb) { const idle = !b || b.done; fb.hidden = !(idle && !S.auto); fb.textContent = b && b.done && !b.win ? "Réessayer" : `Combattre l'étape ${S.stage}`; }
   const sp = $("#spd"); if (sp) { sp.textContent = "×" + speed(); sp.setAttribute("aria-pressed", speed() === 2); }
@@ -1185,8 +1215,45 @@ function renderMissions() {
   document.querySelectorAll("[data-claim]").forEach(b => b.onclick = () => claim(b.dataset.claim));
 }
 
-/* ================== ÉQUIPE ================== */
+/* ================== ÉQUIPE : CONSTELLATION ET RÉSONANCE ================== */
+// Formation à 5 emplacements fixes : 0-1 = ligne avant, 2-4 = ligne arrière.
+const TEAM_SIZE = 5;
+const MELEE = { Guerrier: true, Assassin: true, Gardien: true };
+const BACK_MALUS = { Guerrier: true, Gardien: true }; // les assassins bondissent depuis l'arrière sans malus
 const ELS = ["Feu", "Eau", "Nature", "Terre", "Lumière", "Ombre", "Astre"];
+const teamIds = () => (S.team || []).filter(Boolean);
+const isFront = slot => slot < 2;
+function frontScore(id) { const c = H[id].cls; return (c === "Gardien" ? 3 : c === "Guerrier" ? 2 : MELEE[c] ? 1 : 0) * 1e5 + stats(id).hp; }
+function arrange(ids) {
+  const sorted = ids.slice().sort((a, b) => frontScore(b) - frontScore(a)), t = Array(TEAM_SIZE).fill(null);
+  sorted.slice(0, 2).forEach((id, i) => t[i] = id); sorted.slice(2, 5).forEach((id, i) => t[2 + i] = id);
+  return t;
+}
+function normalizeTeam() {
+  if (!S.teamV) { S.team = arrange((S.team || []).filter(id => id && S.heroes[id]).slice(0, TEAM_SIZE)); S.teamV = 2; }
+  const t = (S.team || []).slice(0, TEAM_SIZE); while (t.length < TEAM_SIZE) t.push(null);
+  S.team = t.map(id => (id && S.heroes[id] ? id : null));
+}
+function resonance(ids = teamIds()) {
+  const cnt = {}; ids.forEach(id => cnt[H[id].el] = (cnt[H[id].el] || 0) + 1);
+  const list = []; let atk = 0, hp = 0;
+  const top = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0];
+  if (top && top[1] >= 3) { const v = { 3: .10, 4: .18, 5: .28 }[top[1]]; atk += v; hp += v; list.push({ name: `Résonance ${top[0]} ×${top[1]}`, el: top[0], txt: `+${Math.round(v * 100)} % ATQ et PV` }); }
+  if (ids.length === TEAM_SIZE && Object.keys(cnt).length === TEAM_SIZE) { atk += .10; hp += .15; list.push({ name: "Harmonie des cinq astres", txt: "+10 % ATQ, +15 % PV" }); }
+  if (cnt["Lumière"] && cnt["Ombre"]) { atk += .08; list.push({ name: "Crépuscule", txt: "Lumière et Ombre réunies : +8 % ATQ" }); }
+  let hint = "";
+  if (top && top[1] === 2) hint = `Encore 1 héros ${top[0]} pour activer la Résonance ×3.`;
+  else if (top && top[1] >= 3 && top[1] < 5) hint = `Encore 1 héros ${top[0]} pour une Résonance plus forte.`;
+  else if (ids.length >= 3 && Object.keys(cnt).length === ids.length && ids.length < TEAM_SIZE) hint = "5 éléments différents activent l'Harmonie des cinq astres.";
+  return { atk, hp, list, cnt, hint };
+}
+function unitStats(id, slot, res = resonance()) {
+  const s = stats(id), front = isFront(slot);
+  const hp = s.hp * (1 + res.hp) * (front ? 1.10 : 1);
+  const atk = s.atk * (1 + res.atk) * (!front && BACK_MALUS[H[id].cls] ? 0.8 : 1);
+  return { hp: Math.round(hp), atk: Math.round(atk), power: Math.round(hp / 4 + atk * 2) };
+}
+function teamPower() { const r = resonance(); return S.team.reduce((s, id, i) => id ? s + unitStats(id, i, r).power : s, 0); }
 function matchup(heroEl, foes) {
   const best = Math.max(...foes.map(f => elMult(heroEl, f.el))), worst = Math.max(...foes.map(f => elMult(f.el, heroEl)));
   return best > 1 ? "good" : worst > 1 ? "bad" : "neutral";
@@ -1196,45 +1263,55 @@ let teamRestartT;
 function teamChanged() {
   save(); renderHUD(); renderTeam();
   clearTimeout(teamRestartT);
-  teamRestartT = setTimeout(() => { if (ui.battle) clearTimeout(ui.battle.timer); clearTimeout(autoT); ui.battle = null; if (S.team.length) startBattle(); else buildStage(null); }, 250);
+  teamRestartT = setTimeout(() => { if (ui.battle) clearTimeout(ui.battle.timer); clearTimeout(autoT); ui.battle = null; if (teamIds().length) startBattle(); else buildStage(null); }, 250);
 }
 function placeHero(id, slot) {
   const t = S.team.slice(), from = t.indexOf(id);
-  if (slot == null) slot = t.length < 3 ? t.length : null;
+  if (slot == null) { slot = t.indexOf(null); if (slot < 0) slot = null; }
   if (slot == null) { ui.pending = id; ui.slot = null; renderTeam(); toast("Touchez l'emplacement à remplacer."); return; }
   if (from === slot) return;
-  if (from >= 0) { t[from] = t[slot]; t[slot] = id; }          // échange de place
-  else if (slot < t.length) t[slot] = id;                          // remplacement
-  else t.push(id);                                                 // ajout
-  S.team = t.filter(Boolean); ui.slot = null; ui.pending = null;
-  const card = document.querySelector(`.tslot[data-slot="${Math.min(slot, S.team.length - 1)}"]`);
+  if (from >= 0) { t[from] = t[slot]; t[slot] = id; } else t[slot] = id;
+  S.team = t; ui.slot = null; ui.pending = null;
   teamChanged();
-  const nc = document.querySelector(`.tslot[data-slot="${S.team.indexOf(id)}"]`); nc && nc.animate([{ transform: "scale(.85)" }, { transform: "scale(1.06)" }, { transform: "scale(1)" }], { duration: 320 });
+  const nc = document.querySelector(`.tslot[data-slot="${slot}"]`); nc && nc.animate([{ transform: "scale(.88)" }, { transform: "scale(1.05)" }, { transform: "scale(1)" }], { duration: 320 });
 }
 function removeFromTeam(slot) {
-  if (S.team.length <= 1) return toast("Gardez au moins un héros dans l'équipe.");
-  S.team.splice(slot, 1); ui.slot = null; teamChanged();
+  if (teamIds().length <= 1) return toast("Gardez au moins un héros dans l'équipe.");
+  S.team[slot] = null; ui.slot = null; teamChanged();
 }
 function autoTeam() {
   const foes = makeFoes(S.stage);
-  S.team = Object.keys(S.heroes).sort((a, b) => teamScore(b, foes) - teamScore(a, foes)).slice(0, 3);
+  // Essaie les combinaisons des 9 meilleurs héros pour tenir compte des Résonances
+  const cand = Object.keys(S.heroes).sort((a, b) => teamScore(b, foes) - teamScore(a, foes)).slice(0, 9);
+  const k = Math.min(TEAM_SIZE, cand.length); let best = null, bestScore = -1;
+  const combos = (start, pick) => {
+    if (pick.length === k) {
+      const t = arrange(pick), res = resonance(pick);
+      const sc = t.reduce((s, id, i) => { if (!id) return s; const m = matchup(H[id].el, foes); return s + unitStats(id, i, res).power * (m === "good" ? 1.3 : m === "bad" ? 0.8 : 1); }, 0);
+      if (sc > bestScore) { bestScore = sc; best = t; } return;
+    }
+    for (let i = start; i < cand.length; i++) combos(i + 1, [...pick, cand[i]]);
+  };
+  combos(0, []);
+  S.team = best || arrange(cand.slice(0, k));
   ui.slot = null; ui.pending = null; teamChanged(); toast("Meilleure équipe placée pour l'étape " + S.stage + ".");
 }
 function faceImg(id) { const s = spriteOf(id); return s ? `<img src="${s}" alt="" draggable="false">` : `<span>${H[id].name[0]}</span>`; }
+function slotHTML(i, foes, res) {
+  const id = S.team[i], sel = ui.slot === i ? " sel" : "", wait = ui.pending && !sel ? " wait" : "";
+  if (!id) return `<button class="tslot empty${sel}${wait}" data-slot="${i}"><span class="plus">+</span><small>${isFront(i) ? "Avant" : "Arrière"}</small></button>`;
+  const h = H[id], o = S.heroes[id], m = matchup(h.el, foes), us = unitStats(id, i, res);
+  const warn = !isFront(i) && BACK_MALUS[h.cls] ? `<small class="warn">À l'arrière : −20 % ATQ</small>` : "";
+  return `<button class="tslot${sel}${wait}${evolved(o) ? " evo" : ""}" data-slot="${i}" data-id="${id}" style="--el:var(${EL[h.el]})">
+    <span class="av"><img src="${artOf(id)}" alt="" draggable="false"></span>
+    <span class="info"><b>${evolved(o) ? h.evo : h.name}</b><small>${h.el} · ${h.cls} · Niv. ${o.lvl}</small><small class="pw">⚔ ${us.power.toLocaleString("fr-FR")}</small>${warn}</span>
+    ${m !== "neutral" ? `<span class="mu ${m}">${m === "good" ? "Efficace" : "Faible"}</span>` : ""}
+    <span class="rm" data-rm="${i}" role="button" aria-label="Retirer ${h.name}">✕</span></button>`;
+}
 function renderTeam() {
   const box = $("#p-team"); if (!box) return;
-  const foes = makeFoes(S.stage), foeEls = [...new Set(foes.map(f => f.el))];
+  const foes = makeFoes(S.stage), foeEls = [...new Set(foes.map(f => f.el))], res = resonance();
   const filter = ui.filter || "all";
-  const slots = [0, 1, 2].map(i => {
-    const id = S.team[i], sel = ui.slot === i ? " sel" : "", wait = ui.pending && !sel ? " wait" : "";
-    if (!id) return `<button class="tslot empty${sel}${wait}" data-slot="${i}"><span class="plus">+</span><small>Emplacement ${i + 1}</small></button>`;
-    const h = H[id], o = S.heroes[id], m = matchup(h.el, foes);
-    return `<button class="tslot${sel}${wait}${evolved(o) ? " evo" : ""}" data-slot="${i}" data-id="${id}" style="--el:var(${EL[h.el]})">
-      <span class="face">${faceImg(id)}</span>
-      <span class="info"><b>${evolved(o) ? h.evo : h.name}</b><small>${h.el} · Niv. ${o.lvl}</small><small class="pw">⚔ ${stats(id).power.toLocaleString("fr-FR")}</small></span>
-      ${m !== "neutral" ? `<span class="mu ${m}">${m === "good" ? "Efficace" : "Faible"}</span>` : ""}
-      <span class="rm" data-rm="${i}" role="button" aria-label="Retirer ${h.name}">✕</span></button>`;
-  }).join("");
   const owned = Object.keys(S.heroes).filter(id => filter === "all" || H[id].el === filter)
     .sort((a, b) => teamScore(b, foes) - teamScore(a, foes));
   const list = owned.map(id => {
@@ -1242,18 +1319,24 @@ function renderTeam() {
     return `<button class="tcard r${h.r}${inT ? " in" : ""}${pend ? " pend" : ""}${evolved(o) ? " evo" : ""}" data-id="${id}" style="--el:var(${EL[h.el]})">
       <span class="face">${faceImg(id)}</span>
       <span class="nm">${evolved(o) ? h.evo : h.name}</span>
-      <span class="meta">${"★".repeat(o.stars)} · Niv. ${o.lvl}</span>
+      <span class="meta">${"★".repeat(o.stars)} · ${h.cls}</span>
       <span class="pw">⚔ ${stats(id).power.toLocaleString("fr-FR")}</span>
       ${inT ? `<span class="tag in">Équipe</span>` : m === "good" ? `<span class="tag good">Conseillé</span>` : m === "bad" ? `<span class="tag bad">Faible</span>` : ""}</button>`;
   }).join("");
-  const totalPower = S.team.reduce((s, id) => s + stats(id).power, 0);
-  const hint = ui.slot != null ? `Choisissez le héros pour l'emplacement ${ui.slot + 1}.`
+  const hint = ui.slot != null ? `Choisissez le héros pour cet emplacement (${isFront(ui.slot) ? "ligne avant" : "ligne arrière"}).`
     : ui.pending ? `Touchez l'emplacement où placer ${H[ui.pending].name}.`
     : "Touchez un emplacement puis un héros, ou maintenez un héros et glissez-le sur un emplacement.";
   box.innerHTML = `
     <div class="foes">Étape ${S.stage}${isBoss(S.stage) ? " · Boss" : ""} — ennemis : ${foeEls.map(e => `<span class="elc" style="--el:var(${EL[e]})">${e}</span>`).join(" ")}
-      <span class="muted">· Puissance de l'équipe ⚔ ${totalPower.toLocaleString("fr-FR")}</span></div>
-    <div class="tslots">${slots}</div>
+      <span class="muted">· Puissance ⚔ ${teamPower().toLocaleString("fr-FR")}</span></div>
+    <div class="formation">
+      <div class="frow back"><p class="rlab">Ligne arrière <small>moins ciblée · idéale pour mages, archers, soigneurs</small></p>${[2, 3, 4].map(i => slotHTML(i, foes, res)).join("")}</div>
+      <div class="frow front"><p class="rlab">Ligne avant <small>encaisse ~75 % des coups · +10 % PV · guerriers et gardiens</small></p>${[0, 1].map(i => slotHTML(i, foes, res)).join("")}</div>
+    </div>
+    <div class="reso">
+      ${res.list.length ? res.list.map(r => `<span class="rchip" ${r.el ? `style="--el:var(${EL[r.el]})"` : ""}><b>${r.name}</b> ${r.txt}</span>`).join("") : `<span class="rchip off"><b>Aucune résonance</b> Réunissez 3 héros du même élément.</span>`}
+      ${res.hint ? `<span class="rhint">${res.hint}</span>` : ""}
+    </div>
     <p class="thint">${hint}</p>
     <div class="tbar">
       <div class="tfilter">${["all", ...ELS.filter(e => Object.keys(S.heroes).some(id => H[id].el === e))].map(e => `<button class="fchip${filter === e ? " on" : ""}" data-f="${e}" ${e !== "all" ? `style="--el:var(${EL[e]})"` : ""}>${e === "all" ? "Tous" : e}</button>`).join("")}</div>
@@ -1293,6 +1376,8 @@ function bindDrag(card) {
   card.onpointermove = e => {
     if (!dragging) { if (Math.hypot(e.clientX - sx, e.clientY - sy) > 10) { moved = true; clearTimeout(timer); } return; }
     e.preventDefault(); ghost.style.left = e.clientX + "px"; ghost.style.top = e.clientY + "px";
+    const body = document.querySelector(".drawer-body"), br = body && body.getBoundingClientRect();
+    if (br && e.clientY < br.top + 70) body.scrollTop -= 14; else if (br && e.clientY > br.bottom - 70) body.scrollTop += 14;
     const over = document.elementFromPoint(e.clientX, e.clientY)?.closest(".tslot");
     document.querySelectorAll(".tslot").forEach(s => s.classList.toggle("over", s === over));
   };
@@ -1302,8 +1387,8 @@ function bindDrag(card) {
       const over = document.elementFromPoint(e.clientX, e.clientY)?.closest(".tslot");
       ghost && ghost.remove(); card.classList.remove("lift"); dragging = false;
       document.querySelectorAll(".tslot").forEach(s => s.classList.remove("drop", "over"));
-      if (over) placeHero(id, Math.min(+over.dataset.slot, S.team.includes(id) ? 2 : S.team.length));
-      card.dataset.skipClick = "1"; return;
+      if (over) placeHero(id, +over.dataset.slot);
+      card.dataset.skipClick = "1";
     }
   };
   card.onpointerup = end; card.onpointercancel = e => { clearTimeout(timer); if (dragging) end(e); };
@@ -1362,8 +1447,9 @@ window.addEventListener("resize", () => { BG.L = null; });
 
 function start(data) {
   S = data && data.gems != null ? data : load();
+  normalizeTeam();
   render(); buildStage(null); requestAnimationFrame(bgFrame);
-  if (S.team.length) setTimeout(() => { if (!ui.battle) startBattle(); }, 500);
+  if (teamIds().length) setTimeout(() => { if (!ui.battle) startBattle(); }, 500);
 }
 window.claude?.hot?.snapshot?.(() => S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data);
