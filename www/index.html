@@ -934,6 +934,74 @@ body.home-on .drawer { z-index: 50; }
 .cloud.c4 { top: 62%; width: 22%; opacity: .6; animation-duration: 85s; animation-delay: -55s; }
 @keyframes drift { from { left: -32%; } to { left: 105%; } }
 @media (prefers-reduced-motion: reduce) { .isle, .cloud, .isle .glow, .isle .sp, .hfight .ico { animation: none !important; } .cloud { display: none; } }
+/* ================= PAGE HÉROS (plein écran) ================= */
+body.page-full #sheet { inset: 0 !important; width: auto !important; height: auto !important; border-radius: 0 !important; z-index: 70; box-shadow: none !important;
+  background: linear-gradient(rgba(20,12,4,.35), rgba(20,12,4,.55)), var(--hp-bg) center / cover no-repeat !important; }
+body.page-full #sheet .drawer-head { display: none; }
+body.page-full #sheet { grid-template-rows: minmax(0, 1fr) !important; }
+body.page-full #sheet .drawer-body { padding: 0; overflow: hidden; height: 100%; }
+body.page-full #p-heroes { height: 100%; display: block; } .hpage { height: 100%; overflow: hidden; }
+.hpage { height: 100%; display: grid; grid-template-rows: auto 1fr; padding: calc(6px + env(safe-area-inset-top, 0px)) calc(10px + env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) calc(10px + env(safe-area-inset-left, 0px)); gap: 6px; }
+.hp-top { display: grid; grid-template-columns: 52px 1fr 52px; align-items: center; }
+.hp-back { width: 46px; height: 46px; border: 0; border-radius: 50%; padding: 9px; color: #ffd36a; background: radial-gradient(circle at 40% 30%, #8a5a30, #4a2c14); box-shadow: inset 0 0 0 3px var(--gold-edge), 0 3px 0 #1f1208; cursor: pointer; }
+.hp-back svg { width: 100%; height: 100%; }
+.hp-title { justify-self: center; margin: 0; font-family: var(--f-display); font-weight: 700; font-size: 1.45rem; letter-spacing: .02em; color: #ffe08a;
+  text-shadow: 0 2px 0 #7a4a12, 0 3px 0 #3a2208, 0 0 14px rgba(255,200,80,.35); }
+.hp-body { min-height: 0; display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+/* cadre crème + grille bois sombre */
+.hp-frame { min-height: 0; display: grid; grid-template-rows: auto 1fr; border-radius: 26px; padding: 10px 12px 12px;
+  background: linear-gradient(180deg, #f6e7c4, #e2c896); box-shadow: inset 0 2px 0 #fff8e4, inset 0 0 0 3px #b98b4e, 0 6px 0 #6b4423, 0 12px 24px rgba(0,0,0,.4); }
+.hp-bar { display: flex; align-items: center; gap: 10px; padding: 0 4px 10px; }
+.hp-count { font-family: var(--f-display); font-weight: 600; font-size: 1.05rem; color: #6b4423; white-space: nowrap; } .hp-count b { color: #3a2208; font-size: 1.2rem; }
+.hp-els { flex: 1; display: flex; justify-content: center; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px; }
+.med { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 0; padding: 8px; cursor: pointer;
+  background: radial-gradient(circle at 38% 30%, color-mix(in srgb, var(--el) 55%, white), var(--el) 55%, color-mix(in srgb, var(--el) 60%, black));
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.5), 0 0 0 2px #7a5532, 0 3px 0 #4a2c14; opacity: .72; transition: transform .12s, opacity .12s; }
+.med svg { width: 100%; height: 100%; filter: drop-shadow(0 1px 1px rgba(0,0,0,.4)); }
+.med b { font-family: var(--f-display); font-size: .68rem; color: #fff; text-shadow: 0 1px 1px rgba(0,0,0,.5); }
+.med.on { opacity: 1; transform: translateY(-2px) scale(1.08); box-shadow: inset 0 0 0 2px rgba(255,255,255,.7), 0 0 0 3px #ffd36a, 0 3px 0 #4a2c14, 0 0 12px rgba(255,210,100,.6); }
+.hp-sort { flex: none; border: 0; border-radius: 999px; padding: 6px 14px; cursor: pointer; font-family: var(--f-display); font-weight: 600; font-size: .9rem; color: #4a2a00;
+  background: linear-gradient(180deg, #fff0b8, #f4c24f); box-shadow: inset 0 0 0 2px #c8892e, 0 3px 0 #9a5d14; }
+.hp-grid { min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 10px; align-content: start; padding: 12px; border-radius: 18px;
+  background: linear-gradient(180deg, #6b4627, #4f3219); box-shadow: inset 0 3px 8px rgba(0,0,0,.45), inset 0 0 0 2px #3a2311; overscroll-behavior: contain; }
+/* vignette héros */
+.ht { position: relative; aspect-ratio: 1; padding: 0; border: 0; border-radius: 14px; cursor: pointer; --rc: #c9b38c;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--rc) 85%, white), var(--rc) 45%, color-mix(in srgb, var(--rc) 55%, black));
+  box-shadow: 0 3px 0 #2a1608, 0 5px 8px rgba(0,0,0,.35); }
+.ht.r4 { --rc: #b98bf0; } .ht.r5 { --rc: #f2b84a; }
+.ht-art { position: absolute; inset: 3px; border-radius: 11px; overflow: hidden; background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--el) 45%, #4a2e17), #24150a); }
+.ht-art img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.12); transform-origin: 50% 30%; }
+.ht-art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 62%, rgba(0,0,0,.65)); }
+.ht-el { position: absolute; left: -3px; top: -3px; width: 26px; height: 26px; padding: 4px; border-radius: 50%; background: radial-gradient(circle at 38% 30%, color-mix(in srgb, var(--el) 55%, white), var(--el) 60%, color-mix(in srgb, var(--el) 55%, black)); box-shadow: 0 0 0 2px #fff3d6, 0 2px 3px rgba(0,0,0,.4); }
+.ht-el svg { width: 100%; height: 100%; display: block; }
+.ht-lv { position: absolute; right: 7px; top: 4px; font-family: var(--f-display); font-weight: 700; font-size: .95rem; color: #fff; text-shadow: 0 0 3px #000, 0 1px 0 #000, 1px 0 0 #000, -1px 0 0 #000, 0 -1px 0 #000; }
+.ht-st { position: absolute; left: 0; right: 0; bottom: 4px; text-align: center; font-size: .78rem; letter-spacing: -1px; color: #ffd34a; text-shadow: 0 1px 0 #6b3a00, 0 0 2px #000; }
+.ht.evo .ht-st { color: #ff7ad9; } .ht.evo { box-shadow: 0 3px 0 #2a1608, 0 0 14px rgba(255,190,80,.7); }
+.ht-team { position: absolute; right: 5px; bottom: 20px; width: 12px; height: 12px; border-radius: 50%; background: #5fd38a; box-shadow: 0 0 0 2px #fff3d6, 0 0 6px #5fd38a; }
+.ht.locked { filter: grayscale(1) brightness(.5); } .ht.locked .ht-st { opacity: .6; }
+.ht:active { transform: translateY(2px); }
+/* onglets verticaux */
+.hp-tabs { display: grid; align-content: start; gap: 10px; padding-top: 6px; }
+.hp-tabs button { position: relative; width: 74px; display: grid; justify-items: center; gap: 2px; padding: 9px 4px 7px; border: 0; border-radius: 16px; cursor: pointer;
+  font-family: var(--f-display); font-weight: 600; font-size: .74rem; color: #fff3d6; text-shadow: 0 1px 0 #5a2e08;
+  background: linear-gradient(180deg, #f2a35a, #c96a2a); box-shadow: inset 0 2px 0 rgba(255,255,255,.4), inset 0 0 0 2px #7a3e12, 0 4px 0 #5a2e08; }
+.hp-tabs button.on { background: linear-gradient(180deg, #ffd56b, #f4ac2f); color: #4a2a00; text-shadow: 0 1px 0 rgba(255,255,255,.5); transform: translateX(-4px); }
+.hp-tabs svg, .hp-tabs .ico { width: 30px; height: 30px; fill: currentColor; vertical-align: 0; }
+/* fiche détaillée */
+.hp-detail { min-height: 0; height: 100%; display: grid; grid-template-columns: minmax(200px, 38%) 1fr; grid-template-rows: 100%; gap: 12px; }
+.hp-stage { position: relative; min-height: 0; height: 100%; overflow: hidden; }
+.hp-stage img { position: absolute; z-index: 2; left: 50%; bottom: 9%; transform: translateX(-50%); height: 82%; width: auto; max-width: 96%; object-fit: contain; filter: drop-shadow(0 10px 10px rgba(0,0,0,.45)); animation: bnfloat 4s ease-in-out infinite; }
+.hp-aura { position: absolute; left: 50%; top: 45%; width: 90%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--el) 60%, transparent), transparent); }
+.hp-ped { position: absolute; z-index: 1; bottom: 6%; left: 50%; width: 70%; height: 12%; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(closest-side, rgba(255,214,110,.55), rgba(90,58,30,.6) 60%, transparent); }
+.hp-nav { position: absolute; z-index: 3; left: 0; right: 0; top: 45%; display: flex; justify-content: space-between; pointer-events: none; }
+.hp-nav button { pointer-events: auto; width: 40px; height: 40px; border: 0; border-radius: 50%; font-size: 1.6rem; line-height: 1; color: #ffd36a; background: radial-gradient(circle at 40% 30%, #8a5a30, #4a2c14); box-shadow: inset 0 0 0 2px var(--gold-edge), 0 3px 0 #1f1208; cursor: pointer; }
+.hp-info { min-height: 0; overflow-y: auto; padding-right: 2px; overscroll-behavior: contain; }
+.hp-info .hs-art { display: none; } .hp-info .hs-top { grid-template-columns: 1fr; } .hp-info .hs-id h2 { display: none; }
+@media (orientation: portrait) {
+  .hp-detail { grid-template-rows: 34vh auto; height: auto; } .hp-info { overflow: visible; } .hp-detail-wrap { overflow-y: auto; }
+  .hp-body { grid-template-columns: 1fr; grid-template-rows: 1fr auto; } .hp-tabs { grid-auto-flow: column; justify-content: center; } .hp-tabs button.on { transform: translateY(-4px); }
+  .hp-detail { grid-template-columns: 1fr; grid-template-rows: 34vh 1fr; } .hp-bar { flex-wrap: wrap; } .hp-els { order: 3; flex-basis: 100%; justify-content: flex-start; }
+}
 </style>
 
 <div class="game">
@@ -1207,20 +1275,91 @@ function renderSummon() {
   $("#pull10").onclick = () => summon(10);
 }
 
+// Glyphes d'élément (médaillons et badges)
+const EL_GLYPH = {
+  Feu: '<path d="M12 2c1 4 5 6 5 11a5 5 0 0 1-10 0c0-3 2-4 2-7 1 1 2 2 2 4 1-2 1-5 1-8z"/>',
+  Eau: '<path d="M12 2C9 7 6 10 6 14a6 6 0 0 0 12 0c0-4-3-7-6-12z"/>',
+  Nature: '<path d="M5 20C4 10 10 4 20 4c0 10-6 16-15 16z"/><path d="M6 19l8-8" stroke="rgba(0,0,0,.35)" stroke-width="1.6"/>',
+  Terre: '<path d="M2 20l7-12 4 6 3-4 6 10z"/>',
+  Lumière: '<circle cx="12" cy="12" r="5"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4M4.2 4.2l2.8 2.8M17 17l2.8 2.8M4.2 19.8L7 17M17 7l2.8-2.8" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>',
+  Ombre: '<path d="M15 3a9 9 0 1 0 6 13A7 7 0 0 1 15 3z"/>',
+  Astre: '<path d="M12 2l2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5z"/>',
+};
+const elGlyph = el => `<svg viewBox="0 0 24 24" fill="#fff">${EL_GLYPH[el] || ""}</svg>`;
+const HSORTS = { power: "Puissance", stars: "Étoiles", lvl: "Niveau", el: "Élément" };
+function heroTile(id, locked) {
+  const h = H[id], o = S.heroes[id] || { lvl: 1, stars: h.r }, evo = !locked && evolved(o);
+  return `<button class="ht r${h.r}${locked ? " locked" : ""}${evo ? " evo" : ""}" data-hero="${id}" style="--el:var(${EL[h.el]})" aria-label="${h.name}">
+    <span class="ht-art">${artOf(id) ? `<img src="${artOf(id)}" alt="" loading="lazy">` : `<b>${h.name[0]}</b>`}</span>
+    <i class="ht-el">${elGlyph(h.el)}</i>
+    ${locked ? "" : `<b class="ht-lv">${o.lvl}</b>`}
+    <span class="ht-st">${"★".repeat(locked ? h.r : o.stars)}</span>
+    ${!locked && S.team.includes(id) ? `<i class="ht-team" title="Dans l'équipe"></i>` : ""}
+  </button>`;
+}
 function renderHeroes() {
+  const box = $("#p-heroes");
   const owned = HEROES.filter(h => S.heroes[h.id]), missing = HEROES.filter(h => !S.heroes[h.id]);
   if (!ui.sel || !S.heroes[ui.sel]) ui.sel = owned[0]?.id;
-  const sorted = owned.sort((a, b) => b.r - a.r || stats(b.id).power - stats(a.id).power);
-  $("#p-heroes").innerHTML = `
-    ${ui.sel ? sheetHTML(ui.sel) : ""}
-    <div class="toolbar"><h2>Collection <span>${owned.length} / ${HEROES.length}</span></h2><div class="tb-act"><button class="btn" id="goteam">Équipe</button><button class="btn" id="gorelics">Reliques</button></div></div>
-    <div class="roster">${sorted.map(h => cardHTML(h.id, { button: true, showTeam: true })).join("")}${missing.map(h => cardHTML(h.id, { locked: true })).join("")}</div>
-  `;
-  document.querySelectorAll("#p-heroes [data-hero]").forEach(b => b.onclick = () => { ui.sel = b.dataset.hero; renderHeroes(); $("#p-heroes .sheet")?.scrollIntoView({ behavior: "smooth", block: "nearest" }); });
-  bindSheet();
-  const gt = $("#goteam"); if (gt) gt.onclick = () => openTeam(null);
-  const gf = $("#goforge"); if (gf) gf.onclick = () => openForge(null);
-  const gr = $("#gorelics"); if (gr) gr.onclick = () => openRelics(ui.sel, null);
+  const f = ui.hfilter || "Tous", so = ui.hsort || "power";
+  const tabs = `<nav class="hp-tabs">
+      <button class="on" data-go="heroes"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4.5 4.5-6.5 8-6.5s7 2 8 6.5z"/></svg><span>Héros</span></button>
+      <button data-go="relics">${ico("amulet")}<span>Reliques</span></button>
+      <button data-go="forge">${ico("shard")}<span>Forge</span></button>
+      <button data-go="team"><svg viewBox="0 0 24 24"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M2 20c.6-3.6 3-5 6-5s5.4 1.4 6 5zM10 20c.6-3.6 3-5 6-5s5.4 1.4 6 5z"/></svg><span>Équipe</span></button>
+    </nav>`;
+  if (ui.hdetail && ui.sel) {
+    const id = ui.sel, h = H[id];
+    box.innerHTML = `<div class="hpage detail" style="--el:var(${EL[h.el]})">
+      <div class="hp-top"><button class="hp-back" aria-label="Retour à la liste">${backSVG()}</button><h2 class="hp-title">${evolved(S.heroes[id]) ? h.evo : h.name}</h2><span></span></div>
+      <div class="hp-body">
+        <div class="hp-detail">
+          <div class="hp-stage"><div class="hp-aura"></div><img src="${spriteOf(id) || artOf(id)}" alt=""><div class="hp-ped"></div>
+            <div class="hp-nav"><button id="hprev" aria-label="Héros précédent">‹</button><button id="hnext" aria-label="Héros suivant">›</button></div></div>
+          <div class="hp-info">${sheetHTML(id)}</div>
+        </div>
+        ${tabs}
+      </div></div>`;
+    const list = sortedHeroes(owned, so, f).map(x => x.id), i = list.indexOf(id);
+    box.querySelector(".hp-back").onclick = () => { ui.hdetail = false; renderHeroes(); };
+    $("#hprev").onclick = () => { ui.sel = list[(i - 1 + list.length) % list.length]; renderHeroes(); };
+    $("#hnext").onclick = () => { ui.sel = list[(i + 1) % list.length]; renderHeroes(); };
+    bindSheet();
+  } else {
+    const els = ["Tous", "Feu", "Eau", "Nature", "Terre", "Lumière", "Ombre", "Astre"];
+    const shown = sortedHeroes(owned, so, f), lock = missing.filter(h => f === "Tous" || h.el === f);
+    box.innerHTML = `<div class="hpage">
+      <div class="hp-top"><button class="hp-back" aria-label="Fermer">${backSVG()}</button><h2 class="hp-title">Mes héros</h2><span></span></div>
+      <div class="hp-body">
+        <div class="hp-frame">
+          <div class="hp-bar">
+            <span class="hp-count"><b>${owned.length}</b>/${HEROES.length}</span>
+            <div class="hp-els">${els.map(e => `<button class="med${f === e ? " on" : ""}" data-f="${e}" style="--el:${e === "Tous" ? "#d7a24a" : `var(${EL[e]})`}" aria-label="${e}" title="${e}">${e === "Tous" ? `<b>Tous</b>` : elGlyph(e)}</button>`).join("")}</div>
+            <button class="hp-sort" id="hsort">${HSORTS[so]} ▾</button>
+          </div>
+          <div class="hp-grid">${shown.map(h => heroTile(h.id)).join("")}${lock.map(h => heroTile(h.id, true)).join("")}</div>
+        </div>
+        ${tabs}
+      </div></div>`;
+    box.querySelector(".hp-back").onclick = () => openTab("battle");
+    box.querySelectorAll(".med").forEach(b => b.onclick = () => { ui.hfilter = b.dataset.f; renderHeroes(); });
+    $("#hsort").onclick = () => { const k = Object.keys(HSORTS); ui.hsort = k[(k.indexOf(so) + 1) % k.length]; renderHeroes(); };
+    box.querySelectorAll(".ht:not(.locked)").forEach(b => b.onclick = () => { ui.sel = b.dataset.hero; ui.hdetail = true; renderHeroes(); });
+    box.querySelectorAll(".ht.locked").forEach(b => b.onclick = () => toast(`${H[b.dataset.hero].name} n'est pas encore obtenu : invoquez-le au Cercle d'invocation.`));
+  }
+  box.querySelectorAll(".hp-tabs [data-go]").forEach(b => b.onclick = () => { const g = b.dataset.go;
+    if (g === "heroes") { ui.hdetail = false; renderHeroes(); } else if (g === "relics") openRelics(ui.sel, null); else if (g === "forge") openForge(ui.sel); else openTeam(null); });
+}
+const backSVG = () => `<svg viewBox="0 0 24 24"><path d="M10 5L3 12l7 7M3 12h11a6 6 0 0 1 6 6v1" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+function sortedHeroes(owned, so, f) {
+  const order = ["Feu", "Eau", "Nature", "Terre", "Lumière", "Ombre", "Astre"];
+  return owned.filter(h => f === "Tous" || h.el === f).sort((a, b) => {
+    const A = S.heroes[a.id], B = S.heroes[b.id];
+    if (so === "stars") return B.stars - A.stars || B.lvl - A.lvl;
+    if (so === "lvl") return B.lvl - A.lvl || B.stars - A.stars;
+    if (so === "el") return order.indexOf(a.el) - order.indexOf(b.el) || stats(b.id).power - stats(a.id).power;
+    return stats(b.id).power - stats(a.id).power;
+  });
 }
 
 function sheetHTML(id) {
@@ -2984,6 +3123,7 @@ function renderInfo() {
 function render() {
   renderWallet(); renderHUD(); renderBadge(); renderChest();
   document.body.classList.toggle("home-on", !!ui.home); if (ui.home) renderHome();
+  document.body.classList.toggle("page-full", ui.tab === "heroes");
   const open = ui.tab !== "battle";
   $("#sheet").hidden = !open; document.body.classList.toggle("sheet-open", open);
   if (open) $("#sheet-title").textContent = SHEET_TITLES[ui.tab] || "";
@@ -3028,6 +3168,7 @@ function start(data) {
   normalizeTeam();
   if (!S.relicGift) { S.relics = S.relics || []; RSLOTS.forEach((sl, i) => S.relics.push(makeRelic(i < 2 ? 1 : 0, sl.k))); S.relicGift = 1; save(); }
   ui.home = true;
+  document.documentElement.style.setProperty("--hp-bg", `url("${BG_SRC.Nature}")`);
   render(); buildStage(null); requestAnimationFrame(bgFrame);
   if (teamIds().length) setTimeout(() => { if (!ui.battle) startBattle(); }, 500);
 }
