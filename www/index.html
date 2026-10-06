@@ -316,6 +316,52 @@ body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.s
 @keyframes flip { from { transform: rotateY(90deg) scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
 .summonfx .tap { position: absolute; bottom: calc(30px + env(safe-area-inset-bottom, 0px)); color: var(--muted); font-size: .9rem; animation: blink 1.4s infinite; }
 @keyframes blink { 50% { opacity: .35; } }
+/* ---------- Écran Équipe ---------- */
+#p-team { user-select: none; -webkit-user-select: none; }
+.foes { font-size: .85rem; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.tslots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; position: sticky; top: -4px; z-index: 5; padding: 6px 0 8px; background: linear-gradient(180deg, var(--ink) 85%, transparent); }
+.tslot { position: relative; display: grid; grid-template-rows: auto auto; justify-items: center; gap: 4px; padding: 8px 6px 10px; border-radius: 16px; border: 2px solid color-mix(in srgb, var(--el, var(--line)) 70%, var(--line)); background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--el, var(--ink-3)) 35%, transparent), var(--ink-2) 75%); color: var(--text); min-width: 0; transition: transform .15s, box-shadow .15s; }
+.tslot .face { height: clamp(78px, 12vh, 130px); overflow: hidden; display: grid; place-items: end center; }
+.tslot .face img { height: clamp(78px, 12vh, 130px); width: auto; max-width: 100%; object-fit: contain; filter: drop-shadow(0 3px 2px rgba(0,0,0,.4)); }
+.tslot.evo .face img { filter: drop-shadow(0 0 6px var(--r5)); }
+.tslot .info { display: grid; justify-items: center; text-align: center; min-width: 0; }
+.tslot .info b { font-size: .85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.tslot small { font-size: .68rem; color: var(--muted); }
+.tslot small.pw { color: var(--brass-hi); font-variant-numeric: tabular-nums; }
+.tslot.empty { border-style: dashed; border-color: var(--line); background: var(--ink-2); min-height: calc(clamp(78px, 12vh, 130px) + 52px); place-content: center; }
+.tslot .plus { font-size: 2.2rem; color: var(--brass); line-height: 1; }
+.tslot.sel { box-shadow: 0 0 0 3px var(--brass-hi), 0 0 22px rgba(243,208,143,.55); transform: translateY(-3px); }
+.tslot.wait, .tslot.drop { animation: pulse 1s ease-in-out infinite; }
+.tslot.over { box-shadow: 0 0 0 3px var(--ok), 0 0 22px rgba(111,207,142,.6); transform: scale(1.04); }
+@keyframes pulse { 50% { box-shadow: 0 0 0 3px rgba(243,208,143,.7); } }
+.tslot .rm { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: .75rem; background: rgba(0,0,0,.55); border: 1px solid var(--line); color: var(--muted); }
+.mu { position: absolute; top: 6px; left: 6px; font-size: .6rem; font-weight: 800; padding: 1px 6px; border-radius: 6px; }
+.mu.good, .tag.good { background: var(--ok); color: var(--ink); }
+.mu.bad, .tag.bad { background: var(--bad); color: var(--ink); }
+.thint { margin: 0; font-size: .82rem; color: var(--muted); text-align: center; }
+.tbar { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.tfilter { display: flex; gap: 6px; flex-wrap: wrap; min-width: 0; }
+.fchip { font-size: .74rem; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--el, var(--line)); background: var(--ink-2); color: var(--el, var(--text)); font-weight: 600; }
+.fchip.on { background: var(--el, var(--brass)); color: var(--ink); }
+.troster { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
+.tcard { position: relative; display: grid; justify-items: center; gap: 1px; padding: 6px 4px 8px; border-radius: 14px; border: 1px solid var(--line); background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--el) 30%, transparent), var(--ink-2) 72%); color: var(--text); user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: pan-y; min-width: 0; }
+.tcard.r4 { border-color: color-mix(in srgb, var(--r4) 60%, var(--line)); }
+.tcard.r5 { border-color: var(--r5); }
+.tcard .face { height: 72px; display: grid; place-items: end center; pointer-events: none; overflow: hidden; }
+.tcard .face img { height: 72px; width: auto; max-width: 100%; object-fit: contain; }
+.tcard .nm { font-size: .78rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.tcard .meta { font-size: .62rem; color: var(--r5); }
+.tcard .pw { font-size: .66rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tcard.in { opacity: .55; }
+.tcard.in .tag.in { background: var(--brass); color: var(--ink); }
+.tcard.pend { box-shadow: 0 0 0 3px var(--brass-hi); }
+.tcard.lift { opacity: .4; }
+.tag { position: absolute; top: 4px; left: 4px; font-size: .56rem; font-weight: 800; padding: 1px 5px; border-radius: 5px; }
+.ghost { position: fixed; z-index: 100; width: 84px; height: 84px; transform: translate(-50%, -70%); pointer-events: none; display: grid; place-items: end center; filter: drop-shadow(0 8px 10px rgba(0,0,0,.6)); }
+.ghost img { height: 84px; width: auto; }
+.teambtn { width: 54px; height: 54px; border-radius: 50%; border: 2px solid var(--brass); background: rgba(10,12,32,.7); backdrop-filter: blur(6px); color: var(--brass-hi); display: grid; place-items: center; padding: 0; box-shadow: 0 4px 10px rgba(0,0,0,.4); }
+.teambtn svg { width: 26px; height: 26px; }
+.u.hero { cursor: pointer; }
 </style>
 
 <div class="game">
@@ -337,6 +383,7 @@ body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.s
   <div class="bossbar" id="bossbar" hidden><span class="nm"></span><div class="bar"><b></b></div></div>
 
   <div class="ctl-l">
+    <button class="teambtn" id="teambtn" aria-label="Modifier l'équipe"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="5" cy="9.5" r="2.4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="19" cy="9.5" r="2.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6.5 20c.6-3.6 3-5.5 5.5-5.5s4.9 1.9 5.5 5.5M1.5 18c.3-2.4 1.6-3.8 3.5-4M22.5 18c-.3-2.4-1.6-3.8-3.5-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
     <button class="chest" id="chest" aria-label="Récolter le coffre d'absence">
       <svg viewBox="0 0 64 56" aria-hidden="true"><path d="M6 24h52v26a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4z" fill="#8a5a2b"/><path d="M6 24c0-12 10-20 26-20s26 8 26 20z" fill="#a8703a"/><path d="M6 24h52v6H6z" fill="#d9ad62"/><path d="M14 8v46M50 8v46" stroke="#d9ad62" stroke-width="4"/><rect x="26" y="26" width="12" height="12" rx="2" fill="#f3d08f" stroke="#6b4420" stroke-width="2"/></svg>
       <span class="amt">0</span>
@@ -351,6 +398,7 @@ body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.s
   <section class="drawer" id="sheet" hidden>
     <div class="drawer-head"><span class="grab"></span><h2 id="sheet-title"></h2><button class="x" id="sheet-close" aria-label="Fermer">✕</button></div>
     <div class="drawer-body">
+      <div class="panel" id="p-team"></div>
       <div class="panel" id="p-heroes"></div>
       <div class="panel" id="p-summon"></div>
       <div class="panel" id="p-missions"></div>
@@ -572,11 +620,13 @@ function renderHeroes() {
   const sorted = owned.sort((a, b) => b.r - a.r || stats(b.id).power - stats(a.id).power);
   $("#p-heroes").innerHTML = `
     ${ui.sel ? sheetHTML(ui.sel) : ""}
+    <button class="btn primary" id="goteam" style="justify-self:start">Modifier l'équipe</button>
     <div class="toolbar"><div><p class="eyebrow">Collection</p><h2>${owned.length} / ${HEROES.length} héros</h2></div><span class="muted">Point doré = dans l'équipe (${S.team.length}/3)</span></div>
     <div class="roster">${sorted.map(h => cardHTML(h.id, { button: true, showTeam: true })).join("")}${missing.map(h => cardHTML(h.id, { locked: true })).join("")}</div>
   `;
   document.querySelectorAll("#p-heroes [data-hero]").forEach(b => b.onclick = () => { ui.sel = b.dataset.hero; renderHeroes(); $("#p-heroes .sheet")?.scrollIntoView({ behavior: "smooth", block: "nearest" }); });
   bindSheet();
+  const gt = $("#goteam"); if (gt) gt.onclick = () => openTeam(null);
 }
 
 function sheetHTML(id) {
@@ -629,10 +679,10 @@ function bindSheet() {
     render();
   };
   $("#teamtg").onclick = () => {
-    if (S.team.includes(id)) S.team = S.team.filter(x => x !== id);
-    else if (S.team.length >= 3) return toast("L'équipe est complète (3 héros). Retirez-en un d'abord.");
+    if (S.team.includes(id)) { if (S.team.length <= 1) return toast("Gardez au moins un héros dans l'équipe."); S.team = S.team.filter(x => x !== id); }
+    else if (S.team.length >= 3) { toast("Touchez le héros à remplacer."); return openTeam(null, id); }
     else S.team.push(id);
-    save(); render();
+    teamChanged(); render();
   };
 }
 
@@ -1135,6 +1185,133 @@ function renderMissions() {
   document.querySelectorAll("[data-claim]").forEach(b => b.onclick = () => claim(b.dataset.claim));
 }
 
+/* ================== ÉQUIPE ================== */
+const ELS = ["Feu", "Eau", "Nature", "Terre", "Lumière", "Ombre", "Astre"];
+function matchup(heroEl, foes) {
+  const best = Math.max(...foes.map(f => elMult(heroEl, f.el))), worst = Math.max(...foes.map(f => elMult(f.el, heroEl)));
+  return best > 1 ? "good" : worst > 1 ? "bad" : "neutral";
+}
+function teamScore(id, foes) { const m = matchup(H[id].el, foes); return stats(id).power * (m === "good" ? 1.3 : m === "bad" ? 0.8 : 1); }
+let teamRestartT;
+function teamChanged() {
+  save(); renderHUD(); renderTeam();
+  clearTimeout(teamRestartT);
+  teamRestartT = setTimeout(() => { if (ui.battle) clearTimeout(ui.battle.timer); clearTimeout(autoT); ui.battle = null; if (S.team.length) startBattle(); else buildStage(null); }, 250);
+}
+function placeHero(id, slot) {
+  const t = S.team.slice(), from = t.indexOf(id);
+  if (slot == null) slot = t.length < 3 ? t.length : null;
+  if (slot == null) { ui.pending = id; ui.slot = null; renderTeam(); toast("Touchez l'emplacement à remplacer."); return; }
+  if (from === slot) return;
+  if (from >= 0) { t[from] = t[slot]; t[slot] = id; }          // échange de place
+  else if (slot < t.length) t[slot] = id;                          // remplacement
+  else t.push(id);                                                 // ajout
+  S.team = t.filter(Boolean); ui.slot = null; ui.pending = null;
+  const card = document.querySelector(`.tslot[data-slot="${Math.min(slot, S.team.length - 1)}"]`);
+  teamChanged();
+  const nc = document.querySelector(`.tslot[data-slot="${S.team.indexOf(id)}"]`); nc && nc.animate([{ transform: "scale(.85)" }, { transform: "scale(1.06)" }, { transform: "scale(1)" }], { duration: 320 });
+}
+function removeFromTeam(slot) {
+  if (S.team.length <= 1) return toast("Gardez au moins un héros dans l'équipe.");
+  S.team.splice(slot, 1); ui.slot = null; teamChanged();
+}
+function autoTeam() {
+  const foes = makeFoes(S.stage);
+  S.team = Object.keys(S.heroes).sort((a, b) => teamScore(b, foes) - teamScore(a, foes)).slice(0, 3);
+  ui.slot = null; ui.pending = null; teamChanged(); toast("Meilleure équipe placée pour l'étape " + S.stage + ".");
+}
+function faceImg(id) { const s = spriteOf(id); return s ? `<img src="${s}" alt="" draggable="false">` : `<span>${H[id].name[0]}</span>`; }
+function renderTeam() {
+  const box = $("#p-team"); if (!box) return;
+  const foes = makeFoes(S.stage), foeEls = [...new Set(foes.map(f => f.el))];
+  const filter = ui.filter || "all";
+  const slots = [0, 1, 2].map(i => {
+    const id = S.team[i], sel = ui.slot === i ? " sel" : "", wait = ui.pending && !sel ? " wait" : "";
+    if (!id) return `<button class="tslot empty${sel}${wait}" data-slot="${i}"><span class="plus">+</span><small>Emplacement ${i + 1}</small></button>`;
+    const h = H[id], o = S.heroes[id], m = matchup(h.el, foes);
+    return `<button class="tslot${sel}${wait}${evolved(o) ? " evo" : ""}" data-slot="${i}" data-id="${id}" style="--el:var(${EL[h.el]})">
+      <span class="face">${faceImg(id)}</span>
+      <span class="info"><b>${evolved(o) ? h.evo : h.name}</b><small>${h.el} · Niv. ${o.lvl}</small><small class="pw">⚔ ${stats(id).power.toLocaleString("fr-FR")}</small></span>
+      ${m !== "neutral" ? `<span class="mu ${m}">${m === "good" ? "Efficace" : "Faible"}</span>` : ""}
+      <span class="rm" data-rm="${i}" role="button" aria-label="Retirer ${h.name}">✕</span></button>`;
+  }).join("");
+  const owned = Object.keys(S.heroes).filter(id => filter === "all" || H[id].el === filter)
+    .sort((a, b) => teamScore(b, foes) - teamScore(a, foes));
+  const list = owned.map(id => {
+    const h = H[id], o = S.heroes[id], m = matchup(h.el, foes), inT = S.team.includes(id), pend = ui.pending === id;
+    return `<button class="tcard r${h.r}${inT ? " in" : ""}${pend ? " pend" : ""}${evolved(o) ? " evo" : ""}" data-id="${id}" style="--el:var(${EL[h.el]})">
+      <span class="face">${faceImg(id)}</span>
+      <span class="nm">${evolved(o) ? h.evo : h.name}</span>
+      <span class="meta">${"★".repeat(o.stars)} · Niv. ${o.lvl}</span>
+      <span class="pw">⚔ ${stats(id).power.toLocaleString("fr-FR")}</span>
+      ${inT ? `<span class="tag in">Équipe</span>` : m === "good" ? `<span class="tag good">Conseillé</span>` : m === "bad" ? `<span class="tag bad">Faible</span>` : ""}</button>`;
+  }).join("");
+  const totalPower = S.team.reduce((s, id) => s + stats(id).power, 0);
+  const hint = ui.slot != null ? `Choisissez le héros pour l'emplacement ${ui.slot + 1}.`
+    : ui.pending ? `Touchez l'emplacement où placer ${H[ui.pending].name}.`
+    : "Touchez un emplacement puis un héros, ou maintenez un héros et glissez-le sur un emplacement.";
+  box.innerHTML = `
+    <div class="foes">Étape ${S.stage}${isBoss(S.stage) ? " · Boss" : ""} — ennemis : ${foeEls.map(e => `<span class="elc" style="--el:var(${EL[e]})">${e}</span>`).join(" ")}
+      <span class="muted">· Puissance de l'équipe ⚔ ${totalPower.toLocaleString("fr-FR")}</span></div>
+    <div class="tslots">${slots}</div>
+    <p class="thint">${hint}</p>
+    <div class="tbar">
+      <div class="tfilter">${["all", ...ELS.filter(e => Object.keys(S.heroes).some(id => H[id].el === e))].map(e => `<button class="fchip${filter === e ? " on" : ""}" data-f="${e}" ${e !== "all" ? `style="--el:var(${EL[e]})"` : ""}>${e === "all" ? "Tous" : e}</button>`).join("")}</div>
+      <button class="btn primary" id="autoteam">Meilleure équipe</button>
+    </div>
+    <div class="troster">${list || `<p class="muted">Aucun héros de cet élément.</p>`}</div>`;
+  box.querySelectorAll(".tslot").forEach(b => b.onclick = e => {
+    const rm = e.target.closest("[data-rm]"); if (rm) { e.stopPropagation(); return removeFromTeam(+rm.dataset.rm); }
+    const i = +b.dataset.slot;
+    if (ui.pending) return placeHero(ui.pending, i);
+    ui.slot = ui.slot === i ? null : i; renderTeam();
+  });
+  box.querySelectorAll(".fchip").forEach(b => b.onclick = () => { ui.filter = b.dataset.f; renderTeam(); });
+  $("#autoteam").onclick = autoTeam;
+  box.querySelectorAll(".tcard").forEach(c => bindDrag(c));
+}
+function tapCard(id) {
+  if (ui.slot != null) return placeHero(id, ui.slot);
+  const i = S.team.indexOf(id);
+  if (i >= 0 && !ui.pending) { ui.slot = i; renderTeam(); return toast(`${H[id].name} est déjà dans l'équipe. Choisissez un autre héros pour le remplacer.`); }
+  placeHero(id, null);
+}
+// Appui long + glisser vers un emplacement ; un simple toucher garde le comportement normal
+function bindDrag(card) {
+  let timer, ghost, sx, sy, dragging = false, moved = false;
+  const id = card.dataset.id;
+  card.onpointerdown = e => {
+    sx = e.clientX; sy = e.clientY; moved = false; dragging = false;
+    timer = setTimeout(() => {
+      dragging = true; card.setPointerCapture(e.pointerId); card.classList.add("lift");
+      ghost = card.querySelector(".face").cloneNode(true); ghost.className = "ghost"; document.body.appendChild(ghost);
+      ghost.style.left = sx + "px"; ghost.style.top = sy + "px";
+      document.querySelectorAll(".tslot").forEach(s => s.classList.add("drop"));
+      navigator.vibrate && navigator.vibrate(15);
+    }, 240);
+  };
+  card.onpointermove = e => {
+    if (!dragging) { if (Math.hypot(e.clientX - sx, e.clientY - sy) > 10) { moved = true; clearTimeout(timer); } return; }
+    e.preventDefault(); ghost.style.left = e.clientX + "px"; ghost.style.top = e.clientY + "px";
+    const over = document.elementFromPoint(e.clientX, e.clientY)?.closest(".tslot");
+    document.querySelectorAll(".tslot").forEach(s => s.classList.toggle("over", s === over));
+  };
+  const end = e => {
+    clearTimeout(timer);
+    if (dragging) {
+      const over = document.elementFromPoint(e.clientX, e.clientY)?.closest(".tslot");
+      ghost && ghost.remove(); card.classList.remove("lift"); dragging = false;
+      document.querySelectorAll(".tslot").forEach(s => s.classList.remove("drop", "over"));
+      if (over) placeHero(id, Math.min(+over.dataset.slot, S.team.includes(id) ? 2 : S.team.length));
+      card.dataset.skipClick = "1"; return;
+    }
+  };
+  card.onpointerup = end; card.onpointercancel = e => { clearTimeout(timer); if (dragging) end(e); };
+  card.onclick = () => { if (card.dataset.skipClick) { delete card.dataset.skipClick; return; } if (!moved) tapCard(id); };
+  card.oncontextmenu = e => e.preventDefault();
+}
+function openTeam(slot, pending) { ui.slot = slot ?? null; ui.pending = pending || null; ui.tab = "team"; render(); }
+
 /* ================== GÉNÉRAL ================== */
 let toastT;
 function toast(msg) {
@@ -1142,7 +1319,7 @@ function toast(msg) {
   const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); t.textContent = msg; document.body.appendChild(t);
   clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2600);
 }
-const SHEET_TITLES = { heroes: "Héros", summon: "Invocation", missions: "Missions", info: "Journal & infos" };
+const SHEET_TITLES = { team: "Équipe", heroes: "Héros", summon: "Invocation", missions: "Missions", info: "Journal & infos" };
 function renderInfo() {
   const r = idleRate(), p = pending();
   $("#p-info-top").innerHTML = `
@@ -1156,22 +1333,26 @@ function render() {
   $("#sheet").hidden = !open; document.body.classList.toggle("sheet-open", open);
   if (open) $("#sheet-title").textContent = SHEET_TITLES[ui.tab] || "";
   document.querySelectorAll(".dock button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === ui.tab));
-  ["summon", "heroes", "missions", "info"].forEach(t => { $("#p-" + t).hidden = ui.tab !== t; });
+  ["team", "summon", "heroes", "missions", "info"].forEach(t => { $("#p-" + t).hidden = ui.tab !== t; });
   if (ui.tab === "summon") renderSummon();
   if (ui.tab === "heroes") renderHeroes();
   if (ui.tab === "missions") renderMissions();
   if (ui.tab === "info") renderInfo();
+  if (ui.tab === "team") renderTeam();
 }
 function openTab(t) {
   daily();
   if (t === ui.tab && t !== "battle") t = "battle";
   if (t !== "summon") ui.lastPull = [];
+  if (t !== "team") { ui.slot = null; ui.pending = null; }
   ui.tab = t; render();
   if (t !== "battle") $("#sheet .drawer-body").scrollTop = 0;
 }
 document.querySelectorAll(".dock button").forEach(b => b.onclick = () => openTab(b.dataset.tab));
 $("#sheet-close").onclick = () => openTab("battle");
 $("#chest").onclick = collect;
+$("#teambtn").onclick = () => openTeam(null);
+$("#stage").onclick = e => { const u = e.target.closest(".u.hero"); if (u) openTeam(+u.id.slice(3)); };
 $("#spd").onclick = () => { S.speed = speed() === 2 ? 1 : 2; save(); renderHUD(); };
 $("#auto").onclick = () => { S.auto = !S.auto; save(); renderHUD(); toast(S.auto ? "Combats en boucle activés." : "Combats en boucle désactivés."); if (S.auto && !(ui.battle && !ui.battle.done)) scheduleAuto(); else if (!S.auto) clearTimeout(autoT); };
 $("#fightbtn").onclick = () => { clearTimeout(autoT); ui.battle = null; startBattle(); };
