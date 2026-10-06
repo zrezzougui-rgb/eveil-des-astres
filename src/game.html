@@ -629,6 +629,29 @@ body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.s
 .dlog { margin-top: 10px; font-size: .75rem; color: var(--muted); display: grid; gap: 2px; } .dlog div:first-child { color: var(--text); }
 .dend { text-align: center; padding: 16px; border-radius: 16px; border: 1px solid var(--line); display: grid; gap: 8px; justify-items: center; } .dend.win { border-color: var(--gold-1); } .dend h3 { margin: 0; color: var(--gold-1); }
 #dquit { margin-top: 12px; justify-self: center; width: 100%; opacity: .7; }
+/* ---------- Explorations ---------- */
+.adv-card.explo-card { border-color: color-mix(in srgb, #5fd3b0 45%, var(--line)); background: radial-gradient(circle at 90% 0%, rgba(95,211,176,.18), transparent 55%), linear-gradient(160deg, var(--ink-2), var(--ink)); }
+.xtop { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: .8rem; }
+.xtop .btn { display: inline-flex; align-items: center; gap: 4px; } .xtop .btn .ico, .xhurry .ico { width: 18px; height: 18px; }
+.xcard { display: grid; gap: 7px; padding: 12px; margin-bottom: 10px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--rc) 55%, var(--line)); background: radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--rc) 22%, transparent), transparent 55%), linear-gradient(160deg, var(--ink-2), var(--ink)); }
+.xcard.ready { box-shadow: 0 0 0 2px var(--gold-1), 0 0 18px rgba(255,214,120,.35); }
+.xh1 { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; } .xh1 b { font-size: .95rem; color: var(--text); }
+.xr { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--rc); white-space: nowrap; }
+.xmeta { display: flex; flex-wrap: wrap; gap: 6px; font-size: .75rem; color: var(--muted); align-items: center; }
+.xreq { padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--text); } .xreq.ok { border-color: #5fd38a; color: #9df0bb; } .xreq.ok::before { content: "✓ "; } .xreq.no { border-color: #e5574f; color: #ffaaa4; }
+.xrw { display: flex; flex-wrap: wrap; gap: 8px; font-size: .8rem; }
+.xteam { display: flex; gap: 6px; } .xteam img { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; border: 1px solid var(--line); }
+.xprog { position: relative; height: 22px; border-radius: 11px; background: rgba(0,0,0,.35); overflow: hidden; border: 1px solid var(--line); }
+.xprog b { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, color-mix(in srgb, var(--rc) 60%, #222), var(--rc)); transition: width 1s linear; }
+.xprog span { position: relative; display: block; text-align: center; font-size: .75rem; line-height: 22px; font-weight: 700; text-shadow: 0 1px 2px #000; }
+.xhurry { justify-self: start; display: inline-flex; align-items: center; gap: 4px; font-size: .8rem; } .xhurry.confirm { border-color: var(--gold-1); color: var(--gold-1); }
+.xpick { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.xh { position: relative; padding: 0; border: 2px solid transparent; border-radius: 12px; background: none; cursor: pointer; } .xh img { width: 100%; aspect-ratio: 1; height: auto; object-fit: cover; border-radius: 10px; display: block; border: 1px solid var(--el); }
+.xh i { position: absolute; right: 3px; bottom: 2px; font-style: normal; font-size: .62rem; font-weight: 800; color: var(--gold-1); text-shadow: 0 1px 2px #000; }
+.xh.on { border-color: var(--gold-1); box-shadow: 0 0 10px rgba(255,214,120,.5); } .xh.on::after { content: "✓"; position: absolute; top: 2px; left: 4px; color: var(--gold-1); font-weight: 900; text-shadow: 0 1px 2px #000; }
+.xcard .actions { display: flex; gap: 8px; flex-wrap: wrap; } .xopen, .xclaim { justify-self: start; }
+.xfoot { font-size: .72rem; }
+#tab-adv { position: relative; }
 </style>
 
 <div class="game">
@@ -671,6 +694,7 @@ body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.s
       <div class="panel" id="p-forge"></div>
       <div class="panel" id="p-relics"></div>
       <div class="panel" id="p-derive"></div>
+      <div class="panel" id="p-explo"></div>
       <div class="panel" id="p-heroes"></div>
       <div class="panel" id="p-summon"></div>
       <div class="panel" id="p-missions"></div>
@@ -1536,6 +1560,10 @@ function allDone() { const d = daily(); return MISSIONS.every(m => d.claimed[m.i
 function renderBadge() {
   const t = $("#tab-missions"); if (!t) return; const n = claimable() + (S.pass ? claimablePass() : 0) + (calReady() ? 1 : 0);
   t.querySelector(".badge-slot").innerHTML = n ? `<span class="badge">${n}</span>` : "";
+  const ta = $("#tab-adv"); if (ta && typeof exploReady === "function") {
+    let sl = ta.querySelector(".badge-slot"); if (!sl) { sl = document.createElement("span"); sl.className = "badge-slot"; ta.appendChild(sl); }
+    const k = exploReady(); sl.innerHTML = k ? `<span class="badge">${k}</span>` : "";
+  }
 }
 function claim(id) {
   const d = daily();
@@ -1897,6 +1925,7 @@ function renderAdv() {
       <p class="muted">Un sanctuaire par jour (lundi Feu, mardi Eau, mercredi Nature, jeudi Terre, vendredi Lumière, samedi Ombre). ${SANCT_TRIES} essais par jour. Un niveau réussi peut être balayé sans combattre.</p>
       ${sanctHTML}
     </div>
+    ${exploCardHTML()}
     ${deriveCardHTML()}
     <div class="adv-card soon">
       <div class="adv-head"><h3>${ico("shard", "big")} Éclats errants : ${S.shards || 0}</h3></div>
@@ -1905,10 +1934,156 @@ function renderAdv() {
     </div>`;
   $("#advforge").onclick = () => openForge(null);
   $("#derivego").onclick = () => openTab("derive");
+  $("#explogo").onclick = () => openTab("explo");
   $("#towergo").onclick = startTower;
   box.querySelectorAll("[data-sanct]").forEach(b => b.onclick = () => startSanct(b.dataset.sanct, +b.dataset.l));
   box.querySelectorAll(".sweep").forEach(b => b.onclick = () => sweepSanct(b.dataset.el));
 }
+
+/* ================== EXPLORATIONS (missions minutées, même jeu fermé) ================== */
+// Tableau de missions renouvelé chaque jour. Les héros envoyés continuent de combattre ailleurs,
+// mais un héros ne peut suivre qu'une exploration à la fois.
+const XRAR = [
+  { n: "Commune", c: "#9aa7bd", dur: 1, heroes: 1, gems: 120, pots: 6, shards: 0, relic: 0 },
+  { n: "Rare", c: "#5aa9ff", dur: 2, heroes: 2, gems: 300, pots: 15, shards: 1, relic: .3 },
+  { n: "Épique", c: "#c27bff", dur: 4, heroes: 3, gems: 700, pots: 35, shards: 2, relic: 1 },
+  { n: "Légendaire", c: "#ffc75a", dur: 8, heroes: 3, gems: 1600, pots: 80, shards: 4, relic: 1 },
+];
+const XPLACES = ["Ruines englouties", "Col de givre", "Forêt chantante", "Mines de quartz", "Marais luminescent", "Désert de verre", "Archipel brumeux", "Tour effondrée", "Grotte aux échos", "Plaine des comètes", "Jardin suspendu", "Cratère d'obsidienne"];
+const XTASKS = ["Cartographie", "Fouille", "Escorte", "Récolte", "Chasse", "Reconnaissance"];
+const XELS = ["Feu", "Eau", "Nature", "Terre", "Lumière", "Ombre"], XCLS = ["Guerrier", "Mage", "Archer", "Assassin", "Soigneur", "Gardien"];
+const HOUR = 3600000;
+const pickR = a => a[Math.floor(Math.random() * a.length)];
+function exploSize() { return 5 + (S.stage >= 20) + (S.stage >= 50); }
+function makeMission() {
+  const x = Math.random(), rar = x < .5 ? 0 : x < .8 ? 1 : x < .95 ? 2 : 3, R = XRAR[rar], k = 1 + S.stage / 40;
+  const req = [];
+  if (rar >= 1) req.push({ el: pickR(XELS) });
+  if (rar >= 2) req.push(rar === 2 ? { stars: 4, k: 1 } : { stars: 5, k: 2 });
+  if (rar === 3) req.push({ cls: pickR(XCLS) });
+  return { id: Math.random().toString(36).slice(2, 9), name: `${pickR(XTASKS)} · ${pickR(XPLACES)}`, rar, dur: R.dur * HOUR, n: R.heroes, req,
+    reward: { gems: Math.round(R.gems * k), pots: Math.round(R.pots * k), shards: R.shards }, relic: R.relic, start: null, heroes: [] };
+}
+function explo() {
+  if (!S.explo) S.explo = { day: "", board: [] };
+  const X = S.explo;
+  if (X.day !== today()) { // nouveau tableau du jour : les missions en cours sont conservées
+    X.day = today(); X.board = X.board.filter(m => m.start);
+    while (X.board.length < exploSize()) X.board.push(makeMission());
+  }
+  return X;
+}
+const xDone = m => m.start && Date.now() >= m.start + m.dur;
+function exploReady() { return S.explo ? S.explo.board.filter(xDone).length : 0; }
+const busyIds = () => new Set(explo().board.filter(m => m.start).flatMap(m => m.heroes));
+function reqTxt(r) { return r.el ? `1 héros ${r.el}` : r.stars ? `${r.k || 1} héros ★${r.stars}+` : `1 ${r.cls}`; }
+function reqOk(r, ids) {
+  if (r.el) return ids.some(id => H[id].el === r.el);
+  if (r.stars) return ids.filter(id => S.heroes[id].stars >= r.stars).length >= (r.k || 1);
+  return ids.some(id => H[id].cls === r.cls);
+}
+const missionOk = (m, ids) => ids.length === m.n && m.req.every(r => reqOk(r, ids));
+function autoPick(m) {
+  const busy = busyIds(), pool = Object.keys(S.heroes).filter(id => !busy.has(id));
+  const ok = pool, out = [], sr = m.req.find(r => r.stars);
+  if (sr) ok.filter(id => S.heroes[id].stars >= sr.stars).sort((a, b) => m.req.filter(r => !r.stars && reqOk(r, [b])).length - m.req.filter(r => !r.stars && reqOk(r, [a])).length).slice(0, sr.k || 1).forEach(id => out.push(id));
+  for (const r of m.req.filter(r => !r.stars)) { if (!out.some(id => reqOk(r, [id]))) { const h = ok.filter(id => !out.includes(id)).sort((a, b) => S.heroes[a].stars - S.heroes[b].stars).find(id => reqOk(r, [id])); if (h) out.push(h); } }
+  // compléter avec les héros les moins précieux (le combat n'est pas affecté, mais on garde les meilleurs disponibles pour les autres missions exigeantes)
+  ok.filter(id => !out.includes(id)).sort((a, b) => S.heroes[a].stars - S.heroes[b].stars || stats(a).power - stats(b).power).forEach(id => { if (out.length < m.n) out.push(id); });
+  return out.slice(0, m.n);
+}
+function sendMission(mid, ids) {
+  const m = explo().board.find(x => x.id === mid); if (!m || m.start || !missionOk(m, ids)) return;
+  m.heroes = ids.slice(); m.start = Date.now(); ui.xsel = null; save(); renderExplo();
+  toast(`${m.name} : départ ! Retour dans ${fmtWait(m.dur)}.`);
+}
+function claimMission(mid, el) {
+  const X = explo(), m = X.board.find(x => x.id === mid); if (!m || !xDone(m)) return;
+  grant(m.reward); passXP(10);
+  if (m.relic && Math.random() < m.relic) setTimeout(() => gainRelic(Math.max(rollRarity(S.stage), m.rar >= 3 ? 2 : m.rar >= 2 ? 1 : 0)), 700);
+  X.board.splice(X.board.indexOf(m), 1);
+  gemBurst(6, el); setTimeout(renderWallet, 900);
+  toast(`${m.name} terminée : ${rewardTxt(m.reward)}.`);
+  save(); renderExplo(); renderBadge();
+}
+function claimAllMissions() { explo().board.filter(xDone).map(m => m.id).forEach(id => claimMission(id)); }
+const hurryCost = m => Math.max(10, Math.ceil((m.start + m.dur - Date.now()) / 60000) * 2);
+function hurryMission(mid) {
+  const m = explo().board.find(x => x.id === mid); if (!m || !m.start || xDone(m)) return;
+  const c = hurryCost(m); if (S.gems < c) return toast("Pas assez de gemmes.");
+  S.gems -= c; m.start = Date.now() - m.dur; save(); renderWallet(); renderExplo(); renderBadge();
+}
+const XREFRESH = 60;
+function refreshBoard() {
+  const X = explo(), idle = X.board.filter(m => !m.start).length; if (!idle) return toast("Toutes les missions sont déjà en cours.");
+  if (S.gems < XREFRESH) return toast("Pas assez de gemmes.");
+  S.gems -= XREFRESH; X.board = X.board.map(m => m.start ? m : makeMission()); ui.xsel = null; save(); renderWallet(); renderExplo();
+}
+function exploCardHTML() {
+  const X = explo(), run = X.board.filter(m => m.start && !xDone(m)).length, done = exploReady(), free = X.board.filter(m => !m.start).length;
+  return `<div class="adv-card explo-card">
+    <div class="adv-head"><h3>Explorations</h3><span class="floor">${done ? `${done} à récolter` : `${run} en cours`}</span></div>
+    <p class="muted">Envoyez vos héros en mission quelques heures : ils reviennent avec gemmes, potions, éclats et reliques, même jeu fermé.</p>
+    <p class="rw">${free} mission${free > 1 ? "s" : ""} disponible${free > 1 ? "s" : ""} · nouveau tableau chaque jour</p>
+    <button class="btn primary big" id="explogo">${done ? "Récolter les explorations" : "Ouvrir les Explorations"}</button>
+  </div>`;
+}
+function xRewardHTML(m) { return rewardHTML(m.reward) + (m.relic ? `<span class="rwi">${ico("amulet")}${m.relic >= 1 ? "Relique" : Math.round(m.relic * 100) + " %"}</span>` : ""); }
+function renderExplo() {
+  const box = $("#p-explo"); if (!box) return;
+  const X = explo(), busy = busyIds(), done = exploReady(), sel = ui.xsel;
+  const cards = X.board.slice().sort((a, b) => (xDone(b) - xDone(a)) || (!!b.start - !!a.start) || b.rar - a.rar).map(m => {
+    const R = XRAR[m.rar], ready = xDone(m), open = sel && sel.id === m.id, ids = open ? sel.ids : m.heroes;
+    const reqs = m.req.map(r => `<span class="xreq ${(open || m.start) ? (reqOk(r, ids) ? "ok" : "no") : ""}">${reqTxt(r)}</span>`).join("");
+    let body = "";
+    if (m.start) {
+      const end = m.start + m.dur;
+      body = `<div class="xteam">${m.heroes.map(id => `<img src="${artOf(id)}" alt="">`).join("")}</div>
+        ${ready ? `<button class="btn primary xclaim" data-c="${m.id}">Récolter</button>`
+          : `<div class="xprog" data-s="${m.start}" data-e="${end}"><b style="width:${(Date.now() - m.start) / m.dur * 100}%"></b><span>${fmtWait(end - Date.now())}</span></div>
+             <button class="btn xhurry" data-h="${m.id}">Terminer · ${ico("gem")}${hurryCost(m)}</button>`}`;
+    } else if (open) {
+      const pool = Object.keys(S.heroes).filter(id => !busy.has(id)).sort((a, b) => S.heroes[b].stars - S.heroes[a].stars || stats(b).power - stats(a).power);
+      body = `<p class="eyebrow">Choisissez ${m.n} héros (${sel.ids.length}/${m.n})</p>
+        <div class="xpick">${pool.map(id => { const on = sel.ids.includes(id), o = S.heroes[id];
+          return `<button class="xh${on ? " on" : ""}" data-x="${id}" style="--el:var(${EL[H[id].el]})"><img src="${artOf(id)}" alt=""><i>★${o.stars}</i></button>`; }).join("") || `<p class="muted">Tous vos héros sont déjà en exploration.</p>`}</div>
+        <div class="actions"><button class="btn" id="xauto">Auto</button><button class="btn primary" id="xsend" ${missionOk(m, sel.ids) ? "" : "disabled"}>Envoyer</button><button class="btn" id="xcancel">Annuler</button></div>`;
+    } else body = `<button class="btn primary xopen" data-o="${m.id}">Choisir les héros</button>`;
+    return `<div class="xcard${ready ? " ready" : ""}${m.start && !ready ? " run" : ""}" style="--rc:${R.c}">
+      <div class="xh1"><b>${m.name}</b><span class="xr">${R.n}</span></div>
+      <div class="xmeta"><span>⏱ ${m.dur / HOUR} h</span><span>👥 ${m.n}</span>${reqs}</div>
+      <div class="xrw">${xRewardHTML(m)}</div>
+      ${body}
+    </div>`;
+  }).join("");
+  box.innerHTML = `<div class="xtop">
+      <span class="muted">Héros en mission : ${busy.size}/${Object.keys(S.heroes).length}</span>
+      ${done > 1 ? `<button class="btn primary" id="xall">Tout récolter (${done})</button>` : ""}
+      <button class="btn" id="xref">${ico("gem")}${XREFRESH} · Nouvelles missions</button>
+    </div>${cards}
+    <p class="muted xfoot">Les héros en exploration peuvent toujours combattre. Le tableau se renouvelle chaque jour (les missions en cours sont conservées) ; « Nouvelles missions » remplace celles qui n'ont pas encore commencé. Plus vous avancez dans la campagne, plus les récompenses grandissent ; une 6ᵉ mission s'ajoute à l'étape 20, une 7ᵉ à l'étape 50.</p>`;
+  box.querySelectorAll(".xopen").forEach(b => b.onclick = () => { ui.xsel = { id: b.dataset.o, ids: [] }; renderExplo(); });
+  box.querySelectorAll(".xclaim").forEach(b => b.onclick = () => claimMission(b.dataset.c, b));
+  box.querySelectorAll(".xhurry").forEach(b => b.onclick = () => { if (b.dataset.ok) hurryMission(b.dataset.h); else { b.dataset.ok = 1; b.classList.add("confirm"); b.firstChild.textContent = "Confirmer · "; } });
+  box.querySelectorAll(".xh").forEach(b => b.onclick = () => { const m = X.board.find(x => x.id === sel.id), i = sel.ids.indexOf(b.dataset.x);
+    if (i >= 0) sel.ids.splice(i, 1); else if (sel.ids.length < m.n) sel.ids.push(b.dataset.x); else { sel.ids.shift(); sel.ids.push(b.dataset.x); } renderExplo(); });
+  const g = id => box.querySelector("#" + id);
+  g("xauto") && (g("xauto").onclick = () => { const m = X.board.find(x => x.id === sel.id); sel.ids = autoPick(m); if (!missionOk(m, sel.ids)) toast("Aucune équipe disponible ne remplit toutes les conditions."); renderExplo(); });
+  g("xsend") && (g("xsend").onclick = () => sendMission(sel.id, sel.ids));
+  g("xcancel") && (g("xcancel").onclick = () => { ui.xsel = null; renderExplo(); });
+  g("xall") && (g("xall").onclick = claimAllMissions);
+  g("xref").onclick = refreshBoard;
+}
+setInterval(() => {
+  if (!S || !S.explo) return;
+  if (ui.tab === "explo") {
+    let fin = false;
+    document.querySelectorAll("#p-explo .xprog").forEach(p => { const s0 = +p.dataset.s, e = +p.dataset.e, now = Date.now();
+      if (now >= e) fin = true; p.querySelector("b").style.width = Math.min(100, (now - s0) / (e - s0) * 100) + "%"; p.querySelector("span").textContent = fmtWait(e - now); });
+    if (fin) renderExplo();
+  }
+  renderBadge();
+}, 5000);
 
 /* ================== DÉRIVE CÉLESTE (expédition quotidienne, chemin au choix) ================== */
 // 3 actes de 5 carrefours + 1 Gardien. Les PV des héros sont conservés d'un combat à l'autre,
@@ -2442,7 +2617,7 @@ function toast(msg) {
   const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); t.textContent = msg; document.body.appendChild(t);
   clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2600);
 }
-const SHEET_TITLES = { derive: "Dérive céleste", relics: "Reliques", missions: "Missions & Carnet lunaire", forge: "Forge stellaire", adv: "Aventures", team: "Équipe", heroes: "Héros", summon: "Invocation", info: "Journal & infos" };
+const SHEET_TITLES = { explo: "Explorations", derive: "Dérive céleste", relics: "Reliques", missions: "Missions & Carnet lunaire", forge: "Forge stellaire", adv: "Aventures", team: "Équipe", heroes: "Héros", summon: "Invocation", info: "Journal & infos" };
 function renderInfo() {
   const r = idleRate(), p = pending();
   $("#p-info-top").innerHTML = `
@@ -2456,7 +2631,7 @@ function render() {
   $("#sheet").hidden = !open; document.body.classList.toggle("sheet-open", open);
   if (open) $("#sheet-title").textContent = SHEET_TITLES[ui.tab] || "";
   document.querySelectorAll(".dock button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === ui.tab));
-  ["derive", "relics", "forge", "adv", "team", "summon", "heroes", "missions", "info"].forEach(t => { $("#p-" + t).hidden = ui.tab !== t; });
+  ["explo", "derive", "relics", "forge", "adv", "team", "summon", "heroes", "missions", "info"].forEach(t => { $("#p-" + t).hidden = ui.tab !== t; });
   if (ui.tab === "summon") renderSummon();
   if (ui.tab === "heroes") renderHeroes();
   if (ui.tab === "missions") renderMissions();
@@ -2466,6 +2641,7 @@ function render() {
   if (ui.tab === "forge") renderForge();
   if (ui.tab === "relics") renderRelics();
   if (ui.tab === "derive") renderDerive();
+  if (ui.tab === "explo") renderExplo();
 }
 function openTab(t) {
   daily();
