@@ -581,6 +581,31 @@ body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.s
 .altar .meter .row { flex-wrap: wrap; gap: 0 6px; }
 .altar .pull-btns { gap: 8px; }
 .altar .pull-btns .btn { flex: 1 1 0; padding: 10px 8px; }
+/* ---------- Reliques ---------- */
+.rslots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.rslot { position: relative; display: grid; justify-items: center; gap: 2px; padding: 8px 4px 6px; border-radius: 12px; border: 2px solid var(--rc); color: var(--text);
+  background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--rc) 35%, transparent), rgba(0,0,0,.35) 70%); box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 0 10px color-mix(in srgb, var(--rc) 35%, transparent); }
+.rslot .ico { width: 40px; height: 40px; } .rslot small { font-size: .62rem; color: var(--muted); }
+.rslot.empty { border-style: dashed; box-shadow: none; } .rslot .ico.ghost { filter: grayscale(1) brightness(.5); opacity: .45; }
+.rslot.on { outline: 2px solid var(--brass-hi); outline-offset: 2px; }
+.rl { position: absolute; top: 3px; right: 5px; font-style: normal; font-size: .62rem; font-weight: 800; color: #fff; text-shadow: 0 1px 2px #000; }
+.rgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; }
+.rtile { position: relative; aspect-ratio: 1; border-radius: 12px; border: 2px solid var(--rc); display: grid; place-items: center; padding: 6px;
+  background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--rc) 40%, transparent), rgba(0,0,0,.4) 72%); box-shadow: inset 0 1px 0 rgba(255,255,255,.12); }
+.rtile .ico { width: 100%; height: 100%; }
+.rtile .rh { position: absolute; bottom: -4px; right: -4px; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--ink); object-fit: cover; }
+.rtile.rsel { outline: 2px solid var(--brass-hi); outline-offset: 2px; box-shadow: 0 0 14px var(--rc); }
+.rdetail { border-color: var(--rc) !important; }
+.rdh { display: flex; gap: 10px; align-items: center; } .rdh h3 { margin: 0; font-family: var(--f-display); font-weight: 400; color: var(--gold-1); }
+.rdh .ico.big { width: 48px; height: 48px; }
+.setline { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 2px 0 0; font-size: .74rem; color: var(--astral); }
+.relic-hero .fg-hero img { height: 110px; }
+.sheet-relics { display: grid; gap: 6px; } .sheet-relics .rslots .ico { width: 32px; height: 32px; }
+.relicdrop { position: fixed; z-index: 85; left: 50%; top: calc(120px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); display: flex; gap: 10px; align-items: center; padding: 8px 16px 8px 10px; border-radius: 14px;
+  background: linear-gradient(180deg, var(--plate-1), var(--plate-2)); border: 2px solid var(--rc); box-shadow: 0 0 20px color-mix(in srgb, var(--rc) 60%, transparent), 0 8px 18px rgba(0,0,0,.5);
+  animation: dropin 2.6s cubic-bezier(.2,1.4,.4,1) both; pointer-events: none; }
+.relicdrop .ico { width: 40px; height: 40px; } .relicdrop span { display: grid; } .relicdrop small { color: var(--rc); font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; } .relicdrop b { color: var(--gold-1); font-size: .9rem; }
+@keyframes dropin { 0% { opacity: 0; transform: translateX(-50%) translateY(-20px) scale(.6); } 12% { opacity: 1; transform: translateX(-50%) scale(1.05); } 20% { transform: translateX(-50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) translateY(-10px); } }
 </style>
 
 <div class="game">
@@ -621,6 +646,7 @@ body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.s
       <div class="panel" id="p-team"></div>
       <div class="panel" id="p-adv"></div>
       <div class="panel" id="p-forge"></div>
+      <div class="panel" id="p-relics"></div>
       <div class="panel" id="p-heroes"></div>
       <div class="panel" id="p-summon"></div>
       <div class="panel" id="p-missions"></div>
@@ -748,7 +774,9 @@ const evolved = o => o.stars >= MAXSTAR;
 function stats(id) {
   const h = H[id], o = S.heroes[id];
   const m = (1 + (o.lvl - 1) * 0.05) * (1 + (o.stars - h.r) * 0.15) * (evolved(o) ? 1.25 : 1);
-  return { hp: Math.round(h.hp * m), atk: Math.round(h.atk * m), power: Math.round((h.hp * m) / 4 + h.atk * m * 2) };
+  const rb = typeof relicBonus === "function" && S.relics ? relicBonus(id) : { atk: 0, hp: 0 };
+  const hp = h.hp * m * (1 + rb.hp), atk = h.atk * m * (1 + rb.atk);
+  return { hp: Math.round(hp), atk: Math.round(atk), power: Math.round(hp / 4 + atk * 2) };
 }
 function rate5() { return S.pity5 + 1 >= HARD ? 1 : RATE5 + Math.max(0, S.pity5 + 1 - SOFT) * 0.07; }
 function rollOne() {
@@ -852,7 +880,7 @@ function renderHeroes() {
   const sorted = owned.sort((a, b) => b.r - a.r || stats(b.id).power - stats(a.id).power);
   $("#p-heroes").innerHTML = `
     ${ui.sel ? sheetHTML(ui.sel) : ""}
-    <div class="actions"><button class="btn primary" id="goteam">Modifier l'équipe</button><button class="btn" id="goforge">Forge stellaire</button></div>
+    <div class="actions"><button class="btn primary" id="goteam">Modifier l'équipe</button><button class="btn" id="goforge">Forge stellaire</button><button class="btn" id="gorelics">Reliques</button></div>
     <div class="toolbar"><div><p class="eyebrow">Collection</p><h2>${owned.length} / ${HEROES.length} héros</h2></div><span class="muted">Point doré = dans l'équipe (${teamIds().length}/3)</span></div>
     <div class="roster">${sorted.map(h => cardHTML(h.id, { button: true, showTeam: true })).join("")}${missing.map(h => cardHTML(h.id, { locked: true })).join("")}</div>
   `;
@@ -860,6 +888,7 @@ function renderHeroes() {
   bindSheet();
   const gt = $("#goteam"); if (gt) gt.onclick = () => openTeam(null);
   const gf = $("#goforge"); if (gf) gf.onclick = () => openForge(null);
+  const gr = $("#gorelics"); if (gr) gr.onclick = () => openRelics(ui.sel, null);
 }
 
 function sheetHTML(id) {
@@ -884,6 +913,7 @@ function sheetHTML(id) {
         <div class="stat"><small>Attaque</small><b>${st.atk}</b></div>
         <div class="stat"><small>Doublons</small><b>${o.dupes}</b></div>
       </div>
+      <div class="sheet-relics"><p class="eyebrow">Reliques · touchez un emplacement</p>${relicSlotsHTML(id, false)}</div>
       <div><p class="eyebrow" style="margin-bottom:6px">Chemin d'éveil</p>
         <div class="path" style="grid-template-columns:repeat(${steps.length},1fr)">${steps.map(s => `<div class="${s < o.stars ? "done" : s === o.stars ? "now" : ""}">★${s}${s === MAXSTAR ? " · Évolution" : ""}</div>`).join("")}</div>
       </div>
@@ -905,6 +935,7 @@ function bindSheet() {
   $("#lv1").onclick = () => { up(); save(); render(); };
   $("#lvmax").onclick = () => { let n = 0; while (up()) n++; save(); render(); toast(`${h.name} gagne ${n} niveau${n > 1 ? "x" : ""}.`); };
   $("#starup").onclick = () => openForge(id);
+  document.querySelectorAll("#p-heroes .sheet-relics .rslot").forEach(b => b.onclick = () => openRelics(id, b.dataset.slot));
   $("#teamtg").onclick = () => {
     if (S.team.includes(id)) { if (teamIds().length <= 1) return toast("Gardez au moins un héros dans l'équipe."); S.team[S.team.indexOf(id)] = null; }
     else if (!S.team.includes(null)) { toast("Touchez le héros à remplacer."); return openTeam(null, id); }
@@ -1405,6 +1436,7 @@ function finish() {
     banner(boss ? "BOSS VAINCU !" : "VICTOIRE", "win"); gemBurst(boss ? 14 : 7);
     document.querySelectorAll("#stage .u.hero:not(.dead) .body").forEach((e, i) => e.animate([{ transform: "translateY(0)" }, { transform: "translateY(-16px)" }, { transform: "translateY(0)" }], { duration: 420, delay: i * 80, composite: "add" }));
     if (boss) toast(msg);
+    if (boss) setTimeout(() => gainRelic(rollRarity(S.stage, 1)), 900); else if (Math.random() < .35) setTimeout(() => gainRelic(rollRarity(S.stage)), 900);
   } else { S.gems += 60; msg = "Défaite… +60 gemmes. Montez vos héros en niveau ou en étoiles."; banner("DÉFAITE", "lose"); }
   b.result = { win: b.win, msg };
   save(); setTimeout(renderWallet, 800); renderHUD(); renderChest(); logLine(msg, b.win ? "win" : "lose");
@@ -1755,7 +1787,7 @@ function startTower() {
   launchSpecial({ kind: "tower", label: `Tour · étage ${info.f}`, foes: info.foes, back: "adv",
     onEnd: win => {
       const T2 = tower();
-      if (win) { grant(info.reward); T2.floor++; passXP(20); return `Étage ${info.f} franchi ! ${rewardTxt(info.reward)}.`; }
+      if (win) { grant(info.reward); T2.floor++; passXP(20); if (info.f % 5 === 0) setTimeout(() => gainRelic(rollRarity(info.f, 2)), 900); else if (Math.random() < .2) setTimeout(() => gainRelic(rollRarity(info.f)), 900); return `Étage ${info.f} franchi ! ${rewardTxt(info.reward)}.`; }
       if (T2.energy >= TOWER_MAX) T2.t = Date.now();
       T2.energy = Math.max(0, T2.energy - 1);
       return `L'étage ${info.f} résiste. −1 Souffle d'éther (${T2.energy}/${TOWER_MAX}).`;
@@ -1783,7 +1815,7 @@ function startSanct(el, L) {
   launchSpecial({ kind: "sanct", label: `${SANCT_NAMES[el]} · niv. ${L}`, foes: info.foes, back: "adv",
     onEnd: win => {
       const s = sanct(); s.tries[el] = (s.tries[el] || 0) + 1;
-      if (win) { grant(info.reward); s.best[el] = Math.max(s.best[el] || 0, L); passXP(20); return `${SANCT_NAMES[el]} niv. ${L} réussi ! ${rewardTxt(info.reward)}.`; }
+      if (win) { grant(info.reward); s.best[el] = Math.max(s.best[el] || 0, L); passXP(20); if (L >= 5) setTimeout(() => gainRelic(rollRarity(L * 3, 1)), 900); return `${SANCT_NAMES[el]} niv. ${L} réussi ! ${rewardTxt(info.reward)}.`; }
       return `${SANCT_NAMES[el]} niv. ${L} : défaite. Essais restants : ${triesLeft(el)}.`;
     } });
 }
@@ -2040,6 +2072,145 @@ function bindLunar() {
   const tr = $("#tiers"); if (tr) { const first = tr.querySelector(".tier.open:not(.got)") || tr.querySelectorAll(".tier.got")[Math.max(0, passTier() - 1)]; if (first) tr.scrollLeft = first.offsetLeft - 16; }
 }
 
+/* ================== RELIQUES ================== */
+const RSLOTS = [
+  { k: "arme",   name: "Arme",      kinds: ["sword", "staff"],   main: { atk: 1 } },
+  { k: "armure", name: "Armure",    kinds: ["armor", "shield"],  main: { hp: 1 } },
+  { k: "bijou",  name: "Bijou",     kinds: ["amulet", "ring"],   main: { atk: .5, hp: .5 } },
+  { k: "orne",   name: "Ornement",  kinds: ["crown", "boots"],   main: { atk: .35, hp: .65 } },
+];
+const RKIND = { sword: "Épée", staff: "Bâton", armor: "Cuirasse", shield: "Bouclier", amulet: "Amulette", ring: "Anneau", crown: "Couronne", boots: "Bottes" };
+const RRAR = [ { n: "Commune", c: "#a9b4c8", base: .04, mult: 1 }, { n: "Rare", c: "#5fb2ff", base: .07, mult: 1.5 }, { n: "Épique", c: "#b98bf0", base: .11, mult: 2.2 }, { n: "Légendaire", c: "#f2c46b", base: .16, mult: 3 } ];
+const RSETS = {
+  belier:  { n: "du Bélier",  short: "Bélier",  b2: { atk: .06 }, b4: { atk: .15 }, txt2: "+6 % ATQ", txt4: "+15 % ATQ" },
+  tortue:  { n: "de la Tortue", short: "Tortue", b2: { hp: .08 }, b4: { hp: .18 }, txt2: "+8 % PV", txt4: "+18 % PV" },
+  comete:  { n: "de la Comète", short: "Comète", b2: { atk: .04, hp: .04 }, b4: { atk: .10, hp: .10 }, txt2: "+4 % ATQ et PV", txt4: "+10 % ATQ et PV" },
+};
+const RMAX_LVL = 10, RINV_MAX = 60;
+const relics = () => (S.relics || (S.relics = []));
+const relicById = rid => relics().find(r => r.id === rid);
+const slotOf = r => RSLOTS.find(s => s.k === r.slot);
+function relicName(r) { return `${RKIND[r.kind]} ${RSETS[r.set].n}`; }
+function relicVal(r) { const v = RRAR[r.rar].base * (1 + r.lvl * .1), m = slotOf(r).main; return { atk: (m.atk || 0) * v, hp: (m.hp || 0) * v }; }
+const pct = v => `${Math.round(v * 1000) / 10} %`;
+function relicStatTxt(r) { const v = relicVal(r); return [v.atk && `ATQ +${pct(v.atk)}`, v.hp && `PV +${pct(v.hp)}`].filter(Boolean).join(" · "); }
+function equipped(id) { const o = S.heroes[id]; if (!o.relics) o.relics = {}; return o.relics; }
+function holderOf(rid) { return Object.keys(S.heroes).find(id => S.heroes[id].relics && Object.values(S.heroes[id].relics).includes(rid)); }
+function relicBonus(id) {
+  const eq = equipped(id), b = { atk: 0, hp: 0, sets: [] }, cnt = {};
+  Object.values(eq).forEach(rid => { const r = relicById(rid); if (!r) return; const v = relicVal(r); b.atk += v.atk; b.hp += v.hp; cnt[r.set] = (cnt[r.set] || 0) + 1; });
+  Object.entries(cnt).forEach(([k, n]) => { const s = RSETS[k];
+    if (n >= 2) { b.atk += s.b2.atk || 0; b.hp += s.b2.hp || 0; b.sets.push(`${s.short} ×2 : ${s.txt2}`); }
+    if (n >= 4) { b.atk += s.b4.atk || 0; b.hp += s.b4.hp || 0; b.sets.push(`${s.short} ×4 : ${s.txt4}`); } });
+  return b;
+}
+function makeRelic(rar, slotK) {
+  const sl = slotK ? RSLOTS.find(s => s.k === slotK) : RSLOTS[Math.floor(Math.random() * RSLOTS.length)], kind = sl.kinds[Math.floor(Math.random() * 2)], sets = Object.keys(RSETS);
+  return { id: "r" + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36), slot: sl.k, kind, rar, set: sets[Math.floor(Math.random() * sets.length)], lvl: 0 };
+}
+function rollRarity(stage, minRar = 0) {
+  const r = Math.random(), leg = .02 + Math.min(.06, stage * .001), epi = .10 + Math.min(.08, stage * .002);
+  let rar = r < leg ? 3 : r < leg + epi ? 2 : r < leg + epi + .3 ? 1 : 0;
+  return Math.max(rar, minRar);
+}
+function gainRelic(rar, from) {
+  const inv = relics();
+  if (inv.length >= RINV_MAX) { // inventaire plein : la moins bonne relique libre est démantelée
+    const free = inv.filter(r => !holderOf(r.id)).sort((a, b) => a.rar - b.rar || a.lvl - b.lvl)[0];
+    if (free && free.rar <= rar) { S.gems += dismantleValue(free).gems; inv.splice(inv.indexOf(free), 1); } else return null;
+  }
+  const r = makeRelic(rar); inv.push(r);
+  relicDropFx(r);
+  return r;
+}
+function relicDropFx(r) {
+  const el = document.createElement("div"); el.className = "relicdrop";
+  el.style.setProperty("--rc", RRAR[r.rar].c);
+  el.innerHTML = `${ico(r.kind)}<span><small>${RRAR[r.rar].n}</small><b>${relicName(r)}</b></span>`;
+  document.body.appendChild(el); setTimeout(() => el.remove(), 2600);
+}
+const upgradeCost = r => Math.round(40 * (r.lvl + 1) * RRAR[r.rar].mult);
+const dismantleValue = r => ({ gems: Math.round(20 * (r.rar + 1) * (1 + r.lvl)), shards: r.rar === 3 ? 1 : 0 });
+function equipRelic(id, rid) {
+  const r = relicById(rid); if (!r) return;
+  const prev = holderOf(rid); if (prev) delete equipped(prev)[r.slot];
+  equipped(id)[r.slot] = rid; save(); renderHUD(); renderRelics();
+}
+function unequip(id, slot) { delete equipped(id)[slot]; save(); renderHUD(); renderRelics(); }
+function upgradeRelic(rid) {
+  const r = relicById(rid); if (!r || r.lvl >= RMAX_LVL) return; const c = upgradeCost(r);
+  if (S.gems < c) return toast("Pas assez de gemmes pour renforcer cette relique.");
+  S.gems -= c; r.lvl++; save(); renderWallet(); renderHUD(); renderRelics();
+  const card = document.querySelector(`.rsel`); card && card.animate([{ filter: "brightness(2)" }, { filter: "none" }], { duration: 500 });
+}
+function dismantle(rid) {
+  const r = relicById(rid); if (!r) return; const h = holderOf(rid); if (h) delete equipped(h)[r.slot];
+  const v = dismantleValue(r); S.gems += v.gems; S.shards = (S.shards || 0) + v.shards;
+  relics().splice(relics().indexOf(r), 1); ui.relicSel = null; save(); renderWallet(); renderHUD(); renderRelics();
+  toast(`Relique démantelée : +${v.gems} gemmes${v.shards ? `, +${v.shards} éclat errant` : ""}.`);
+}
+const relicScore = r => { const v = relicVal(r); return v.atk * 2 + v.hp; };
+function autoEquip(id) {
+  RSLOTS.forEach(sl => {
+    const cur = relicById(equipped(id)[sl.k]);
+    const best = relics().filter(r => r.slot === sl.k && (!holderOf(r.id) || holderOf(r.id) === id)).sort((a, b) => relicScore(b) - relicScore(a))[0];
+    if (best && (!cur || relicScore(best) > relicScore(cur))) equipped(id)[sl.k] = best.id;
+  });
+  save(); renderHUD(); renderRelics(); toast(`${H[id].name} : meilleures reliques libres équipées.`);
+}
+function relicTile(r, extra = "") {
+  return `<button class="rtile${extra}" data-rid="${r.id}" style="--rc:${RRAR[r.rar].c}">${ico(r.kind)}${r.lvl ? `<i class="rl">+${r.lvl}</i>` : ""}${holderOf(r.id) ? `<img class="rh" src="${artOf(holderOf(r.id))}" alt="">` : ""}</button>`;
+}
+function relicSlotsHTML(id, big) {
+  const eq = equipped(id);
+  return `<div class="rslots${big ? " big" : ""}">${RSLOTS.map(sl => { const r = relicById(eq[sl.k]);
+    return `<button class="rslot${r ? "" : " empty"}${ui.relicSlot === sl.k && big ? " on" : ""}" data-slot="${sl.k}" style="--rc:${r ? RRAR[r.rar].c : "var(--line)"}">
+      ${r ? ico(r.kind) + (r.lvl ? `<i class="rl">+${r.lvl}</i>` : "") : `<img class="ico ghost" src="${ICONS[sl.kinds[0]]}" alt="">`}<small>${sl.name}</small></button>`; }).join("")}</div>`;
+}
+function renderRelics() {
+  const box = $("#p-relics"); if (!box) return;
+  const owned = Object.keys(S.heroes);
+  if (!ui.relicHero || !S.heroes[ui.relicHero]) ui.relicHero = ui.sel && S.heroes[ui.sel] ? ui.sel : teamIds()[0] || owned[0];
+  const id = ui.relicHero, h = H[id], bonus = relicBonus(id);
+  if (!ui.relicSlot) ui.relicSlot = "arme";
+  const list = relics().filter(r => r.slot === ui.relicSlot).sort((a, b) => b.rar - a.rar || b.lvl - a.lvl);
+  const sel = relicById(ui.relicSel) || null;
+  const picker = [...teamIds(), ...owned.filter(k => !S.team.includes(k))].map(k => `<button class="fpick${k === id ? " on" : ""}" data-hero="${k}" style="--el:var(${EL[H[k].el]})"><img src="${artOf(k)}" alt=""><span>${Object.keys(equipped(k)).length}/4</span></button>`).join("");
+  const holder = sel && holderOf(sel.id);
+  box.innerHTML = `
+    <div class="fpicker">${picker}</div>
+    <div class="forge relic-hero">
+      <div class="fg-hero" style="--el:var(${EL[h.el]})"><img src="${spriteOf(id) || artOf(id)}" alt="">
+        <div><p class="eyebrow">${h.el} · ${h.cls}</p><h3>${evolved(S.heroes[id]) ? h.evo : h.name}</h3>
+        <p class="lvline ok">Reliques : ATQ +${pct(bonus.atk)} · PV +${pct(bonus.hp)}</p>
+        ${bonus.sets.length ? `<p class="setline">${bonus.sets.map(t => `<span>✦ ${t}</span>`).join("")}</p>` : `<p class="muted" style="font-size:.74rem">2 ou 4 reliques du même ensemble donnent un bonus.</p>`}</div></div>
+      ${relicSlotsHTML(id, true)}
+      <div class="actions"><button class="btn primary" id="rauto">Équiper au mieux</button><span class="muted" style="font-size:.74rem">Puissance ⚔ ${stats(id).power.toLocaleString("fr-FR")}</span></div>
+    </div>
+    ${sel ? `<div class="adv-card rdetail" style="--rc:${RRAR[sel.rar].c}">
+      <div class="rdh">${ico(sel.kind, "big")}<div><small style="color:${RRAR[sel.rar].c}">${RRAR[sel.rar].n} · ${slotOf(sel).name} · niv. ${sel.lvl}/${RMAX_LVL}</small><h3>${relicName(sel)}</h3></div></div>
+      <p class="rw">${relicStatTxt(sel)} · Ensemble ${RSETS[sel.set].short} (2 : ${RSETS[sel.set].txt2} · 4 : ${RSETS[sel.set].txt4})</p>
+      ${holder ? `<p class="muted" style="font-size:.76rem">Portée par ${H[holder].name}.</p>` : ""}
+      <div class="actions">
+        ${holder === id ? `<button class="btn" id="runeq">Retirer</button>` : `<button class="btn primary" id="req">Équiper sur ${h.name}</button>`}
+        <button class="btn" id="rup" ${sel.lvl >= RMAX_LVL || S.gems < upgradeCost(sel) ? "disabled" : ""}>Renforcer ${sel.lvl >= RMAX_LVL ? "(max)" : `<small>${ico("gem", "sm")}${upgradeCost(sel)}</small>`}</button>
+        <button class="btn" id="rdis">Démanteler <small>${ico("gem", "sm")}${dismantleValue(sel).gems}${dismantleValue(sel).shards ? ` ${ico("shard", "sm")}1` : ""}</small></button>
+      </div></div>` : ""}
+    <div class="toolbar"><div><p class="eyebrow">Inventaire · ${relics().length}/${RINV_MAX}</p><h2>${RSLOTS.find(s => s.k === ui.relicSlot).name}s</h2></div>
+      <div class="tfilter">${RSLOTS.map(s => `<button class="fchip${ui.relicSlot === s.k ? " on" : ""}" data-rs="${s.k}">${s.name}</button>`).join("")}</div></div>
+    <div class="rgrid">${list.map(r => relicTile(r, r.id === ui.relicSel ? " rsel" : "")).join("") || `<p class="muted">Aucune relique de ce type. Elles tombent en campagne, dans la Tour et les Sanctuaires.</p>`}</div>`;
+  box.querySelectorAll("[data-hero]").forEach(b => b.onclick = () => { ui.relicHero = b.dataset.hero; renderRelics(); });
+  box.querySelectorAll(".rslot").forEach(b => b.onclick = () => { ui.relicSlot = b.dataset.slot; ui.relicSel = equipped(id)[b.dataset.slot] || null; renderRelics(); });
+  box.querySelectorAll("[data-rs]").forEach(b => b.onclick = () => { ui.relicSlot = b.dataset.rs; ui.relicSel = null; renderRelics(); });
+  box.querySelectorAll("[data-rid]").forEach(b => b.onclick = () => { ui.relicSel = b.dataset.rid; renderRelics(); });
+  $("#rauto").onclick = () => autoEquip(id);
+  const q = $("#req"); if (q) q.onclick = () => equipRelic(id, sel.id);
+  const u = $("#runeq"); if (u) u.onclick = () => unequip(id, sel.slot);
+  const up = $("#rup"); if (up) up.onclick = () => upgradeRelic(sel.id);
+  const d = $("#rdis"); if (d) d.onclick = () => dismantle(sel.id);
+}
+function openRelics(id, slot) { if (id) ui.relicHero = id; if (slot) { ui.relicSlot = slot; ui.relicSel = equipped(ui.relicHero || id)[slot] || null; } ui.tab = "relics"; render(); }
+
 /* ================== GÉNÉRAL ================== */
 let toastT;
 function toast(msg) {
@@ -2047,7 +2218,7 @@ function toast(msg) {
   const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); t.textContent = msg; document.body.appendChild(t);
   clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2600);
 }
-const SHEET_TITLES = { missions: "Missions & Carnet lunaire", forge: "Forge stellaire", adv: "Aventures", team: "Équipe", heroes: "Héros", summon: "Invocation", info: "Journal & infos" };
+const SHEET_TITLES = { relics: "Reliques", missions: "Missions & Carnet lunaire", forge: "Forge stellaire", adv: "Aventures", team: "Équipe", heroes: "Héros", summon: "Invocation", info: "Journal & infos" };
 function renderInfo() {
   const r = idleRate(), p = pending();
   $("#p-info-top").innerHTML = `
@@ -2061,7 +2232,7 @@ function render() {
   $("#sheet").hidden = !open; document.body.classList.toggle("sheet-open", open);
   if (open) $("#sheet-title").textContent = SHEET_TITLES[ui.tab] || "";
   document.querySelectorAll(".dock button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === ui.tab));
-  ["forge", "adv", "team", "summon", "heroes", "missions", "info"].forEach(t => { $("#p-" + t).hidden = ui.tab !== t; });
+  ["relics", "forge", "adv", "team", "summon", "heroes", "missions", "info"].forEach(t => { $("#p-" + t).hidden = ui.tab !== t; });
   if (ui.tab === "summon") renderSummon();
   if (ui.tab === "heroes") renderHeroes();
   if (ui.tab === "missions") renderMissions();
@@ -2069,6 +2240,7 @@ function render() {
   if (ui.tab === "team") renderTeam();
   if (ui.tab === "adv") renderAdv();
   if (ui.tab === "forge") renderForge();
+  if (ui.tab === "relics") renderRelics();
 }
 function openTab(t) {
   daily();
@@ -2096,6 +2268,7 @@ function start(data) {
   applyIcons();
   S = data && data.gems != null ? data : load();
   normalizeTeam();
+  if (!S.relicGift) { S.relics = S.relics || []; RSLOTS.forEach((sl, i) => S.relics.push(makeRelic(i < 2 ? 1 : 0, sl.k))); S.relicGift = 1; save(); }
   render(); buildStage(null); requestAnimationFrame(bgFrame);
   if (teamIds().length) setTimeout(() => { if (!ui.battle) startBattle(); }, 500);
 }
