@@ -808,6 +808,37 @@ h2, h3, .adv-head h3, .toolbar h2, .fg-hero h3, .rdh h3 { font-family: var(--f-d
 .tcard { border-radius: 16px; }
 /* ---- Forge ---- */
 .forge h3, .altar h3 { color: var(--cream); }
+/* ================= MODE PAYSAGE =================
+   Barre de navigation en rail vertical à gauche, combat sur toute la largeur,
+   menus en panneau latéral à droite (le combat reste visible à gauche). */
+@media (orientation: landscape) {
+  :root { --rail: calc(84px + env(safe-area-inset-left, 0px)); --side: min(60vw, 620px); }
+  .dock { left: 0; right: auto; top: 0; bottom: 0; width: var(--rail); grid-template-columns: 1fr; grid-template-rows: repeat(5, 1fr); align-items: center;
+    padding: calc(6px + env(safe-area-inset-top, 0px)) 4px calc(6px + env(safe-area-inset-bottom, 0px)) calc(4px + env(safe-area-inset-left, 0px));
+    background: linear-gradient(90deg, #2a2168, #140f3a); box-shadow: 2px 0 0 #5a4bc4, 4px 0 12px rgba(0,0,0,.4); }
+  .dock button { padding: 2px 0; }
+  .dock button.main { margin-top: 0; }
+  .dock button.main svg { width: 52px; height: 52px; padding: 12px; }
+  .dock button[aria-selected="true"]:not(.main)::after { left: auto; right: -4px; top: 25%; bottom: 25%; width: 3px; height: auto; }
+  #world { left: var(--rail); z-index: 0; isolation: isolate; }
+  body.sheet-open #world { transform: none; }
+  .hud { left: var(--rail); padding-left: 14px; padding-right: 14px; }
+  .ctl-l { left: calc(var(--rail) + 12px); top: calc(64px + env(safe-area-inset-top, 0px)); grid-auto-flow: row; }
+  .ctl-r { right: calc(12px + env(safe-area-inset-right, 0px)); top: calc(64px + env(safe-area-inset-top, 0px)); }
+  .u { --h: clamp(64px, 25vh, 210px); }
+  .u.boss { --h: clamp(130px, 42vh, 380px); }
+  .bossbar { top: calc(14px + env(safe-area-inset-top, 0px)); width: min(36vw, 420px); }
+  .drawer, section.drawer { left: auto; right: 0; top: 0; bottom: 0; height: 100%; width: var(--side); border-radius: 26px 0 0 26px;
+    box-shadow: -3px 0 0 #5a4bc4, -5px 0 0 rgba(0,0,0,.5), -20px 0 40px rgba(0,0,0,.55); }
+  .drawer-head { padding-top: calc(10px + env(safe-area-inset-top, 0px)); padding-right: calc(14px + env(safe-area-inset-right, 0px)); }
+  .drawer-body { padding: 4px calc(14px + env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) 14px; }
+  .toast { left: calc(50% + var(--rail) / 2); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); }
+  /* fiche héros : portrait et identité côte à côte, actions en ligne */
+  .hs-top { grid-template-columns: 112px 1fr; } .hs-art, .hs-art img { width: 112px; height: 112px; }
+  .roster { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+  .bn-stage { height: 150px; } .bn-h { height: 120px; } .bn-h.h0 { height: 150px; }
+  .summonfx .cards { width: min(88vw, 900px); }
+}
 </style>
 
 <div class="game">
