@@ -261,11 +261,11 @@ body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.s
 .proj { position: absolute; width: 28px; height: 12px; border-radius: 50%; background: radial-gradient(ellipse at 70% 50%, #fff 15%, var(--el) 45%, transparent 72%); box-shadow: 0 0 16px var(--el), 0 0 30px var(--el); }
 .proj.big { width: 60px; height: 26px; }
 .dmg { position: absolute; transform: translate(-50%, -50%); font-weight: 900; font-size: 1.25rem; color: #fff; -webkit-text-stroke: 1.5px rgba(0,0,0,.75); paint-order: stroke fill; text-shadow: 0 3px 0 rgba(0,0,0,.5); animation: rise 1s ease-out forwards; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.dmg.eff { color: #ffe066; font-size: 1.45rem; }
-.dmg.weak { color: #e0d6c8; font-size: 1rem; }
-.dmg.crit { color: #ff8a3d; font-size: 1.7rem; }
-.dmg.heal { color: #7dffa8; }
-.dmg.skill { color: var(--r5); font-size: 1.8rem; }
+.dmg.f-eff { color: #ffe066; font-size: 1.45rem; }
+.dmg.f-weak { color: #e0d6c8; font-size: 1rem; }
+.dmg.f-crit { color: #ff8a3d; font-size: 1.7rem; }
+.dmg.f-heal { color: #7dffa8; }
+.dmg.f-skill { color: var(--r5); font-size: 1.8rem; }
 @keyframes rise { 0% { opacity: 0; margin-top: 8px; transform: translate(-50%,-50%) scale(.5); } 14% { opacity: 1; transform: translate(-50%,-50%) scale(1.25); } 30% { transform: translate(-50%,-50%) scale(1); } 100% { opacity: 0; margin-top: -54px; transform: translate(-50%,-50%) scale(1); } }
 .banner { position: absolute; left: 0; right: 0; top: 34%; z-index: 310; text-align: center; font-family: var(--f-display); font-size: clamp(2.2rem, 11vw, 4rem); letter-spacing: .08em; color: #fff; -webkit-text-stroke: 1px rgba(0,0,0,.4); text-shadow: 0 4px 0 rgba(0,0,0,.45), 0 0 30px rgba(0,0,0,.5); animation: pop .55s cubic-bezier(.2,1.6,.4,1) both; pointer-events: none; }
 .banner.win { color: var(--r5); text-shadow: 0 4px 0 rgba(0,0,0,.45), 0 0 34px rgba(242,196,107,.8); }
@@ -1096,6 +1096,8 @@ body.page-full #p-heroes { height: 100%; display: block; } .hpage { height: 100%
   .parch { position: relative; right: auto; top: auto; bottom: auto; width: auto; margin: 0 76px 20px 12px; min-height: 60vh; }
   .hd-res { top: 60px; } .sktip { transform: translate(-50%, -50%); }
 }
+.dmg.f-tag { color: #fff3c4; font-size: .78rem; font-weight: 800; letter-spacing: .02em; text-shadow: 0 0 3px #000, 0 1px 0 #000; margin-top: -22px; }
+.dmg.f-burn { color: #ff8a3a; }
 </style>
 
 <div class="game">
@@ -1438,6 +1440,8 @@ const SK_GLYPH = {
   active: '<path d="M12 1l2.8 7.2L22 9l-5.6 4.6L18 21l-6-4-6 4 1.6-7.4L2 9l7.2-.8z" fill="#fff"/>',
   pos: '<path d="M12 2l8 3v6c0 5-3.4 9-8 11-4.6-2-8-6-8-11V5z" fill="#fff"/>',
 };
+function posTxtOf(cls) { return { Guerrier: "En ligne avant : <em>+10 % PV</em>. En ligne arrière : <em>−20 % ATQ</em>.", Gardien: "En ligne avant : <em>+10 % PV</em>. Attire <em>30 %</em> des coups ennemis. En ligne arrière : <em>−20 % ATQ</em>.",
+  Mage: "Frappe à distance : idéal en ligne arrière.", Archer: "Vise l'ennemi le plus faible, à distance : idéal en ligne arrière.", Soigneur: "Soigne à distance : idéal en ligne arrière.", Assassin: "Bondit depuis l'arrière sans pénalité et frappe n'importe quel ennemi." }[cls]; }
 function heroSkills(id) {
   const h = H[id], o = S.heroes[id], st = stats(id), evo = evolved(o);
   const [aName, ...aRest] = h.skill.split(":"), beats = BEATS[h.el], beaten = Object.keys(BEATS).find(k => BEATS[k] === h.el);
@@ -1447,11 +1451,12 @@ function heroSkills(id) {
   const posTxt = { Guerrier: "En ligne avant : <em>+10 % PV</em>. En ligne arrière : <em>−20 % ATQ</em>.", Gardien: "En ligne avant : <em>+10 % PV</em>. Attire <em>30 %</em> des coups ennemis sur lui. En ligne arrière : <em>−20 % ATQ</em>.",
     Mage: "Frappe à distance : aucune pénalité en ligne arrière, l'emplacement idéal.", Archer: "Frappe à distance : aucune pénalité en ligne arrière, l'emplacement idéal.",
     Soigneur: "Soigne à distance : aucune pénalité en ligne arrière, l'emplacement idéal.", Assassin: "Bondit depuis l'arrière sans pénalité et frappe n'importe quel ennemi." }[h.cls];
+  const K = KITS[id], p2lock = o.stars < P2_STAR ? `Se débloque à ★${P2_STAR}` : "";
   return [
-    { k: "basic", n: BASIC_NAMES[h.cls], type: "Attaque de base", c: "#e8a33a", d: `${CLASS_NOTE[h.cls]} Puissance actuelle : <em>${st.atk}</em> d'ATQ.` },
-    { k: "active", n: aName.trim(), type: "Compétence d'éveil", c: "#b05ce0", d: `${(aRest.join(":").trim() || h.skill).replace(/\(×1,6\)/, "(<em>×1,6</em>)")}, tous les <em>3 tours</em>.`, lock: evo ? "" : "Se débloque à l'évolution (★6)" },
+    { k: "active", n: K.act[0], type: "Compétence active · tous les 3 tours", c: "#b05ce0", d: K.act[1] + (evo ? " <em>Éveil ★6 : puissance ×1,5.</em>" : " À l'évolution (★6), sa puissance passe à <em>×1,5</em>."), main: true },
+    { k: "basic", n: K.p1[0], type: "Compétence passive", c: "#e8a33a", d: K.p1[1] },
+    { k: "pos", n: K.p2[0], type: "Compétence passive", c: "#3fb5a8", d: K.p2[1], lock: p2lock },
     { k: "el", n: `Affinité ${h.el}`, type: "Passif d'élément", c: `var(${EL[h.el]})`, d: elTxt, el: h.el },
-    { k: "pos", n: `Instinct de ${h.cls.toLowerCase()}`, type: "Passif de position", c: "#3fb5a8", d: posTxt },
   ];
 }
 function skillIcon(sk, i) {
@@ -1479,7 +1484,7 @@ function renderHeroDetail(box, list) {
       <p class="pp-sets">${rb.sets.length ? rb.sets.map(x => `✦ ${x}`).join("<br>") : "2 ou 4 reliques du même ensemble donnent un bonus."}</p>
       <div class="pp-btns"><button class="pbtn orange" id="runeq">Tout retirer</button><button class="pbtn green" id="rauto2">Équiper au mieux</button></div>`;
   } else {
-    if (o.stars >= MAXSTAR) body = `<div class="pp-awk"><p class="pp-done">✦ Forme ultime atteinte ✦</p><p class="pp-note">${h.evo} a atteint ★6 : compétence d'éveil débloquée et statistiques +25 %.</p></div>`;
+    if (o.stars >= MAXSTAR) body = `<div class="pp-awk"><p class="pp-done">✦ Forme ultime atteinte ✦</p><p class="pp-note">${h.evo} a atteint ★6 : compétence active ×1,5 et statistiques +25 %.</p></div>`;
     else {
       const ns = o.stars + 1, ratio = (1 + (ns - h.r) * .15) / (1 + (o.stars - h.r) * .15) * (ns === MAXSTAR ? 1.25 : 1);
       const need = starCost(h, o.stars), have = o.dupes + allyPool(id) / 2 + (S.shards || 0);
@@ -1488,7 +1493,7 @@ function renderHeroDetail(box, list) {
           <div class="pp-cmp"><span>Limite de niveau</span><b>${c}</b><i>➜</i><em>${cap(ns)}</em>
             <span>PV</span><b>${st.hp.toLocaleString("fr-FR")}</b><i>➜</i><em>${Math.round(st.hp * ratio).toLocaleString("fr-FR")}</em>
             <span>Attaque</span><b>${st.atk}</b><i>➜</i><em>${Math.round(st.atk * ratio)}</em></div>
-          ${ns === MAXSTAR ? `<p class="pp-note">Évolution en <b>${h.evo}</b> : nouvelle apparence et compétence d'éveil débloquée.</p>` : ""}
+          ${ns === MAXSTAR ? `<p class="pp-note">Évolution en <b>${h.evo}</b> : nouvelle apparence et compétence active <b>×1,5</b>.</p>` : ""}
         </div>
         <div class="pp-req"><span class="${maxed ? "ok" : "no"}">Niveau ${o.lvl}/${c}</span><span class="${have >= need ? "ok" : "no"}">Essence ${Math.floor(have)}/${need}</span></div>
         <div class="pp-btns"><button class="pbtn yellow" id="goforge2">Forge stellaire</button><button class="pbtn green" id="awake" ${canForge(id) ? "" : "disabled"}>Éveiller</button></div>`;
@@ -1538,7 +1543,7 @@ function renderHeroDetail(box, list) {
   const tip = $$("#sktip");
   box.querySelectorAll("[data-sk]").forEach(b => b.onclick = e => {
     e.stopPropagation();
-    const sk = b.dataset.sk === "cls" ? { n: h.cls, type: "Classe", c: "#c8892e", d: CLASS_NOTE[h.cls], k: "pos" } : skills[+b.dataset.sk];
+    const sk = b.dataset.sk === "cls" ? { n: `${h.cls} · ${BASIC_NAMES[h.cls]}`, type: "Attaque de base et position", c: "#c8892e", d: `${CLASS_NOTE[h.cls]}<br><br>${posTxtOf(h.cls)}`, k: "pos" } : skills[+b.dataset.sk];
     tip.innerHTML = `<div class="tt-h"><span class="skb big" style="--sc:${sk.c}"><svg viewBox="0 0 24 24">${sk.el ? EL_GLYPH[sk.el] : SK_GLYPH[sk.k] || ""}</svg></span><div><b>${sk.n}</b><small>${sk.type}</small></div></div><p>${sk.d}</p>${sk.lock ? `<p class="tt-lock">${sk.lock}</p>` : ""}`;
     tip.hidden = false;
   });
@@ -1715,60 +1720,162 @@ function monsterSVG(el, boss) {
 
 /* ---- Simulation (calcul instantané, rejoué ensuite en animation) ---- */
 const RANGED = { Mage: true, Archer: true, Soigneur: true };
+/* ---- Kits de compétences : 1 active (tous les 3 tours), 2 passifs (le 2ᵉ à ★5), éveil ★6 = active ×1,5 ---- */
+const KITS = {
+  lyra:  { act: ["Pluie d'étoiles", "Frappe tous les ennemis (<em>110 %</em> d'ATQ) et les <em>marque</em> 2 tours : ils subissent <em>+15 %</em> de dégâts."], p1: ["Constellation", "Chaque Pluie d'étoiles donne <em>+6 % d'ATQ</em> à toute l'équipe jusqu'à la fin du combat (3 couches max)."], p2: ["Éclat céleste", "Ses attaques de base ont <em>20 %</em> de chance de frapper une seconde fois."] },
+  kael:  { act: ["Brasier", "Frappe la ligne avant ennemie (<em>160 %</em>) et l'enflamme : <em>30 %</em> d'ATQ de brûlure par tour pendant 2 tours."], p1: ["Cœur ardent", "<em>+15 % d'ATQ</em> tant que Kael a plus de la moitié de ses PV."], p2: ["Braise vengeresse", "Quand un allié tombe, Kael gagne <em>+25 % d'ATQ</em> (cumulable)."] },
+  nyx:   { act: ["Voile noir", "Frappe l'ennemi le plus affaibli (<em>300 %</em>). S'il tombe, frappe aussitôt un autre ennemi (<em>150 %</em>)."], p1: ["Ombre fuyante", "<em>25 %</em> de chance d'esquiver les attaques."], p2: ["Exécution", "<em>+40 %</em> de dégâts contre les ennemis sous 40 % de PV."] },
+  oren:  { act: ["Marée", "Soigne toute l'équipe (<em>120 %</em> d'ATQ) et lui donne un bouclier (<em>80 %</em> d'ATQ)."], p1: ["Courant apaisant", "À la fin de chaque tour, soigne l'allié le plus blessé (<em>40 %</em> d'ATQ)."], p2: ["Bulle protectrice", "Une fois par combat, un allié qui passe sous 30 % de PV reçoit un bouclier (<em>200 %</em> d'ATQ)."] },
+  seve:  { act: ["Racines", "Frappe tous les ennemis (<em>80 %</em>), <em>30 %</em> de chance d'étourdir chacun pendant 1 tour."], p1: ["Écorce", "Dégâts subis <em>−15 %</em>."], p2: ["Sève vive", "Récupère <em>6 %</em> de ses PV max à la fin de chaque tour."] },
+  brasa: { act: ["Volée ardente", "Frappe 3 ennemis au hasard (<em>130 %</em>) et les enflamme (<em>25 %</em> d'ATQ par tour, 2 tours)."], p1: ["Œil de faucon", "<em>+20 %</em> de chance de coup critique (×1,8)."], p2: ["Phénix", "Une fois par combat, renaît avec <em>30 %</em> de ses PV au lieu de tomber."] },
+  iris:  { act: ["Prisme", "Frappe tous les ennemis (<em>100 %</em>) et réduit leur ATQ de <em>20 %</em> pendant 2 tours."], p1: ["Aurore", "Au début du combat, chaque allié reçoit un bouclier (<em>60 %</em> de l'ATQ d'Iris)."], p2: ["Lumière bienveillante", "Après chaque attaque de base, soigne l'allié le plus blessé (<em>30 %</em> d'ATQ)."] },
+  tallo: { act: ["Séisme", "Frappe tous les ennemis (<em>90 %</em>), <em>50 %</em> de chance d'étourdir la ligne avant ennemie."], p1: ["Monolithe", "Commence le combat avec un bouclier (<em>15 %</em> de ses PV max) et attire <em>40 %</em> des coups."], p2: ["Riposte", "<em>35 %</em> de chance de contre-attaquer (<em>80 %</em>) quand il est frappé."] },
+  pip:   { act: ["Lueur", "Soigne toute l'équipe (<em>90 %</em> d'ATQ) et retire brûlures, étourdissements et malus."], p1: ["Petite flamme", "Les alliés soignés par Pip gagnent <em>+10 % d'ATQ</em> pendant 2 tours."], p2: ["Lanterne", "Une fois par combat, relève le premier allié tombé avec <em>25 %</em> de ses PV."] },
+  gorm:  { act: ["Coup de masse", "Frappe la ligne avant ennemie (<em>170 %</em>), <em>40 %</em> de chance d'étourdir la cible principale."], p1: ["Peau de roc", "Dégâts subis <em>−10 %</em>."], p2: ["Tête dure", "Insensible aux étourdissements."] },
+  mira:  { act: ["Flèche d'écume", "Frappe l'ennemi le plus faible (<em>220 %</em>) et réduit son ATQ de <em>15 %</em> pendant 2 tours."], p1: ["Écume", "Chacun de ses coups marque la cible : <em>+10 %</em> de dégâts subis pendant 1 tour."], p2: ["Vent du large", "<em>+15 % d'ATQ</em> en ligne arrière."] },
+  fenn:  { act: ["Morsure", "Frappe 2 ennemis au hasard (<em>150 %</em>) et récupère <em>50 %</em> des dégâts infligés."], p1: ["Instinct du renard", "<em>20 %</em> de chance d'esquiver les attaques."], p2: ["Curée", "Chaque ennemi achevé lui donne <em>+20 % d'ATQ</em> (cumulable)."] },
+  rook:  { act: ["Nuée", "Deux vagues de corbeaux frappent tous les ennemis (<em>70 %</em> chacune)."], p1: ["Présage", "Les ennemis qu'il touche perdent <em>10 % d'ATQ</em> pendant 1 tour."], p2: ["Corbeau-Roi", "<em>+5 % d'ATQ</em> par ennemi tombé."] },
+};
+const P2_STAR = 5;
+HEROES.forEach(h => { const k = KITS[h.id]; if (k) h.skill = `${k.act[0]} : ${k.act[1].replace(/<[^>]+>/g, "")}`; });
+
 function simulate(E0) {
   const res = resonance();
-  let A = S.team.map((id, slot) => { if (!id) return null; const s = unitStats(id, slot, res), o = S.heroes[id]; return { id, slot, front: isFront(slot), el: H[id].el, name: evolved(o) ? H[id].evo : H[id].name, cls: H[id].cls, hp: s.hp, max: s.hp, atk: s.atk, evo: evolved(o), lvl: o.lvl }; }).filter(Boolean);
+  let A = S.team.map((id, slot) => { if (!id) return null; const s = unitStats(id, slot, res), o = S.heroes[id]; return { id, slot, front: isFront(slot), el: H[id].el, name: evolved(o) ? H[id].evo : H[id].name, cls: H[id].cls, hp: s.hp, max: s.hp, atk: s.atk, evo: evolved(o), lvl: o.lvl, stars: o.stars, side: "a" }; }).filter(Boolean);
   if (ui.special && ui.special.prep) A = ui.special.prep(A); // modificateurs de mode (Dérive céleste : PV conservés, bénédictions)
-  const E = (E0 || makeFoes(S.stage)).map(f => ({ ...f })), frames = [];
-  const alive = arr => arr.filter(u => u.hp > 0);
-  const snap = (text, kind, ev) => frames.push({ a: A.map(u => u.hp), e: E.map(u => u.hp), text, kind, ev });
-  const rnd = () => 0.9 + Math.random() * 0.2;
-  const tag = m => m > 1 ? " (efficace !)" : m < 1 ? " (peu efficace)" : "";
+  const E = (E0 || makeFoes(S.stage)).map(f => ({ ...f, side: "e" })), frames = [];
+  [...A, ...E].forEach(u => Object.assign(u, { sh: 0, burns: [], stun: 0, buf: [], mark: [], def: 0, dodge: 0, stack: 0, used: {} }));
+  const alive = arr => arr.filter(u => u.hp > 0), R = Math.random, rnd = () => 0.9 + R() * 0.2;
+  const code = u => (u.side === "a" ? "a" + A.indexOf(u) : "e" + E.indexOf(u));
+  const snap = (text, kind, ev) => frames.push({ a: A.map(u => Math.max(0, Math.round(u.hp))), e: E.map(u => Math.max(0, Math.round(u.hp))), text, kind, ev });
+  const tagTxt = m => m > 1 ? " (efficace !)" : m < 1 ? " (peu efficace)" : "";
+  const has = (u, id, p) => u.id === id && u.side === "a" && (p !== "p2" || u.stars >= P2_STAR);
+  const pick = arr => arr[Math.floor(R() * arr.length)];
+  let lyraStacks = 0;
+  // passifs permanents et effets d'ouverture
+  A.forEach(u => {
+    if (has(u, "seve")) u.def += .15; if (has(u, "gorm")) u.def += .10;
+    if (has(u, "nyx")) u.dodge = .25; if (has(u, "fenn")) u.dodge = .20;
+    if (has(u, "brasa")) u.crit = (u.crit || 0) + .2;
+    if (has(u, "tallo")) u.sh += Math.round(u.max * .15);
+  });
+  const iris = A.find(u => has(u, "iris"));
+  if (iris) A.forEach(u => u.sh += Math.round(iris.atk * .6));
+  const atkOf = u => {
+    let m = 1 + u.buf.reduce((s, b) => s + b.v, 0) + u.stack;
+    if (u.side === "a") {
+      m += lyraStacks * .06;
+      if (has(u, "kael") && u.hp > u.max / 2) m += .15;
+      if (has(u, "mira", "p2") && !u.front) m += .15;
+      if (has(u, "rook", "p2")) m += .05 * E.filter(e => e.hp <= 0).length;
+    }
+    return u.atk * Math.max(.2, m);
+  };
+  function death(u, killer) {
+    if (has(u, "brasa", "p2") && !u.used.phx) { u.used.phx = 1; u.hp = Math.round(u.max * .3); u.burns = []; return ["Renaissance !"]; }
+    if (u.side === "a") {
+      A.forEach(k => { if (k.hp > 0 && has(k, "kael", "p2")) k.stack += .25; });
+      const pip = A.find(k => k.hp > 0 && k !== u && has(k, "pip", "p2") && !k.used.rev);
+      if (pip) { pip.used.rev = 1; u.hp = Math.round(u.max * .25); u.burns = []; u.stun = 0; return ["Relevé par Pip !"]; }
+    } else if (killer && has(killer, "fenn", "p2")) killer.stack += .2;
+    return [];
+  }
+  function strike(src, t, mult, o = {}) {
+    if (!t || t.hp <= 0) return null;
+    if (t.dodge && R() < t.dodge) return { d: "Esquive", m: 1, tags: [] };
+    const m = elMult(src.el, t.el);
+    let d = atkOf(src) * mult * m * rnd();
+    const crit = !o.noCrit && ((src.cls === "Assassin" && R() < .3) || R() < (src.crit || 0));
+    if (crit) d *= 1.8;
+    if (has(src, "nyx", "p2") && t.hp / t.max < .4) d *= 1.4;
+    d *= 1 + t.mark.reduce((s, x) => s + x.v, 0);
+    d *= 1 - Math.min(.6, t.def);
+    d = Math.max(1, Math.round(d));
+    let left = d; if (t.sh > 0) { const ab = Math.min(t.sh, left); t.sh -= ab; left -= ab; }
+    t.hp = Math.max(0, t.hp - left);
+    if (src.ls && src.side === "a") src.hp = Math.min(src.max, src.hp + Math.round(d * src.ls));
+    if (o.ls) src.hp = Math.min(src.max, src.hp + Math.round(d * o.ls));
+    if (has(src, "mira")) t.mark.push({ v: .10, t: 1 });
+    if (has(src, "rook")) t.buf.push({ v: -.10, t: 1 });
+    const tags = t.hp <= 0 ? death(t, src) : [];
+    return { d, crit, m, tags };
+  }
+  const stunT = (t, ch) => t.hp > 0 && !has(t, "gorm", "p2") && R() < ch ? (t.stun = 1, true) : false;
+  const heal = (src, t, amt) => { if (t.hp <= 0) return 0; const v = Math.round(amt); t.hp = Math.min(t.max, t.hp + v); if (has(src, "pip")) t.buf.push({ v: .10, t: 2 }); return v; };
+  const mostHurt = () => alive(A).sort((x, y) => x.hp / x.max - y.hp / y.max)[0];
+  // ev : t = cibles, v = valeurs, ms = multiplicateurs, tags = statuts affichés
+  const ev0 = (u, type, extra = {}) => ({ s: code(u), t: [], v: [], ms: [], tags: [], type, el: u.el, ranged: !!RANGED[u.cls], ...extra });
+  const add = (ev, t, r, tag) => { ev.t.push(code(t)); ev.v.push(r ? r.d : 0); ev.ms.push(r && r.m || 1); ev.tags.push([...(r && r.tags || []), ...(tag ? [tag] : [])].join(" · ")); if (r && r.crit) ev.crit = true; };
+  const hitTxt = (ev) => ev.t.map((c, i) => { const u = c[0] === "a" ? A[+c.slice(1)] : E[+c.slice(1)]; return `${u.name} ${ev.v[i]}${ev.tags[i] ? " (" + ev.tags[i] + ")" : ""}`; }).join(", ");
+
+  function active(u) {
+    const P = u.evo ? 1.5 : 1, foes = alive(E), fr = foes.filter(e => e.front), frontOr = fr.length ? fr : foes;
+    const K = KITS[u.id], ev = ev0(u, "skill", { name: K ? K.act[0] : "Compétence", ranged: true });
+    switch (u.id) {
+      case "lyra": foes.forEach(e => { const r = strike(u, e, 1.1 * P); if (e.hp > 0) e.mark.push({ v: .15, t: 2 }); add(ev, e, r, "Marqué"); }); lyraStacks = Math.min(3, lyraStacks + 1); break;
+      case "kael": frontOr.forEach(e => { const r = strike(u, e, 1.6 * P); if (e.hp > 0) e.burns.push({ d: Math.round(atkOf(u) * .3), t: 2 }); add(ev, e, r, "Brûlure"); }); ev.ranged = false; break;
+      case "nyx": { const t = foes.sort((x, y) => x.hp - y.hp)[0], r = strike(u, t, 3 * P); add(ev, t, r);
+        if (t.hp <= 0) { const t2 = alive(E).sort((x, y) => x.hp - y.hp)[0]; if (t2) add(ev, t2, strike(u, t2, 1.5 * P), "Enchaînement"); } ev.ranged = false; break; }
+      case "oren": ev.type = "heal"; ev.name = K.act[0]; alive(A).forEach(a => { const v = heal(u, a, atkOf(u) * 1.2 * P); a.sh += Math.round(atkOf(u) * .8 * P); ev.t.push(code(a)); ev.v.push(v); ev.tags.push("Bouclier"); }); break;
+      case "seve": foes.forEach(e => { const r = strike(u, e, .8 * P); add(ev, e, r, stunT(e, .3) ? "Étourdi" : ""); }); break;
+      case "brasa": foes.sort(() => R() - .5).slice(0, 3).forEach(e => { const r = strike(u, e, 1.3 * P); if (e.hp > 0) e.burns.push({ d: Math.round(atkOf(u) * .25), t: 2 }); add(ev, e, r, "Brûlure"); }); break;
+      case "iris": foes.forEach(e => { const r = strike(u, e, 1 * P); if (e.hp > 0) e.buf.push({ v: -.2, t: 2 }); add(ev, e, r, "ATQ −20 %"); }); break;
+      case "tallo": foes.forEach(e => { const r = strike(u, e, .9 * P); add(ev, e, r, e.front && stunT(e, .5) ? "Étourdi" : ""); }); ev.ranged = false; break;
+      case "pip": ev.type = "heal"; alive(A).forEach(a => { a.burns = []; a.stun = 0; a.buf = a.buf.filter(b => b.v > 0); const v = heal(u, a, atkOf(u) * .9 * P); ev.t.push(code(a)); ev.v.push(v); ev.tags.push("Purifié"); }); break;
+      case "gorm": frontOr.forEach((e, i) => { const r = strike(u, e, 1.7 * P); add(ev, e, r, i === 0 && stunT(e, .4) ? "Étourdi" : ""); }); ev.ranged = false; break;
+      case "mira": { const t = foes.sort((x, y) => x.hp - y.hp)[0], r = strike(u, t, 2.2 * P); if (t.hp > 0) t.buf.push({ v: -.15, t: 2 }); add(ev, t, r, "ATQ −15 %"); break; }
+      case "fenn": foes.sort(() => R() - .5).slice(0, 2).forEach(e => add(ev, e, strike(u, e, 1.5 * P, { ls: .5 }))); ev.ranged = false; break;
+      case "rook": for (let w = 0; w < 2; w++) alive(E).forEach(e => add(ev, e, strike(u, e, .7 * P))); break;
+      default: foes.forEach(e => add(ev, e, strike(u, e, 1.6 * P)));
+    }
+    snap(`✦ ${u.name} — ${ev.name} : ${ev.type === "heal" ? "équipe soignée" : hitTxt(ev)}`, "skillline", ev);
+  }
+  function basic(u) {
+    if (u.cls === "Soigneur") {
+      const w = mostHurt();
+      if (w && w.hp / w.max < .7) { const ev = ev0(u, "heal"); ev.t.push(code(w)); ev.v.push(heal(u, w, atkOf(u) * 1.8)); ev.tags.push(""); snap(`${u.name} soigne ${w.name} (+${ev.v[0]}).`, "", ev); return; }
+    }
+    const once = () => {
+      const foes = alive(E); if (!foes.length) return;
+      if (u.cls === "Mage") { const ev = ev0(u, "aoe"); foes.forEach(e => add(ev, e, strike(u, e, .6))); snap(`${u.name} frappe tous les ennemis : ${hitTxt(ev)}`, "", ev); return; }
+      const frontFoes = foes.filter(e => e.front), pool = u.cls === "Archer" || u.cls === "Assassin" || !frontFoes.length ? foes : frontFoes;
+      const t = u.cls === "Archer" ? foes.sort((x, y) => x.hp - y.hp)[0] : pick(pool), ev = ev0(u, "hit"), r = strike(u, t, 1);
+      add(ev, t, r);
+      snap(`${u.name} → ${t.name} : ${r.d}${r.crit ? " (critique)" : ""}${tagTxt(r.m)}${t.hp === 0 ? " — vaincu" : ""}`, r.m > 1 ? "eff" : r.m < 1 ? "weak" : "", ev);
+    };
+    once();
+    if (has(u, "lyra", "p2") && R() < .2 && alive(E).length) once();
+    if (has(u, "iris", "p2")) { const w = mostHurt(); if (w && w.hp < w.max) { const ev = ev0(u, "heal"); ev.t.push(code(w)); ev.v.push(heal(u, w, atkOf(u) * .3)); ev.tags.push(""); snap(`${u.name} soigne ${w.name} (+${ev.v[0]}).`, "", ev); } }
+  }
+  function foeAct(e) {
+    const al = alive(A); if (!al.length) return;
+    const fr = al.filter(u => u.front), tallo = al.find(u => has(u, "tallo")), guard = al.find(u => u.cls === "Gardien");
+    const t = tallo && R() < .4 ? tallo : guard && R() < .3 ? guard : fr.length && R() < .75 ? pick(fr) : pick(al);
+    const ev = { s: code(e), t: [], v: [], ms: [], tags: [], type: "hit", el: e.el, ranged: false }, r = strike(e, t, 1);
+    add(ev, t, r);
+    snap(`${e.name} → ${t.name} : ${r.d}${tagTxt(r.m)}${t.hp === 0 ? " — K.O." : ""}`, "", ev);
+    if (t.hp > 0 && has(t, "tallo", "p2") && R() < .35 && e.hp > 0) { const c = ev0(t, "hit"); add(c, e, strike(t, e, .8), "Riposte"); snap(`${t.name} riposte !`, "", c); }
+    const oren = alive(A).find(u => has(u, "oren", "p2") && !u.used.bub);
+    if (oren && t.hp > 0 && t.hp / t.max < .3) { oren.used.bub = 1; const sh = Math.round(atkOf(oren) * 2); t.sh += sh; const b = ev0(oren, "heal"); b.t.push(code(t)); b.v.push(sh); b.tags.push("Bouclier"); snap(`${oren.name} protège ${t.name} d'une bulle (${sh}).`, "", b); }
+  }
+  const act = (u, fn) => { if (u.hp <= 0) return; if (u.stun > 0) { u.stun--; snap(`${u.name} est étourdi.`, "weak", { s: code(u), t: [code(u)], v: ["Étourdi"], ms: [1], tags: [""], type: "tick", el: u.el }); return; } fn(u); };
+
   if (E[0].boss) snap(`BOSS — ${E[0].name} (${E[0].el}) barre la route !`, "bossline");
   else snap(`${ui.special ? ui.special.label : "Étape " + S.stage} : ${E.map(e => `${e.name} (${e.el})`).join(", ")} apparaissent.`);
   for (let turn = 1; turn <= 25 && alive(A).length && alive(E).length; turn++) {
-    A.forEach((u, ai) => {
-      if (u.hp <= 0 || !alive(E).length) return;
-      const src = "a" + ai;
-      if (u.evo && turn % (u.sk || 3) === 0) {
-        const tg = alive(E), v = tg.map(e => { const d = Math.round(u.atk * 1.6 * elMult(u.el, e.el) * rnd()); e.hp = Math.max(0, e.hp - d); return d; });
-        snap(`✦ ${u.name} déclenche sa compétence d'éveil !`, "skillline", { s: src, t: tg.map(e => "e" + E.indexOf(e)), v, type: "skill", el: u.el, ranged: true });
-        return;
-      }
-      if (u.cls === "Soigneur") {
-        const w = alive(A).sort((x, y) => x.hp / x.max - y.hp / y.max)[0];
-        if (w && w.hp / w.max < 0.7) {
-          const heal = Math.round(u.atk * 1.8 * rnd()); w.hp = Math.min(w.max, w.hp + heal);
-          snap(`${u.name} soigne ${w.name} (+${heal}).`, "", { s: src, t: ["a" + A.indexOf(w)], v: [heal], type: "heal", el: u.el, ranged: true });
-          return;
-        }
-      }
-      if (u.cls === "Mage") {
-        const tg = alive(E), ms = tg.map(e => elMult(u.el, e.el)), v = tg.map((e, i) => { const d = Math.round(u.atk * 0.6 * ms[i] * rnd()); e.hp = Math.max(0, e.hp - d); return d; });
-        if (u.ls) u.hp = Math.min(u.max, u.hp + Math.round(v.reduce((a, b) => a + b, 0) * u.ls));
-        snap(`${u.name} frappe tous les ennemis.`, "", { s: src, t: tg.map(e => "e" + E.indexOf(e)), v, ms, type: "aoe", el: u.el, ranged: true });
-        return;
-      }
-      const tgts = alive(E), frontFoes = tgts.filter(e => e.front);
-      const pool = u.cls === "Archer" || u.cls === "Assassin" || !frontFoes.length ? tgts : frontFoes; // la mêlée frappe d'abord la ligne avant ennemie
-      const t = u.cls === "Archer" ? tgts.sort((x, y) => x.hp - y.hp)[0] : pool[Math.floor(Math.random() * pool.length)];
-      const m = elMult(u.el, t.el);
-      let dmg = Math.round(u.atk * m * rnd()), crit = (u.cls === "Assassin" && Math.random() < 0.3) || Math.random() < (u.crit || 0);
-      if (crit) dmg = Math.round(dmg * 1.8);
-      t.hp = Math.max(0, t.hp - dmg);
-      if (u.ls) u.hp = Math.min(u.max, u.hp + Math.round(dmg * u.ls));
-      snap(`${u.name} → ${t.name} : ${dmg}${crit ? " (critique)" : ""}${tag(m)}${t.hp === 0 ? " — vaincu" : ""}`, m > 1 ? "eff" : m < 1 ? "weak" : "",
-        { s: src, t: ["e" + E.indexOf(t)], v: [dmg], ms: [m], crit, type: "hit", el: u.el, ranged: !!RANGED[u.cls] });
-    });
-    for (const e of E.flatMap(x => x.boss ? [x, x] : [x])) {
-      if (e.hp <= 0 || !alive(A).length) continue;
-      const al = alive(A), fr = al.filter(u => u.front), guard = al.find(u => u.cls === "Gardien");
-      const pick = arr => arr[Math.floor(Math.random() * arr.length)];
-      const t = guard && Math.random() < 0.3 ? guard : fr.length && Math.random() < 0.75 ? pick(fr) : pick(al);
-      const m = elMult(e.el, t.el), dmg = Math.round(e.atk * m * rnd()); t.hp = Math.max(0, t.hp - dmg);
-      snap(`${e.name} → ${t.name} : ${dmg}${tag(m)}${t.hp === 0 ? " — K.O." : ""}`, "",
-        { s: "e" + E.indexOf(e), t: ["a" + A.indexOf(t)], v: [dmg], ms: [m], type: "hit", el: e.el, ranged: false });
+    A.forEach(u => { if (!alive(E).length) return; act(u, x => (turn % (x.sk || 3) === 0 ? active(x) : basic(x))); });
+    for (const e of E.flatMap(x => x.boss ? [x, x] : [x])) { if (!alive(A).length) break; act(e, foeAct); }
+    // fin de tour : soins passifs, brûlures, durées
+    const oren = alive(A).find(u => has(u, "oren")), w = mostHurt();
+    if (oren && w && w.hp < w.max) { const ev = ev0(oren, "heal"); ev.t.push(code(w)); ev.v.push(heal(oren, w, atkOf(oren) * .4)); ev.tags.push(""); snap(`Courant apaisant : ${w.name} +${ev.v[0]}.`, "", ev); }
+    alive(A).filter(u => has(u, "seve", "p2") && u.hp < u.max).forEach(u => { const ev = ev0(u, "heal"); ev.t.push(code(u)); ev.v.push(heal(u, u, u.max * .06)); ev.tags.push(""); snap(`Sève vive : ${u.name} +${ev.v[0]}.`, "", ev); });
+    const burning = [...A, ...E].filter(u => u.hp > 0 && u.burns.length);
+    if (burning.length) {
+      const ev = { s: code(burning[0]), t: [], v: [], ms: [], tags: [], type: "tick", el: "Feu" };
+      burning.forEach(u => { const d = u.burns.reduce((s, b) => s + b.d, 0); u.hp = Math.max(0, u.hp - d); ev.t.push(code(u)); ev.v.push(d); ev.tags.push(u.hp <= 0 ? death(u, null).join(" ") : ""); });
+      snap(`Les flammes brûlent : ${burning.map(u => u.name).join(", ")}.`, "", ev);
     }
+    [...A, ...E].forEach(u => { u.burns = u.burns.filter(b => --b.t > 0); u.buf = u.buf.filter(b => --b.t > 0); u.mark = u.mark.filter(b => --b.t > 0); });
   }
   const win = alive(A).length > 0 && !alive(E).length;
   return { A, E, frames, win };
@@ -2004,7 +2111,7 @@ function setBar(code, hp, max) {
 function floatText(el, txt, cls) {
   const fx = $("#fx"); if (!fx || !el) return;
   const [x, y] = centerOf(el), d = document.createElement("div");
-  d.className = "dmg " + cls; d.textContent = txt;
+  d.className = "dmg" + (cls ? " f-" + cls : ""); d.textContent = txt;
   d.style.left = (x + (Math.random() * 24 - 12)) + "px"; d.style.top = (y - 20) + "px";
   fx.appendChild(d); setTimeout(() => d.remove(), 1000);
 }
@@ -2033,7 +2140,9 @@ function impact(el, ev, i) {
   const col = ev.type === "heal" ? "#7dffa8" : ev.s[0] === "a" ? getComputedStyle(document.documentElement).getPropertyValue(EL[ev.el] || "--brass").trim() : (MON_COLOR[ev.el] || "#fff");
   sparks(x, y, col, ev.type === "skill" || ev.crit ? 22 : 10, ev.type === "skill" || ev.crit);
   if (!ev.ranged && ev.type === "hit") (BG.slashes = BG.slashes || []).push({ x, y, c: col, life: 0, rot: (ev.s[0] === "a" ? Math.PI : 0) + (Math.random() - .5) * .8 });
+  if (ev.tags && ev.tags[i]) setTimeout(() => floatText(el, ev.tags[i], "tag"), 260);
   if (ev.type === "heal") return floatText(el, "+" + v, "heal");
+  if (v === "Esquive") return floatText(el, "Esquive", "tag");
   if (ev.crit) { shake(5); return floatText(el, v + " CRITIQUE !", "crit"); }
   if (ev.s[0] === "e" && ui.battle && ui.battle.E[0].boss) shake(7, 300);
   floatText(el, v + (m > 1 ? " !" : ""), ev.type === "skill" ? "skill" : m > 1 ? "eff" : m < 1 ? "weak" : "");
@@ -2043,7 +2152,8 @@ function playFrame(f) {
   logLine(f.text, f.kind);
   if (!ev) { applyHP(f); return; }
   const src = unitEl(ev.s), dir = ev.s[0] === "a" ? 1 : -1;
-  if (ev.type === "skill") { const w = $("#world"); w && w.animate([{ filter: "brightness(1.9) saturate(1.3)" }, { filter: "none" }], { duration: dur }); floatText(src, "ÉVEIL !", "skill"); shake(9, 400); }
+  if (ev.type === "tick") { applyHP(f); ev.t.forEach((t, i) => { const el = unitEl(t); if (!el) return; floatText(el, String(ev.v[i]), ev.v[i] === "Étourdi" ? "tag" : "burn"); if (ev.tags[i]) setTimeout(() => floatText(el, ev.tags[i], "tag"), 260); }); return; }
+  if (ev.type === "skill" || (ev.type === "heal" && ev.name)) { const w = $("#world"); w && w.animate([{ filter: "brightness(1.9) saturate(1.3)" }, { filter: "none" }], { duration: dur }); floatText(src, ev.name || "ÉVEIL !", "skill"); if (ev.type === "skill") shake(9, 400); }
   if (ev.type === "heal") src && src.querySelector(".body").animate([{ transform: "translateY(0)" }, { transform: "translateY(-12px)" }, { transform: "translateY(0)" }], { duration: dur * .5, composite: "add" });
   else lunge(src, dir, dur * .6, !ev.ranged);
   const fly = ev.ranged ? dur * .32 : 0, wait = ev.ranged ? dur * .18 : dur * .27, b0 = ui.battle;
@@ -2782,6 +2892,7 @@ const DACTS = [
   { n: "Brasier stellaire", els: ["Feu", "Terre"] },
   { n: "Cœur du néant", els: ["Ombre", "Lumière"] },
 ];
+const DSCALE = 1.6; // recalibré après l'ajout des compétences (les kits rendent l'équipe plus forte que sa puissance affichée)
 const DMULT = { elite: 1.15, gardien: 0.55 }; // calibré : ~10 étapes en moyenne, dérive complète rare
 const DROWS = 5; // carrefours par acte (+ Gardien)
 const DNODES = {
@@ -2823,7 +2934,7 @@ function dRow(r) {
 }
 function dFoes(r, node) {
   const d = dDepth(r), mult = node.t === "elite" ? DMULT.elite : node.t === "gardien" ? DMULT.gardien : 1;
-  const target = r.p0 * (0.5 + d * 0.036) * mult, boss = node.t === "gardien";
+  const target = r.p0 * DSCALE * (0.5 + d * 0.036) * mult, boss = node.t === "gardien";
   let L = 1; while (L < 300 && foePowerOf(genFoes(L, node.els, boss)) < target) L++;
   return genFoes(L, node.els, boss);
 }
