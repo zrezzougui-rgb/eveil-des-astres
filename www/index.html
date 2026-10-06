@@ -475,6 +475,91 @@ body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.s
 .tier.open { color: var(--text); border-color: var(--brass-hi); box-shadow: 0 0 12px rgba(243,208,143,.45); animation: pulse 1.4s ease-in-out infinite; }
 .tier.got { opacity: .5; } .tier .ok { position: absolute; top: 4px; right: 6px; color: var(--ok); font-style: normal; font-weight: 800; }
 .tier:disabled { cursor: default; }
+/* ================= HABILLAGE DES MENUS (thème « Observatoire céleste ») ================= */
+:root {
+  --gold-1: #fff1c4; --gold-2: #f2c46b; --gold-3: #c8892e; --gold-4: #7a4a12;
+  --plate-1: #2b2860; --plate-2: #161437; --hair: rgba(243,208,143,.32);
+  --orn: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%23f2c46b' stop-opacity='0'/%3E%3Cstop offset='.5' stop-color='%23fff1c4'/%3E%3Cstop offset='1' stop-color='%23f2c46b' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M0 12H80M120 12H200' stroke='url(%23g)' stroke-width='2'/%3E%3Cpath d='M100 2L110 12L100 22L90 12Z' fill='%23f2c46b' stroke='%237a4a12'/%3E%3Ccircle cx='100' cy='12' r='3.5' fill='%2374d4cd'/%3E%3Ccircle cx='84' cy='12' r='2' fill='%23f2c46b'/%3E%3Ccircle cx='116' cy='12' r='2' fill='%23f2c46b'/%3E%3C/svg%3E");
+}
+/* Panneau coulissant : texture étoilée, liseré doré et ornement central */
+.drawer {
+  background:
+    radial-gradient(1px 1px at 12% 22%, rgba(255,255,255,.35), transparent 60%),
+    radial-gradient(1px 1px at 72% 12%, rgba(255,255,255,.3), transparent 60%),
+    radial-gradient(1.5px 1.5px at 42% 64%, rgba(243,208,143,.35), transparent 60%),
+    radial-gradient(1px 1px at 88% 78%, rgba(255,255,255,.25), transparent 60%),
+    radial-gradient(ellipse at 50% -10%, rgba(116,212,205,.14), transparent 55%),
+    linear-gradient(180deg, #1f1c4a 0%, #121331 40%, #0c0d24 100%);
+  background-size: 140px 140px, 180px 180px, 220px 220px, 160px 160px, 100% 100%, 100% 100%;
+  border-top: 0; box-shadow: 0 -2px 0 var(--gold-3), 0 -4px 0 rgba(0,0,0,.6), 0 -18px 40px rgba(0,0,0,.6);
+}
+.drawer::before { content: ""; position: absolute; left: 50%; top: -13px; width: 220px; height: 26px; transform: translateX(-50%); background: var(--orn) center / contain no-repeat; pointer-events: none; z-index: 2; }
+.drawer-head { display: grid; grid-template-columns: 40px 1fr 40px; align-items: center; padding: 18px 14px 10px; }
+.drawer-head .grab { display: none; }
+.drawer-head h2 { grid-column: 2; justify-self: center; position: relative; margin: 0; padding: 6px 26px 7px; font-size: 1.15rem; letter-spacing: .06em; color: var(--gold-1); text-shadow: 0 2px 0 rgba(0,0,0,.6), 0 0 14px rgba(242,196,107,.45);
+  background: linear-gradient(180deg, var(--plate-1), var(--plate-2)); border: 1px solid var(--gold-3); border-radius: 6px;
+  clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0 50%); box-shadow: inset 0 1px 0 rgba(255,255,255,.12); white-space: nowrap; }
+.drawer-head .x { grid-column: 3; width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--gold-3); background: radial-gradient(circle at 35% 30%, #4a3f8a, #1a1640); color: var(--gold-1); font-weight: 800; box-shadow: 0 2px 6px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.2); }
+/* Boutons en relief */
+.btn { background: linear-gradient(180deg, #3d4280 0%, #2a2d5c 55%, #1f2148 100%); border: 1px solid var(--hair); border-radius: 12px; color: #eef0ff;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.2), inset 0 -3px 0 rgba(0,0,0,.35), 0 3px 8px rgba(0,0,0,.35); text-shadow: 0 1px 0 rgba(0,0,0,.55); transition: transform .08s, box-shadow .08s, filter .15s; }
+.btn:hover:not(:disabled) { filter: brightness(1.12); }
+.btn:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 1px 0 rgba(255,255,255,.15), inset 0 -1px 0 rgba(0,0,0,.35), 0 1px 3px rgba(0,0,0,.35); }
+.btn.primary { background: linear-gradient(180deg, var(--gold-1) 0%, var(--gold-2) 42%, var(--gold-3) 100%); color: #3a2208; border: 1px solid #fff6d6; text-shadow: 0 1px 0 rgba(255,255,255,.55);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.75), inset 0 -3px 0 rgba(122,74,18,.65), 0 0 16px rgba(242,196,107,.35), 0 3px 8px rgba(0,0,0,.4); font-weight: 800; }
+.btn:disabled { filter: grayscale(.75) brightness(.75); opacity: .65; }
+.btn small { opacity: .85; font-weight: 700; }
+/* Cadres de panneaux avec coins ornés */
+.adv-card, .mission, .forge, #p-heroes .sheet, .altar {
+  position: relative; border: 1px solid var(--hair); border-radius: 16px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08), 0 8px 18px rgba(0,0,0,.35);
+}
+.mission, #p-heroes .sheet { background: linear-gradient(180deg, rgba(48,44,104,.9), rgba(20,19,50,.95)); }
+.adv-card::before, .adv-card::after, .mission::before, .mission::after, .forge::before, .forge::after, #p-heroes .sheet::before, #p-heroes .sheet::after {
+  content: ""; position: absolute; top: -5px; width: 10px; height: 10px; background: linear-gradient(135deg, var(--gold-1), var(--gold-3)); border: 1px solid var(--gold-4); transform: rotate(45deg); pointer-events: none; }
+.adv-card::before, .mission::before, .forge::before, #p-heroes .sheet::before { left: 14px; }
+.adv-card::after, .mission::after, .forge::after, #p-heroes .sheet::after { right: 14px; }
+/* Titres de section */
+.adv-head h3, .toolbar h2, #p-heroes .sheet h2, .fg-hero h3 { color: var(--gold-1); text-shadow: 0 2px 0 rgba(0,0,0,.55), 0 0 12px rgba(242,196,107,.35); }
+.eyebrow { color: #b9b4e6; letter-spacing: .16em; }
+.toolbar { padding-bottom: 6px; border-bottom: 1px solid transparent; border-image: linear-gradient(90deg, transparent, var(--gold-3), transparent) 1; }
+/* Cartes de héros encadrées selon la rareté */
+.card { border-radius: 14px; border: 2px solid transparent; background:
+    linear-gradient(180deg, #242a5a, #13153a) padding-box,
+    linear-gradient(160deg, #c9d6f2, #6e7fa8 50%, #c9d6f2) border-box; box-shadow: 0 4px 10px rgba(0,0,0,.4); overflow: hidden; }
+.card.r4 { background: linear-gradient(180deg, #2c2460, #15123a) padding-box, linear-gradient(160deg, #e3c9ff, #8b5bd6 50%, #e3c9ff) border-box; box-shadow: 0 0 12px rgba(185,139,240,.35), 0 4px 10px rgba(0,0,0,.4); }
+.card.r5 { background: linear-gradient(180deg, #3a2a3a, #1a1230) padding-box, linear-gradient(160deg, var(--gold-1), var(--gold-3) 50%, var(--gold-1)) border-box; box-shadow: 0 0 16px rgba(242,196,107,.45), 0 4px 10px rgba(0,0,0,.4); }
+.card.r5::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.35) 50%, transparent 65%); transform: translateX(-120%); animation: shine 4.5s ease-in-out infinite; pointer-events: none; }
+@keyframes shine { 0%, 70% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+.card .portrait { border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
+.card .nm { text-shadow: 0 1px 0 rgba(0,0,0,.6); }
+.card.locked { filter: grayscale(1) brightness(.55); }
+/* Barres de progression lumineuses */
+.mission .bar, .meter .bar, .passbar .bar { height: 8px; border-radius: 5px; background: rgba(0,0,0,.45); box-shadow: inset 0 1px 2px rgba(0,0,0,.6); }
+.mission .bar b, .meter .bar b, .passbar .bar i { position: relative; overflow: hidden; border-radius: 5px; }
+.mission .bar b { background: linear-gradient(90deg, #3fbf6a, #9ff0b8); box-shadow: 0 0 8px rgba(111,207,142,.6); }
+.mission .bar b::after, .meter .bar b::after, .passbar .bar i::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(115deg, rgba(255,255,255,.22) 0 6px, transparent 6px 14px); animation: stripes 1.2s linear infinite; }
+@keyframes stripes { to { background-position: 28px 0; } }
+.mission.done { border-color: rgba(111,207,142,.6); box-shadow: 0 0 14px rgba(111,207,142,.25), inset 0 0 0 1px rgba(0,0,0,.45); }
+/* Puces, filtres, chips */
+.fchip, .chip, .rchip, .elc { box-shadow: inset 0 1px 0 rgba(255,255,255,.1); }
+.fchip.on { box-shadow: 0 0 10px color-mix(in srgb, var(--el, var(--brass)) 60%, transparent); }
+/* Statistiques de la fiche héros */
+.stat { background: linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.4)); border: 1px solid rgba(255,255,255,.06); }
+.stat b { color: var(--gold-1); }
+/* Barre du bas : ornement central et icônes lumineuses */
+.dock { border-top: 0; box-shadow: 0 -2px 0 var(--gold-3), 0 -3px 0 rgba(0,0,0,.6); background: linear-gradient(180deg, #1c1a44, #0b0c22); }
+.dock::before { content: ""; position: absolute; left: 0; right: 0; top: -2px; height: 2px; background: linear-gradient(90deg, transparent, var(--gold-1), transparent); opacity: .6; }
+.dock button[aria-selected="true"] svg { filter: drop-shadow(0 0 6px rgba(243,208,143,.8)); }
+.dock button[aria-selected="true"]:not(.main)::after { content: ""; position: absolute; bottom: -2px; left: 30%; right: 30%; height: 3px; border-radius: 2px; background: var(--gold-2); box-shadow: 0 0 8px var(--gold-2); }
+/* Ressources du haut */
+.hud .coin { border: 1px solid var(--hair); background: linear-gradient(180deg, rgba(43,40,96,.85), rgba(14,14,38,.85)); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 2px 6px rgba(0,0,0,.4); }
+.stagepill b { color: var(--gold-1); }
+/* Emplacements de formation et cartes d'équipe */
+.formation .tslot, .tcard { box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 4px 10px rgba(0,0,0,.35); }
+.rlab { color: var(--gold-2); text-shadow: 0 1px 0 rgba(0,0,0,.6); }
+/* Toasts façon parchemin céleste */
+.toast { background: linear-gradient(180deg, var(--plate-1), var(--plate-2)); border: 1px solid var(--gold-3); box-shadow: 0 8px 22px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.12); color: var(--gold-1); }
 </style>
 
 <div class="game">
