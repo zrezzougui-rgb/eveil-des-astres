@@ -268,6 +268,7 @@ body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.s
 @keyframes rise { 0% { opacity: 0; margin-top: 8px; transform: translate(-50%,-50%) scale(.5); } 14% { opacity: 1; transform: translate(-50%,-50%) scale(1.25); } 30% { transform: translate(-50%,-50%) scale(1); } 100% { opacity: 0; margin-top: -54px; transform: translate(-50%,-50%) scale(1); } }
 .banner { position: absolute; left: 0; right: 0; top: 34%; z-index: 310; text-align: center; font-family: var(--f-display); font-size: clamp(2.2rem, 11vw, 4rem); letter-spacing: .08em; color: #fff; -webkit-text-stroke: 1px rgba(0,0,0,.4); text-shadow: 0 4px 0 rgba(0,0,0,.45), 0 0 30px rgba(0,0,0,.5); animation: pop .55s cubic-bezier(.2,1.6,.4,1) both; pointer-events: none; }
 .banner.win { color: var(--r5); text-shadow: 0 4px 0 rgba(0,0,0,.45), 0 0 34px rgba(242,196,107,.8); }
+.banner.special { color: var(--astral); font-size: clamp(1.4rem, 7vw, 2.4rem); }
 .banner.lose { color: var(--bad); } .banner.boss { color: #ff5a5a; text-shadow: 0 0 40px rgba(255,0,0,.8); }
 @keyframes pop { from { transform: scale(.3); opacity: 0; } to { transform: none; opacity: 1; } }
 .gemfly { position: fixed; z-index: 80; width: 12px; height: 12px; background: var(--astral); border-radius: 2px; box-shadow: 0 0 10px var(--astral); pointer-events: none; }
@@ -386,6 +387,25 @@ body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.s
 .rchip.off { --el: var(--line); color: var(--muted); }
 .rchip.off b { color: var(--text); }
 .rhint { font-size: .74rem; color: var(--muted); }
+/* ---------- Aventures ---------- */
+.adv-card { border: 1px solid var(--line); border-radius: 18px; padding: 14px; display: grid; gap: 8px; background: linear-gradient(160deg, var(--ink-2), var(--ink)); }
+.adv-card.tower { border-color: color-mix(in srgb, var(--brass) 55%, var(--line)); background: radial-gradient(circle at 85% 0%, rgba(217,173,98,.18), transparent 50%), linear-gradient(160deg, var(--ink-2), var(--ink)); }
+.adv-card.soon { opacity: .8; }
+.adv-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.adv-head h3 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 1.2rem; color: var(--brass-hi); }
+.adv-card .floor { font-size: .8rem; font-weight: 700; color: var(--text); }
+.adv-card p { margin: 0; font-size: .82rem; }
+.energy { display: flex; align-items: center; gap: 10px; font-size: .8rem; color: var(--muted); flex-wrap: wrap; }
+.energy .dots { display: flex; gap: 5px; }
+.energy i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--astral); }
+.energy i.on { background: radial-gradient(circle at 35% 35%, #fff, var(--astral)); box-shadow: 0 0 8px var(--astral); }
+.rw { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.rw .pw { font-size: .72rem; font-variant-numeric: tabular-nums; padding: 2px 8px; border-radius: 999px; background: rgba(10,12,32,.6); margin-left: auto; }
+.bosstag { font-size: .66rem; font-weight: 800; background: var(--bad); color: var(--ink); padding: 1px 6px; border-radius: 6px; }
+.btn.big { padding: 12px 18px; font-size: 1rem; }
+.sanct { border-left: 3px solid var(--el); padding: 8px 0 8px 12px; display: grid; gap: 6px; }
+.sanct .sh { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.sanct .tries { margin-left: auto; color: var(--el); letter-spacing: 2px; }
 </style>
 
 <div class="game">
@@ -415,6 +435,7 @@ body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.s
   </div>
   <div class="ctl-r">
     <button class="rb" id="spd" aria-label="Vitesse du combat">×1</button>
+    <button class="rb" id="logbtn" aria-label="Journal et infos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18H6z M9 8h6M9 12h6M9 16h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></button>
     <button class="rb" id="auto" aria-label="Combats en boucle"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 13.7-5.7L20 8.6M20 4v4.6h-4.6M20 12a8 8 0 0 1-13.7 5.7L4 15.4M4 20v-4.6h4.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   </div>
   <button class="btn primary fight" id="fightbtn" hidden>Combattre</button>
@@ -423,6 +444,7 @@ body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.s
     <div class="drawer-head"><span class="grab"></span><h2 id="sheet-title"></h2><button class="x" id="sheet-close" aria-label="Fermer">✕</button></div>
     <div class="drawer-body">
       <div class="panel" id="p-team"></div>
+      <div class="panel" id="p-adv"></div>
       <div class="panel" id="p-heroes"></div>
       <div class="panel" id="p-summon"></div>
       <div class="panel" id="p-missions"></div>
@@ -439,7 +461,7 @@ body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.s
     <button id="tab-summon" role="tab" data-tab="summon"><svg viewBox="0 0 24 24"><path d="M12 2l2.6 6.4L21 9l-5 4.4L17.5 20 12 16.6 6.5 20 8 13.4 3 9l6.4-.6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span class="lbl">Invoquer</span></button>
     <button id="tab-battle" role="tab" data-tab="battle" class="main"><svg viewBox="0 0 24 24"><path d="M4 4l9 9M4 4h4M4 4v4M20 4l-9 9M20 4h-4M20 4v4M7 14l3 3-3 3-3-3zM17 14l-3 3 3 3 3-3z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg><span class="lbl">Combat</span></button>
     <button id="tab-missions" role="tab" data-tab="missions"><svg viewBox="0 0 24 24"><path d="M6 3h10l3 3v15H6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 10l2 2 4-4M9 16h6" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span class="lbl">Missions</span><span class="badge-slot"></span></button>
-    <button id="tab-info" role="tab" data-tab="info"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z M9 9h6M9 13h6M9 17h3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span class="lbl">Journal</span></button>
+    <button id="tab-adv" role="tab" data-tab="adv"><svg viewBox="0 0 24 24"><path d="M8 21V9l4-6 4 6v12M8 21h8M5 21h14M10 13h4M10 17h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span class="lbl">Aventures</span></button>
   </nav>
 
   <div id="summonfx" class="summonfx" hidden></div>
@@ -789,16 +811,16 @@ function monsterSVG(el, boss) {
 
 /* ---- Simulation (calcul instantané, rejoué ensuite en animation) ---- */
 const RANGED = { Mage: true, Archer: true, Soigneur: true };
-function simulate() {
+function simulate(E0) {
   const res = resonance();
   const A = S.team.map((id, slot) => { if (!id) return null; const s = unitStats(id, slot, res), o = S.heroes[id]; return { id, slot, front: isFront(slot), el: H[id].el, name: evolved(o) ? H[id].evo : H[id].name, cls: H[id].cls, hp: s.hp, max: s.hp, atk: s.atk, evo: evolved(o), lvl: o.lvl }; }).filter(Boolean);
-  const E = makeFoes(S.stage), frames = [];
+  const E = (E0 || makeFoes(S.stage)).map(f => ({ ...f })), frames = [];
   const alive = arr => arr.filter(u => u.hp > 0);
   const snap = (text, kind, ev) => frames.push({ a: A.map(u => u.hp), e: E.map(u => u.hp), text, kind, ev });
   const rnd = () => 0.9 + Math.random() * 0.2;
   const tag = m => m > 1 ? " (efficace !)" : m < 1 ? " (peu efficace)" : "";
   if (E[0].boss) snap(`BOSS — ${E[0].name} (${E[0].el}) barre la route !`, "bossline");
-  else snap(`Étape ${S.stage} : ${E.map(e => `${e.name} (${e.el})`).join(", ")} apparaissent.`);
+  else snap(`${ui.special ? ui.special.label : "Étape " + S.stage} : ${E.map(e => `${e.name} (${e.el})`).join(", ")} apparaissent.`);
   for (let turn = 1; turn <= 25 && alive(A).length && alive(E).length; turn++) {
     A.forEach((u, ai) => {
       if (u.hp <= 0 || !alive(E).length) return;
@@ -1088,17 +1110,20 @@ function gemBurst(n, fromEl) {
 }
 
 /* ---- Déroulement ---- */
-function startBattle() {
+function startBattle(spec) {
+  ui.special = spec || null;
   if (!teamIds().length) { renderHUD(); return toast("Ajoutez au moins un héros à l'équipe (menu Héros)."); }
-  const b = simulate(); ui.battle = { ...b, i: 0, done: false };
+  const b = simulate(ui.special ? ui.special.foes() : null); ui.battle = { ...b, i: 0, done: false };
+  const bossFight = !!b.E[0].boss;
   buildStage(b);
   const lg = $("#log"); if (lg) lg.innerHTML = "";
   b.A.forEach((u, i) => setBar("a" + i, u.max, u.max)); b.E.forEach((u, i) => setBar("e" + i, u.max, u.max));
   $("#stage").classList.add("walking"); BG.target = 1;
   $("#banner").hidden = true;
-  if (isBoss(S.stage)) setTimeout(() => banner("BOSS", "boss"), 300);
+  if (bossFight) setTimeout(() => banner("BOSS", "boss"), 300);
+  else if (ui.special) setTimeout(() => banner(ui.special.label, "special"), 200);
   renderHUD();
-  ui.battle.timer = setTimeout(() => { BG.target = 0; $("#stage").classList.remove("walking"); $("#banner").hidden = true; step(); }, 1100 / speed() + (isBoss(S.stage) ? 600 : 0));
+  ui.battle.timer = setTimeout(() => { BG.target = 0; $("#stage").classList.remove("walking"); $("#banner").hidden = true; step(); }, 1100 / speed() + (bossFight || ui.special ? 600 : 0));
 }
 function step() {
   const b = ui.battle; if (!b || b.done) return;
@@ -1112,6 +1137,16 @@ function finish() {
   const st = $("#stage"); st && st.classList.remove("walking");
   applyHP(b.frames[b.frames.length - 1]);
   let msg;
+  if (ui.special) {
+    const sp = ui.special; ui.special = null;
+    msg = sp.onEnd(b.win);
+    banner(b.win ? "VICTOIRE" : "DÉFAITE", b.win ? "win" : "lose");
+    if (b.win) { gemBurst(8); toast(msg); } else toast(msg);
+    b.result = { win: b.win, msg };
+    save(); setTimeout(renderWallet, 800); renderHUD(); logLine(msg, b.win ? "win" : "lose");
+    setTimeout(() => { if (ui.tab === "battle") openTab(sp.back); }, 2200);
+    scheduleAuto(); return;
+  }
   if (b.win) {
     const boss = isBoss(S.stage), g = (240 + S.stage * 20) * (boss ? 3 : 1), p = (3 + Math.floor(S.stage / 2)) * (boss ? 2 : 1);
     S.gems += g; S.pots += p; S.stage++; track("win");
@@ -1127,6 +1162,11 @@ function finish() {
 function logLine(t, kind) { const lg = $("#log"); if (!lg) return; const d = document.createElement("div"); d.textContent = t; if (kind) d.className = kind; lg.appendChild(d); while (lg.children.length > 120) lg.firstChild.remove(); lg.scrollTop = lg.scrollHeight; }
 function renderHUD() {
   const tp = teamPower();
+  if (ui.special && ui.battle && !ui.battle.done) {
+    const fp = foePowerOf(ui.battle.E), st = tp / fp >= 1.15 ? "ok" : tp / fp >= .85 ? "mid" : "bad", el0 = $("#stagepill");
+    if (el0) el0.innerHTML = `<b>${ui.special.label}</b><span class="pw ${st}">⚔ ${tp.toLocaleString("fr-FR")} / ${fp.toLocaleString("fr-FR")}</span>`;
+    const fb0 = $("#fightbtn"); if (fb0) fb0.hidden = true; return;
+  }
   const foes = makeFoes(S.stage), foePower = foes.reduce((s, f) => s + Math.round(f.max / 4 + f.atk * 2), 0);
   const ratio = tp / foePower, state = ratio >= 1.15 ? "ok" : ratio >= 0.85 ? "mid" : "bad";
   const el = $("#stagepill");
@@ -1397,6 +1437,135 @@ function bindDrag(card) {
 }
 function openTeam(slot, pending) { ui.slot = slot ?? null; ui.pending = pending || null; ui.tab = "team"; render(); }
 
+/* ================== AVENTURES : TOUR DES ASTRES ET SANCTUAIRES ================== */
+const CYCLE_EL = ["Eau", "Feu", "Nature", "Terre", "Ombre", "Lumière"];
+function genFoes(level, els, boss) {
+  const hp = Math.round(520 * Math.pow(1.22, level - 1)), atk = Math.round(62 * Math.pow(1.2, level - 1));
+  if (boss) { const b = BOSSES.find(x => x.el === els[0]) || BOSSES[0], bhp = Math.round(hp * 4.6); return [{ ...b, hp: bhp, max: bhp, atk: Math.round(atk * 2.3), foe: true, boss: true, front: true }]; }
+  return [0, 1, 2, 3, 4].map(i => { const el = els[i % els.length], f = FOES.find(x => x.el === el) || FOES[0], front = i < 2, h = Math.round(hp * (front ? .95 : .72));
+    return { ...f, hp: h, max: h, atk: Math.round(atk * (front ? .72 : .88)), foe: true, front }; });
+}
+const foePowerOf = foes => foes.reduce((s, f) => s + Math.round(f.max / 4 + f.atk * 2), 0);
+const counterOf = el => el === "Lumière" ? "Ombre" : el === "Ombre" ? "Lumière" : Object.keys(BEATS).find(k => BEATS[k] === el);
+function powerState(foes) { const r = teamPower() / foePowerOf(foes); return r >= 1.15 ? "ok" : r >= 0.85 ? "mid" : "bad"; }
+function rewardTxt(r) { return [r.gems && `${r.gems} gemmes`, r.pots && `${r.pots} potions`, r.shards && `${r.shards} éclat${r.shards > 1 ? "s" : ""} errant${r.shards > 1 ? "s" : ""}`].filter(Boolean).join(" · "); }
+function grant(r) { S.gems += r.gems || 0; S.pots += r.pots || 0; S.shards = (S.shards || 0) + (r.shards || 0); }
+
+// ---- Tour des Astres : le Souffle d'éther n'est consommé qu'en cas de défaite
+const TOWER_MAX = 5, TOWER_REGEN = 45 * 60000;
+function tower() {
+  if (!S.tower) S.tower = { floor: 1, energy: TOWER_MAX, t: Date.now() };
+  const T = S.tower;
+  if (T.energy >= TOWER_MAX) T.t = Date.now();
+  else { const n = Math.floor((Date.now() - T.t) / TOWER_REGEN); if (n > 0) { T.energy = Math.min(TOWER_MAX, T.energy + n); T.t += n * TOWER_REGEN; } }
+  return T;
+}
+function floorInfo(f) {
+  const el = CYCLE_EL[Math.floor((f - 1) / 2) % CYCLE_EL.length], boss = f % 10 === 0;
+  const els = boss ? [el] : f % 3 === 0 ? [el, CYCLE_EL[(CYCLE_EL.indexOf(el) + 3) % CYCLE_EL.length]] : [el];
+  const level = Math.round(1.5 + f * 0.85);
+  const r = { gems: 30 + f * 6, pots: 1 + Math.floor(f / 4), shards: 0 };
+  if (f % 5 === 0) { r.gems += 150; r.shards += 1; }
+  if (boss) { r.gems += 300; r.shards += 2; }
+  return { f, els, boss, level, reward: r, foes: () => genFoes(level, els, boss) };
+}
+function startTower() {
+  const T = tower(), info = floorInfo(T.floor);
+  if (T.energy <= 0) return toast("Plus de Souffle d'éther : il se recharge avec le temps.");
+  launchSpecial({ kind: "tower", label: `Tour · étage ${info.f}`, foes: info.foes, back: "adv",
+    onEnd: win => {
+      const T2 = tower();
+      if (win) { grant(info.reward); T2.floor++; return `Étage ${info.f} franchi ! ${rewardTxt(info.reward)}.`; }
+      if (T2.energy >= TOWER_MAX) T2.t = Date.now();
+      T2.energy = Math.max(0, T2.energy - 1);
+      return `L'étage ${info.f} résiste. −1 Souffle d'éther (${T2.energy}/${TOWER_MAX}).`;
+    } });
+}
+
+// ---- Sanctuaires élémentaires : un élément par jour, tous le dimanche, 3 essais par jour
+const SANCT_ELS = ["Feu", "Eau", "Nature", "Terre", "Lumière", "Ombre"], SANCT_TRIES = 3, SANCT_MAX = 10;
+const SANCT_NAMES = { Feu: "Forge des braises", Eau: "Grotte des marées", Nature: "Bosquet ancien", Terre: "Carrière de basalte", Lumière: "Chapelle d'aurore", Ombre: "Crypte du néant" };
+function sanctOpen() { const d = new Date().getDay(); return d === 0 ? SANCT_ELS : [SANCT_ELS[d - 1]]; }
+function sanct() {
+  if (!S.sanct) S.sanct = { best: {}, tries: {}, day: "" };
+  if (S.sanct.day !== today()) { S.sanct.day = today(); S.sanct.tries = {}; }
+  return S.sanct;
+}
+const triesLeft = el => SANCT_TRIES - (sanct().tries[el] || 0);
+function sanctLevel(el, L) {
+  const boss = L % 5 === 0;
+  const r = { gems: 50 + L * 25, pots: 4 + L * 3, shards: L >= 3 ? Math.floor(L / 3) : 0 };
+  return { el, L, boss, reward: r, level: 3 + L * 3, foes: () => genFoes(3 + L * 3, [el], boss) };
+}
+function startSanct(el, L) {
+  if (triesLeft(el) <= 0) return toast("Plus d'essais aujourd'hui pour ce sanctuaire.");
+  const info = sanctLevel(el, L);
+  launchSpecial({ kind: "sanct", label: `${SANCT_NAMES[el]} · niv. ${L}`, foes: info.foes, back: "adv",
+    onEnd: win => {
+      const s = sanct(); s.tries[el] = (s.tries[el] || 0) + 1;
+      if (win) { grant(info.reward); s.best[el] = Math.max(s.best[el] || 0, L); return `${SANCT_NAMES[el]} niv. ${L} réussi ! ${rewardTxt(info.reward)}.`; }
+      return `${SANCT_NAMES[el]} niv. ${L} : défaite. Essais restants : ${triesLeft(el)}.`;
+    } });
+}
+function sweepSanct(el) {
+  const s = sanct(), L = s.best[el] || 0;
+  if (!L) return; if (triesLeft(el) <= 0) return toast("Plus d'essais aujourd'hui pour ce sanctuaire.");
+  const info = sanctLevel(el, L); s.tries[el] = (s.tries[el] || 0) + 1; grant(info.reward); save();
+  gemBurst(6, $("#p-adv .sweep[data-el='" + el + "']")); setTimeout(renderWallet, 900);
+  toast(`Balayage niv. ${L} : ${rewardTxt(info.reward)}.`); renderAdv();
+}
+
+// ---- Combats spéciaux : ils interrompent la campagne puis la relancent
+function launchSpecial(spec) {
+  if (!teamIds().length) return toast("Ajoutez au moins un héros à l'équipe.");
+  if (ui.battle) clearTimeout(ui.battle.timer); clearTimeout(autoT); ui.battle = null;
+  ui.tab = "battle"; render();
+  startBattle(spec);
+}
+
+function fmtWait(ms) { const m = Math.ceil(ms / 60000); return m >= 60 ? `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, "0")}` : `${m} min`; }
+function renderAdv() {
+  const box = $("#p-adv"); if (!box) return;
+  const T = tower(), fi = floorInfo(T.floor), tf = fi.foes(), s = sanct();
+  const dots = Array.from({ length: TOWER_MAX }, (_, i) => `<i class="${i < T.energy ? "on" : ""}"></i>`).join("");
+  const regen = T.energy < TOWER_MAX ? ` · +1 dans ${fmtWait(TOWER_REGEN - (Date.now() - T.t))}` : " · plein";
+  const chips = els => els.map(e => `<span class="elc" style="--el:var(${EL[e]})">${e}</span>`).join(" ");
+  const next5 = Math.ceil(T.floor / 5) * 5;
+  const sanctHTML = sanctOpen().map(el => {
+    const best = s.best[el] || 0, L = Math.min(SANCT_MAX, best + 1), info = sanctLevel(el, L), left = triesLeft(el), done = best >= SANCT_MAX;
+    return `<div class="sanct" style="--el:var(${EL[el]})">
+      <div class="sh"><b>${SANCT_NAMES[el]}</b> ${chips([el])}<span class="tries">${"◆".repeat(left)}${"◇".repeat(SANCT_TRIES - left)}</span></div>
+      <p class="muted">Conseil : héros ${counterOf(el)} (dégâts ×1,3). Meilleur niveau : ${best}/${SANCT_MAX}.</p>
+      ${done ? "" : `<p class="rw">Niv. ${L}${info.boss ? " · Boss" : ""} : ${rewardTxt(info.reward)} <span class="pw ${powerState(info.foes())}">⚔ ${teamPower().toLocaleString("fr-FR")} / ${foePowerOf(info.foes()).toLocaleString("fr-FR")}</span></p>`}
+      <div class="actions">
+        ${done ? "" : `<button class="btn primary" data-sanct="${el}" data-l="${L}" ${left ? "" : "disabled"}>Combattre niv. ${L}</button>`}
+        ${best ? `<button class="btn sweep" data-el="${el}" ${left ? "" : "disabled"}>Balayer niv. ${best}</button>` : ""}
+      </div></div>`;
+  }).join("");
+  box.innerHTML = `
+    <div class="adv-card tower">
+      <div class="adv-head"><h3>Tour des Astres</h3><span class="floor">Étage ${T.floor}</span></div>
+      <p class="muted">Gravissez la tour étage par étage. Le Souffle d'éther n'est consommé qu'en cas de défaite : une victoire ne coûte rien.</p>
+      <div class="energy"><span class="dots">${dots}</span><span>Souffle d'éther ${T.energy}/${TOWER_MAX}${regen}</span></div>
+      <p class="rw">Ennemis : ${chips(fi.els)}${fi.boss ? ' <span class="bosstag">Boss</span>' : ""} · conseil : ${counterOf(fi.els[0])}
+        <span class="pw ${powerState(tf)}">⚔ ${teamPower().toLocaleString("fr-FR")} / ${foePowerOf(tf).toLocaleString("fr-FR")}</span></p>
+      <p class="rw">Récompense : ${rewardTxt(fi.reward)}${T.floor % 5 ? ` · palier à l'étage ${next5}` : ""}</p>
+      <button class="btn primary big" id="towergo" ${T.energy ? "" : "disabled"}>Gravir l'étage ${T.floor}</button>
+    </div>
+    <div class="adv-card">
+      <div class="adv-head"><h3>Sanctuaires élémentaires</h3><span class="floor">${new Date().getDay() === 0 ? "Dimanche : tous ouverts" : "Ouvert aujourd'hui"}</span></div>
+      <p class="muted">Un sanctuaire par jour (lundi Feu, mardi Eau, mercredi Nature, jeudi Terre, vendredi Lumière, samedi Ombre). ${SANCT_TRIES} essais par jour. Un niveau réussi peut être balayé sans combattre.</p>
+      ${sanctHTML}
+    </div>
+    <div class="adv-card soon">
+      <div class="adv-head"><h3>Éclats errants : ${S.shards || 0}</h3></div>
+      <p class="muted">Gagnés dans la Tour et les Sanctuaires. Ils serviront à la Forge stellaire pour remplacer des doublons lors des montées d'étoiles. Prochainement : Forge stellaire, Reliques, Dérive céleste.</p>
+    </div>`;
+  $("#towergo").onclick = startTower;
+  box.querySelectorAll("[data-sanct]").forEach(b => b.onclick = () => startSanct(b.dataset.sanct, +b.dataset.l));
+  box.querySelectorAll(".sweep").forEach(b => b.onclick = () => sweepSanct(b.dataset.el));
+}
+
 /* ================== GÉNÉRAL ================== */
 let toastT;
 function toast(msg) {
@@ -1404,7 +1573,7 @@ function toast(msg) {
   const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); t.textContent = msg; document.body.appendChild(t);
   clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2600);
 }
-const SHEET_TITLES = { team: "Équipe", heroes: "Héros", summon: "Invocation", missions: "Missions", info: "Journal & infos" };
+const SHEET_TITLES = { adv: "Aventures", team: "Équipe", heroes: "Héros", summon: "Invocation", missions: "Missions", info: "Journal & infos" };
 function renderInfo() {
   const r = idleRate(), p = pending();
   $("#p-info-top").innerHTML = `
@@ -1418,12 +1587,13 @@ function render() {
   $("#sheet").hidden = !open; document.body.classList.toggle("sheet-open", open);
   if (open) $("#sheet-title").textContent = SHEET_TITLES[ui.tab] || "";
   document.querySelectorAll(".dock button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === ui.tab));
-  ["team", "summon", "heroes", "missions", "info"].forEach(t => { $("#p-" + t).hidden = ui.tab !== t; });
+  ["adv", "team", "summon", "heroes", "missions", "info"].forEach(t => { $("#p-" + t).hidden = ui.tab !== t; });
   if (ui.tab === "summon") renderSummon();
   if (ui.tab === "heroes") renderHeroes();
   if (ui.tab === "missions") renderMissions();
   if (ui.tab === "info") renderInfo();
   if (ui.tab === "team") renderTeam();
+  if (ui.tab === "adv") renderAdv();
 }
 function openTab(t) {
   daily();
@@ -1437,6 +1607,8 @@ document.querySelectorAll(".dock button").forEach(b => b.onclick = () => openTab
 $("#sheet-close").onclick = () => openTab("battle");
 $("#chest").onclick = collect;
 $("#teambtn").onclick = () => openTeam(null);
+$("#logbtn").onclick = () => openTab("info");
+setInterval(() => { if (ui.tab === "adv") renderAdv(); }, 30000);
 $("#stage").onclick = e => { const u = e.target.closest(".u.hero"); if (u) openTeam(+u.id.slice(3)); };
 $("#spd").onclick = () => { S.speed = speed() === 2 ? 1 : 2; save(); renderHUD(); };
 $("#auto").onclick = () => { S.auto = !S.auto; save(); renderHUD(); toast(S.auto ? "Combats en boucle activés." : "Combats en boucle désactivés."); if (S.auto && !(ui.battle && !ui.battle.done)) scheduleAuto(); else if (!S.auto) clearTimeout(autoT); };
