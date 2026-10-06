@@ -410,6 +410,47 @@ body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.s
 .sanct { border-left: 3px solid var(--el); padding: 8px 0 8px 12px; display: grid; gap: 6px; }
 .sanct .sh { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .sanct .tries { margin-left: auto; color: var(--el); letter-spacing: 2px; }
+/* ---------- Forge stellaire ---------- */
+.fpicker { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 8px; scrollbar-width: thin; }
+.fpick { flex: none; position: relative; width: 58px; padding: 0; border-radius: 12px; border: 2px solid var(--line); background: var(--ink-2); overflow: hidden; display: grid; }
+.fpick img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+.fpick span { font-size: .55rem; color: var(--r5); text-align: center; padding: 1px 0 2px; background: var(--ink); letter-spacing: -1px; }
+.fpick.on { border-color: var(--brass-hi); box-shadow: 0 0 10px rgba(243,208,143,.6); }
+.fpick.ready::after { content: ""; position: absolute; top: 3px; right: 3px; width: 10px; height: 10px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 6px var(--ok); }
+.forge { display: grid; gap: 10px; padding: 14px; border-radius: 18px; border: 1px solid color-mix(in srgb, var(--brass) 60%, var(--line)); background: radial-gradient(circle at 50% 0%, rgba(242,196,107,.22), transparent 60%), linear-gradient(170deg, #241a3c, var(--ink)); }
+.fg-hero { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: end; }
+.fg-hero img { height: 130px; width: auto; filter: drop-shadow(0 0 12px color-mix(in srgb, var(--el) 60%, transparent)) drop-shadow(0 4px 2px rgba(0,0,0,.4)); }
+.fg-hero h3 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 1.35rem; color: var(--brass-hi); }
+.stars-big { margin: 4px 0; font-size: 1.15rem; color: var(--r5); letter-spacing: 1px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.stars-big .arrow { color: var(--muted); font-size: .9rem; } .stars-big .next { text-shadow: 0 0 10px var(--r5); }
+.lvline { margin: 0; font-size: .78rem; } .lvline.ok { color: var(--ok); } .lvline.bad { color: #f2a83b; }
+.sockets { display: flex; gap: 8px; flex-wrap: wrap; }
+.sock { width: 42px; height: 42px; border-radius: 50%; border: 2px dashed color-mix(in srgb, var(--brass) 60%, transparent); display: flex; overflow: hidden; background: rgba(0,0,0,.3); }
+.sock i { display: block; height: 100%; }
+.sock i.own { background: radial-gradient(circle, #fff3c4, var(--r5)); }
+.sock i.ally { background: radial-gradient(circle, #fff, var(--r4)); }
+.sock i.shard { background: radial-gradient(circle, #e6fffb, var(--astral)); }
+.sock:has(i) { border-style: solid; box-shadow: 0 0 10px rgba(242,196,107,.5); }
+.frow2 { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid rgba(255,255,255,.06); }
+.frow2 .lab { display: grid; min-width: 0; } .frow2 .lab small { color: var(--muted); font-size: .7rem; }
+.frow2 .step { display: flex; align-items: center; gap: 8px; } .frow2 .step b { min-width: 22px; text-align: center; font-variant-numeric: tabular-nums; }
+.rb.sm { width: 32px; height: 32px; font-size: 1.1rem; }
+.drow { display: grid; grid-template-columns: 40px 1fr auto; gap: 10px; align-items: center; }
+.drow img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid var(--line); }
+.drow span { display: grid; min-width: 0; } .drow small { color: var(--muted); font-size: .7rem; }
+.starfly { position: fixed; z-index: 95; color: var(--r5); font-size: 20px; pointer-events: none; text-shadow: 0 0 8px var(--r5); }
+/* Évolution */
+.evofx .evo-stage { position: relative; width: min(70vw, 340px); height: min(48vh, 420px); display: grid; place-items: end center; z-index: 2; }
+.evofx .evo-stage img { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); height: 100%; width: auto; }
+.evofx .evo-old { animation: evoOut 1.6s ease-in forwards; }
+.evofx .evo-new { opacity: 0; animation: evoIn 1.2s 1.4s cubic-bezier(.2,1.4,.4,1) forwards; filter: drop-shadow(0 0 18px var(--r5)) drop-shadow(0 0 40px rgba(242,196,107,.6)); }
+@keyframes evoOut { 0% { filter: none; } 70% { filter: brightness(4) saturate(0); transform: translateX(-50%) scale(1.05); opacity: 1; } 100% { filter: brightness(6); opacity: 0; transform: translateX(-50%) scale(1.15); } }
+@keyframes evoIn { from { opacity: 0; transform: translateX(-50%) scale(.7); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
+.evofx .evo-title { position: relative; z-index: 2; display: grid; justify-items: center; gap: 4px; text-align: center; opacity: 0; animation: pop .6s 2.2s both; padding: 0 16px; }
+.evofx .evo-title small { text-transform: uppercase; letter-spacing: .2em; color: var(--muted); }
+.evofx .evo-title b { font-family: var(--f-display); font-weight: 400; font-size: clamp(1.4rem, 6vw, 2.2rem); color: var(--r5); text-shadow: 0 0 20px rgba(242,196,107,.7); }
+.evofx .evo-title span { color: var(--r5); font-size: .9rem; }
+.evofx { grid-template-rows: 1fr auto auto; padding-block: 12vh 10vh; }
 </style>
 
 <div class="game">
@@ -449,6 +490,7 @@ body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.s
     <div class="drawer-body">
       <div class="panel" id="p-team"></div>
       <div class="panel" id="p-adv"></div>
+      <div class="panel" id="p-forge"></div>
       <div class="panel" id="p-heroes"></div>
       <div class="panel" id="p-summon"></div>
       <div class="panel" id="p-missions"></div>
@@ -670,26 +712,27 @@ function renderHeroes() {
   const sorted = owned.sort((a, b) => b.r - a.r || stats(b.id).power - stats(a.id).power);
   $("#p-heroes").innerHTML = `
     ${ui.sel ? sheetHTML(ui.sel) : ""}
-    <button class="btn primary" id="goteam" style="justify-self:start">Modifier l'équipe</button>
+    <div class="actions"><button class="btn primary" id="goteam">Modifier l'équipe</button><button class="btn" id="goforge">Forge stellaire</button></div>
     <div class="toolbar"><div><p class="eyebrow">Collection</p><h2>${owned.length} / ${HEROES.length} héros</h2></div><span class="muted">Point doré = dans l'équipe (${teamIds().length}/3)</span></div>
     <div class="roster">${sorted.map(h => cardHTML(h.id, { button: true, showTeam: true })).join("")}${missing.map(h => cardHTML(h.id, { locked: true })).join("")}</div>
   `;
   document.querySelectorAll("#p-heroes [data-hero]").forEach(b => b.onclick = () => { ui.sel = b.dataset.hero; renderHeroes(); $("#p-heroes .sheet")?.scrollIntoView({ behavior: "smooth", block: "nearest" }); });
   bindSheet();
   const gt = $("#goteam"); if (gt) gt.onclick = () => openTeam(null);
+  const gf = $("#goforge"); if (gf) gf.onclick = () => openForge(null);
 }
 
 function sheetHTML(id) {
   const h = H[id], o = S.heroes[id], st = stats(id), c = cap(o.stars), maxed = o.lvl >= c;
   const need = o.stars < MAXSTAR ? starCost(h, o.stars) : 0;
-  const canStar = o.stars < MAXSTAR && maxed && o.dupes >= need;
+  const canStar = canForge(id);
   const inTeam = S.team.includes(id);
   const steps = []; for (let s = h.r; s <= MAXSTAR; s++) steps.push(s);
   let starMsg;
   if (o.stars >= MAXSTAR) starMsg = "Forme ultime atteinte.";
   else if (!maxed) starMsg = `Atteignez le niveau ${c} pour l'éveil (★${o.stars + 1}).`;
-  else if (o.dupes < need) starMsg = `Il faut ${need} doublon${need > 1 ? "s" : ""} (vous en avez ${o.dupes}).`;
-  else starMsg = `Prêt : ${need} doublon${need > 1 ? "s" : ""} → ★${o.stars + 1}${o.stars + 1 === MAXSTAR ? " et évolution !" : ""}`;
+  else if (!canStar) starMsg = `Il faut ${need} unité${need > 1 ? "s" : ""} d'essence pour ★${o.stars + 1} : doublons, doublons d'alliés ${h.el} ou éclats errants.`;
+  else starMsg = `Prêt à forger ★${o.stars + 1}${o.stars + 1 === MAXSTAR ? " et à évoluer" : ""} dans la Forge stellaire !`;
   return `<div class="sheet">
     ${cardHTML(id)}
     <div class="sheet-body">
@@ -708,7 +751,7 @@ function sheetHTML(id) {
       <div class="actions">
         <button class="btn" id="lv1" ${maxed || S.pots < lvlCost(o.lvl) ? "disabled" : ""}>Niveau +1 <small>${lvlCost(o.lvl)} potion${lvlCost(o.lvl) > 1 ? "s" : ""}</small></button>
         <button class="btn" id="lvmax" ${maxed || S.pots < lvlCost(o.lvl) ? "disabled" : ""}>Monter au max possible</button>
-        <button class="btn primary" id="starup" ${canStar ? "" : "disabled"}>Éveiller ★${Math.min(o.stars + 1, MAXSTAR)}</button>
+        <button class="btn${canStar ? " primary" : ""}" id="starup" ${o.stars >= MAXSTAR ? "disabled" : ""}>Forge stellaire</button>
         <button class="btn" id="teamtg">${inTeam ? "Retirer de l'équipe" : "Ajouter à l'équipe"}</button>
       </div>
       <p class="muted" style="margin:0;font-size:.85rem">${starMsg}</p>
@@ -721,13 +764,7 @@ function bindSheet() {
   const up = () => { const c = lvlCost(o.lvl); if (o.lvl < cap(o.stars) && S.pots >= c) { S.pots -= c; o.lvl++; track("lvl"); return true; } return false; };
   $("#lv1").onclick = () => { up(); save(); render(); };
   $("#lvmax").onclick = () => { let n = 0; while (up()) n++; save(); render(); toast(`${h.name} gagne ${n} niveau${n > 1 ? "x" : ""}.`); };
-  $("#starup").onclick = () => {
-    const need = starCost(h, o.stars); if (o.dupes < need) return;
-    o.dupes -= need; o.stars++; save();
-    if (evolved(o)) { const f = document.createElement("div"); f.className = "flash"; document.body.appendChild(f); setTimeout(() => f.remove(), 900); toast(`${h.name} évolue en ${h.evo} !`); }
-    else toast(`${h.name} passe à ★${o.stars}. Niveau max : ${cap(o.stars)}.`);
-    render();
-  };
+  $("#starup").onclick = () => openForge(id);
   $("#teamtg").onclick = () => {
     if (S.team.includes(id)) { if (teamIds().length <= 1) return toast("Gardez au moins un héros dans l'équipe."); S.team[S.team.indexOf(id)] = null; }
     else if (!S.team.includes(null)) { toast("Touchez le héros à remplacer."); return openTeam(null, id); }
@@ -1633,12 +1670,124 @@ function renderAdv() {
     </div>
     <div class="adv-card soon">
       <div class="adv-head"><h3>Éclats errants : ${S.shards || 0}</h3></div>
-      <p class="muted">Gagnés dans la Tour et les Sanctuaires. Ils serviront à la Forge stellaire pour remplacer des doublons lors des montées d'étoiles. Prochainement : Forge stellaire, Reliques, Dérive céleste.</p>
+      <p class="muted">Gagnés dans la Tour et les Sanctuaires. Dans la Forge stellaire, chaque éclat remplace un doublon lors des montées d'étoiles. Prochainement : Reliques, Dérive céleste.</p>
+      <button class="btn" id="advforge" style="justify-self:start">Ouvrir la Forge stellaire</button>
     </div>`;
+  $("#advforge").onclick = () => openForge(null);
   $("#towergo").onclick = startTower;
   box.querySelectorAll("[data-sanct]").forEach(b => b.onclick = () => startSanct(b.dataset.sanct, +b.dataset.l));
   box.querySelectorAll(".sweep").forEach(b => b.onclick = () => sweepSanct(b.dataset.el));
 }
+
+/* ================== FORGE STELLAIRE ET AUTEL DE DISSOLUTION ================== */
+// Coût d'une étoile = N unités d'essence : doublon du héros = 1, doublons d'alliés du même élément = 2 pour 1, éclat errant = 1.
+const DISSOLVE = { 3: { take: 3, give: 1 }, 4: { take: 1, give: 1 }, 5: { take: 1, give: 3 } };
+const allyPool = id => Object.keys(S.heroes).filter(k => k !== id && H[k].el === H[id].el).reduce((s, k) => s + S.heroes[k].dupes, 0);
+function forgeState(id) {
+  const o = S.heroes[id], h = H[id], need = o.stars < MAXSTAR ? starCost(h, o.stars) : 0;
+  if (!ui.forge || ui.forge.id !== id) ui.forge = { id, own: 0, ally: 0, shards: 0 }, autoFill(true);
+  const f = ui.forge, units = f.own + f.ally / 2 + f.shards;
+  return { o, h, need, f, units, maxed: o.lvl >= cap(o.stars), pool: allyPool(id) };
+}
+function autoFill(silent) {
+  const f = ui.forge, id = f.id, o = S.heroes[id], need = o.stars < MAXSTAR ? starCost(H[id], o.stars) : 0;
+  f.own = Math.min(o.dupes, need); let rest = need - f.own;
+  f.ally = Math.min(allyPool(id), rest * 2); rest -= f.ally / 2;
+  f.shards = Math.min(S.shards || 0, Math.ceil(rest)); rest -= f.shards;
+  if (!silent) { renderForge(); toast(rest > 0 ? "Pas assez d'essence pour cette étoile." : "Essence placée automatiquement."); }
+}
+function canForge(id) {
+  const o = S.heroes[id]; if (o.stars >= MAXSTAR || o.lvl < cap(o.stars)) return false;
+  return o.dupes + allyPool(id) / 2 + (S.shards || 0) >= starCost(H[id], o.stars);
+}
+function doForge() {
+  const { o, h, need, f, units, maxed } = forgeState(ui.forge.id);
+  if (!maxed || units < need || o.stars >= MAXSTAR) return;
+  o.dupes -= f.own; S.shards = (S.shards || 0) - f.shards;
+  let take = f.ally;
+  Object.keys(S.heroes).filter(k => k !== f.id && H[k].el === h.el).sort((a, b) => S.heroes[b].dupes - S.heroes[a].dupes)
+    .forEach(k => { const n = Math.min(take, S.heroes[k].dupes); S.heroes[k].dupes -= n; take -= n; });
+  const wasEvo = evolved(o); o.stars++; save();
+  ui.forge = null;
+  if (!wasEvo && evolved(o)) evolutionFx(f.id);
+  else { forgeFx(f.id); toast(`${h.name} passe à ★${o.stars}. Niveau max : ${cap(o.stars)}.`); }
+  renderHUD(); render();
+}
+function dissolve(id) {
+  const o = S.heroes[id], d = DISSOLVE[H[id].r]; if (!d || o.dupes < d.take) return;
+  o.dupes -= d.take; S.shards = (S.shards || 0) + d.give; save();
+  toast(`${H[id].name} : ${d.take} doublon${d.take > 1 ? "s" : ""} dissous → +${d.give} éclat${d.give > 1 ? "s" : ""} errant${d.give > 1 ? "s" : ""}.`);
+  ui.forge = null; renderForge();
+}
+function forgeFx(id) {
+  const box = $("#p-forge .fg-hero"); if (!box) return;
+  box.animate([{ filter: "brightness(2.5)", transform: "scale(1.06)" }, { filter: "none", transform: "none" }], { duration: 700 });
+  const r = box.getBoundingClientRect(); for (let i = 0; i < 14; i++) { const s = document.createElement("div"); s.className = "starfly"; s.textContent = "★";
+    s.style.left = (r.left + r.width / 2) + "px"; s.style.top = (r.top + r.height / 2) + "px"; document.body.appendChild(s);
+    const a = Math.random() * 6.28, d = 60 + Math.random() * 90; s.animate([{ transform: "translate(-50%,-50%) scale(.4)", opacity: 1 }, { transform: `translate(calc(-50% + ${Math.cos(a) * d}px), calc(-50% + ${Math.sin(a) * d}px)) scale(1.2)`, opacity: 0 }], { duration: 900, easing: "ease-out" }).onfinish = () => s.remove(); }
+}
+function evolutionFx(id) {
+  const h = H[id], o = $("#summonfx"); o.hidden = false; o.className = "summonfx evofx r5"; o.style.setProperty("--rc", "var(--r5)");
+  o.innerHTML = `<div class="portal"><svg viewBox="0 0 200 200" aria-hidden="true"><g fill="none" stroke="currentColor"><circle cx="100" cy="100" r="92" stroke-width="2"/><circle cx="100" cy="100" r="70" stroke-width="1" stroke-dasharray="3 7"/><path d="M100 8 L180 146 L20 146 Z M100 192 L20 54 L180 54 Z" stroke-width="1.5"/></g></svg></div>
+    <div class="evo-stage"><img class="evo-old" src="${SPRITES[id] || artOf(id)}" alt=""><img class="evo-new" src="${SPRITES[id + "_evo"] || artOf(id)}" alt=""></div>
+    <div class="evo-title"><small>Évolution</small><b>${h.name} devient ${h.evo} !</b><span>★★★★★★ · Compétence d'éveil débloquée</span></div>
+    <p class="tap">Touchez pour continuer</p>`;
+  shake(10, 600);
+  o.onclick = () => { o.hidden = true; o.innerHTML = ""; o.className = "summonfx"; };
+}
+function renderForge() {
+  const box = $("#p-forge"); if (!box) return;
+  const owned = Object.keys(S.heroes).sort((a, b) => H[b].r - H[a].r || stats(b).power - stats(a).power);
+  if (!ui.forgeId || !S.heroes[ui.forgeId]) ui.forgeId = owned.find(canForge) || ui.sel || owned[0];
+  const id = ui.forgeId, { o, h, need, f, units, maxed, pool } = forgeState(id), done = o.stars >= MAXSTAR;
+  const picker = owned.map(k => `<button class="fpick${k === id ? " on" : ""}${canForge(k) ? " ready" : ""}" data-id="${k}" style="--el:var(${EL[H[k].el]})"><img src="${artOf(k)}" alt=""><span>${"★".repeat(S.heroes[k].stars)}</span></button>`).join("");
+  // douilles d'essence : propre (or), alliés (élément, par moitiés), éclats (astral)
+  const parts = []; for (let i = 0; i < f.own; i++) parts.push(["own", 1]); for (let i = 0; i < f.ally; i++) parts.push(["ally", .5]); for (let i = 0; i < f.shards; i++) parts.push(["shard", 1]);
+  const sockets = []; let pi = 0, carry = 0;
+  for (let n = 0; n < need; n++) { let fill = 0, kind = "", segs = []; while (fill < 1 && pi < parts.length) { const [k, v] = parts[pi]; const take = Math.min(v - carry, 1 - fill); segs.push([k, take]); fill += take; carry += take; if (carry >= v - 1e-9) { pi++; carry = 0; } } sockets.push(segs); }
+  const sock = sockets.map(segs => `<span class="sock">${segs.map(([k, v]) => `<i class="${k}" style="flex:${v}"></i>`).join("")}</span>`).join("");
+  const row = (key, label, avail, step, note) => `<div class="frow2"><span class="lab"><b>${label}</b><small>${note} · disponibles : ${avail}</small></span>
+    <span class="step"><button class="rb sm" data-k="${key}" data-d="${-step}" aria-label="Moins">−</button><b>${f[key]}</b><button class="rb sm" data-k="${key}" data-d="${step}" aria-label="Plus">+</button></span></div>`;
+  const dis = owned.filter(k => S.heroes[k].dupes > 0).map(k => { const d = DISSOLVE[H[k].r];
+    return `<div class="drow"><img src="${artOf(k)}" alt=""><span><b>${H[k].name}</b><small>${S.heroes[k].dupes} doublon${S.heroes[k].dupes > 1 ? "s" : ""} · ${d.take} → ${d.give} éclat${d.give > 1 ? "s" : ""}</small></span>
+      <button class="btn" data-dis="${k}" ${S.heroes[k].dupes >= d.take ? "" : "disabled"}>Dissoudre</button></div>`; }).join("");
+  box.innerHTML = `
+    <div class="fpicker">${picker}</div>
+    <div class="forge">
+      <div class="fg-hero r${h.r}" style="--el:var(${EL[h.el]})">
+        <img src="${spriteOf(id) || artOf(id)}" alt="">
+        <div><p class="eyebrow">${h.el} · ${h.cls}</p><h3>${evolved(o) ? h.evo : h.name}</h3>
+          <p class="stars-big">${"★".repeat(o.stars)}${done ? "" : `<span class="arrow">→</span><span class="next">${"★".repeat(o.stars + 1)}</span>`}</p>
+          <p class="lvline ${maxed ? "ok" : "bad"}">Niveau ${o.lvl}/${cap(o.stars)} ${maxed ? "✓" : "· niveau max requis"}</p></div>
+      </div>
+      ${done ? `<p class="muted">Forme ultime atteinte : ${h.evo} ne peut plus monter en étoiles.</p>` : `
+      <p class="muted">Pour ★${o.stars + 1} : ${need} unité${need > 1 ? "s" : ""} d'essence stellaire${o.stars + 1 === MAXSTAR ? ", avec l'évolution en " + h.evo + " !" : "."}</p>
+      <div class="sockets">${sock}</div>
+      ${row("own", `Doublons de ${h.name}`, o.dupes, 1, "1 doublon = 1 unité")}
+      ${row("ally", `Doublons d'alliés ${h.el}`, pool, 1, "2 doublons = 1 unité")}
+      ${row("shards", "Éclats errants", S.shards || 0, 1, "1 éclat = 1 unité")}
+      <div class="actions">
+        <button class="btn" id="fauto">Remplissage auto</button>
+        ${maxed ? "" : `<button class="btn" id="flvmax" ${S.pots >= lvlCost(o.lvl) ? "" : "disabled"}>Monter au niveau max</button>`}
+        <button class="btn primary big" id="fgo" ${maxed && units >= need ? "" : "disabled"}>Forger ★${o.stars + 1}</button>
+      </div>`}
+    </div>
+    <div class="adv-card">
+      <div class="adv-head"><h3>Autel de dissolution</h3><span class="floor">Éclats errants : ${S.shards || 0}</span></div>
+      <p class="muted">Transformez des doublons inutiles en éclats errants : 3 doublons ★3 → 1 éclat, 1 doublon ★4 → 1 éclat, 1 doublon ★5 → 3 éclats.</p>
+      ${dis || `<p class="muted">Aucun doublon à dissoudre pour l'instant.</p>`}
+    </div>`;
+  box.querySelectorAll(".fpick").forEach(b => b.onclick = () => { ui.forgeId = b.dataset.id; ui.forge = null; renderForge(); });
+  box.querySelectorAll("[data-k]").forEach(b => b.onclick = () => {
+    const k = b.dataset.k, d = +b.dataset.d, max = k === "own" ? o.dupes : k === "ally" ? pool : (S.shards || 0);
+    f[k] = Math.max(0, Math.min(max, f[k] + d)); renderForge();
+  });
+  box.querySelectorAll("[data-dis]").forEach(b => b.onclick = () => dissolve(b.dataset.dis));
+  const fa = $("#fauto"); if (fa) fa.onclick = () => autoFill(false);
+  const fg = $("#fgo"); if (fg) fg.onclick = doForge;
+  const fl = $("#flvmax"); if (fl) fl.onclick = () => { let n = 0; while (o.lvl < cap(o.stars) && S.pots >= lvlCost(o.lvl)) { S.pots -= lvlCost(o.lvl); o.lvl++; n++; track("lvl"); } save(); renderWallet(); renderForge(); toast(`${h.name} gagne ${n} niveau${n > 1 ? "x" : ""}.`); };
+}
+function openForge(id) { if (id) { ui.forgeId = id; ui.forge = null; } ui.tab = "forge"; render(); }
 
 /* ================== GÉNÉRAL ================== */
 let toastT;
@@ -1647,7 +1796,7 @@ function toast(msg) {
   const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); t.textContent = msg; document.body.appendChild(t);
   clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2600);
 }
-const SHEET_TITLES = { adv: "Aventures", team: "Équipe", heroes: "Héros", summon: "Invocation", missions: "Missions", info: "Journal & infos" };
+const SHEET_TITLES = { forge: "Forge stellaire", adv: "Aventures", team: "Équipe", heroes: "Héros", summon: "Invocation", missions: "Missions", info: "Journal & infos" };
 function renderInfo() {
   const r = idleRate(), p = pending();
   $("#p-info-top").innerHTML = `
@@ -1661,13 +1810,14 @@ function render() {
   $("#sheet").hidden = !open; document.body.classList.toggle("sheet-open", open);
   if (open) $("#sheet-title").textContent = SHEET_TITLES[ui.tab] || "";
   document.querySelectorAll(".dock button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === ui.tab));
-  ["adv", "team", "summon", "heroes", "missions", "info"].forEach(t => { $("#p-" + t).hidden = ui.tab !== t; });
+  ["forge", "adv", "team", "summon", "heroes", "missions", "info"].forEach(t => { $("#p-" + t).hidden = ui.tab !== t; });
   if (ui.tab === "summon") renderSummon();
   if (ui.tab === "heroes") renderHeroes();
   if (ui.tab === "missions") renderMissions();
   if (ui.tab === "info") renderInfo();
   if (ui.tab === "team") renderTeam();
   if (ui.tab === "adv") renderAdv();
+  if (ui.tab === "forge") renderForge();
 }
 function openTab(t) {
   daily();
