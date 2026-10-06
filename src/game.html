@@ -449,6 +449,23 @@ body.sheet-open .bossbar, body.sheet-open .ctl-l, body.sheet-open .ctl-r, body.s
 .evofx .evo-title b { font-family: var(--f-display); font-weight: 400; font-size: clamp(1.4rem, 6vw, 2.2rem); color: var(--r5); text-shadow: 0 0 20px rgba(242,196,107,.7); }
 .evofx .evo-title span { color: var(--r5); font-size: .9rem; }
 .evofx { grid-template-rows: 1fr auto auto; padding-block: 12vh 10vh; }
+/* ---------- Carnet lunaire ---------- */
+.adv-card.lunar { background: radial-gradient(circle at 90% 0%, rgba(255,243,196,.16), transparent 50%), linear-gradient(160deg, #1d1a42, var(--ink)); border-color: rgba(255,243,196,.3); }
+.calrow { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cday { display: grid; justify-items: center; gap: 2px; padding: 6px 2px; border-radius: 10px; background: rgba(0,0,0,.25); border: 1px solid transparent; text-align: center; min-width: 0; }
+.cday small { font-size: .58rem; color: var(--muted); } .cday span { font-size: .56rem; line-height: 1.15; }
+.cday.got { opacity: .45; } .cday.now { border-color: var(--brass-hi); box-shadow: 0 0 10px rgba(243,208,143,.45); }
+.passbar { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; font-size: .8rem; }
+.passbar .bar { height: 10px; border-radius: 5px; background: rgba(0,0,0,.4); overflow: hidden; }
+.passbar .bar i { display: block; height: 100%; background: linear-gradient(90deg, #b8a8ff, #fff3c4); box-shadow: 0 0 8px #fff3c4; }
+.passbar small { color: var(--muted); font-variant-numeric: tabular-nums; }
+.tiers { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 8px; scroll-behavior: smooth; }
+.tier { flex: none; position: relative; width: 76px; display: grid; justify-items: center; gap: 2px; padding: 8px 4px; border-radius: 12px; background: rgba(0,0,0,.3); border: 1px solid var(--line); color: var(--muted); }
+.tier b { font-size: .8rem; color: var(--text); } .tier small { font-size: .58rem; line-height: 1.15; text-align: center; }
+.tier.big { border-color: rgba(242,196,107,.5); }
+.tier.open { color: var(--text); border-color: var(--brass-hi); box-shadow: 0 0 12px rgba(243,208,143,.45); animation: pulse 1.4s ease-in-out infinite; }
+.tier.got { opacity: .5; } .tier .ok { position: absolute; top: 4px; right: 6px; color: var(--ok); font-style: normal; font-weight: 800; }
+.tier:disabled { cursor: default; }
 </style>
 
 <div class="game">
@@ -642,7 +659,7 @@ function summon(n) {
   if (S.gems < COST * n) return toast("Pas assez de gemmes. Gagnez des combats pour en obtenir.");
   S.gems -= COST * n;
   const res = []; for (let i = 0; i < n; i++) res.push(rollOne());
-  ui.lastPull = res; track("pull", n); save(); renderWallet();
+  ui.lastPull = res; track("pull", n); passXP(3 * n); save(); renderWallet();
   playSummonFx(res);
 }
 function playSummonFx(res) {
@@ -1268,7 +1285,7 @@ function finish() {
   }
   if (b.win) {
     const boss = isBoss(S.stage), g = (240 + S.stage * 20) * (boss ? 3 : 1), p = (3 + Math.floor(S.stage / 2)) * (boss ? 2 : 1);
-    S.gems += g; S.pots += p; S.stage++; track("win");
+    S.gems += g; S.pots += p; S.stage++; track("win"); passXP(boss ? 30 : 6, boss ? "" : "win");
     msg = `${boss ? "Boss vaincu ! " : "Victoire ! "}+${g} gemmes, +${p} potions. Étape ${S.stage} débloquée.`;
     banner(boss ? "BOSS VAINCU !" : "VICTOIRE", "win"); gemBurst(boss ? 14 : 7);
     document.querySelectorAll("#stage .u.hero:not(.dead) .body").forEach((e, i) => e.animate([{ transform: "translateY(0)" }, { transform: "translateY(-16px)" }, { transform: "translateY(0)" }], { duration: 420, delay: i * 80, composite: "add" }));
@@ -1341,15 +1358,15 @@ function track(id, n = 1) { const d = daily(); d.prog[id] = (d.prog[id] || 0) + 
 function claimable() { const d = daily(); let n = MISSIONS.filter(m => (d.prog[m.id] || 0) >= m.goal && !d.claimed[m.id]).length; if (allDone() && !d.claimed.all) n++; return n; }
 function allDone() { const d = daily(); return MISSIONS.every(m => d.claimed[m.id]); }
 function renderBadge() {
-  const t = $("#tab-missions"); if (!t) return; const n = claimable();
+  const t = $("#tab-missions"); if (!t) return; const n = claimable() + (S.pass ? claimablePass() : 0) + (calReady() ? 1 : 0);
   t.querySelector(".badge-slot").innerHTML = n ? `<span class="badge">${n}</span>` : "";
 }
 function claim(id) {
   const d = daily();
-  if (id === "all") { if (!allDone() || d.claimed.all) return; d.claimed.all = true; S.gems += ALL_BONUS; toast(`Bonus du jour : +${ALL_BONUS} gemmes !`); }
+  if (id === "all") { if (!allDone() || d.claimed.all) return; d.claimed.all = true; S.gems += ALL_BONUS; passXP(60); toast(`Bonus du jour : +${ALL_BONUS} gemmes !`); }
   else {
     const m = MISSIONS.find(x => x.id === id); if (!m || d.claimed[id] || (d.prog[id] || 0) < m.goal) return;
-    d.claimed[id] = true; S.gems += m.gems; S.pots += m.pots;
+    d.claimed[id] = true; S.gems += m.gems; S.pots += m.pots; passXP(60);
     toast(`Mission terminée : ${[m.gems && `+${m.gems} gemmes`, m.pots && `+${m.pots} potions`].filter(Boolean).join(", ")}.`);
   }
   save(); render();
@@ -1358,7 +1375,7 @@ function renderMissions() {
   const d = daily();
   const rew = m => [m.gems && `${m.gems} gemmes`, m.pots && `${m.pots} potions`].filter(Boolean).join(" + ");
   const now = new Date(), mid = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1), left = Math.round((mid - now) / 60000);
-  $("#p-missions").innerHTML = `
+  $("#p-missions").innerHTML = lunarHTML() + `
     <div class="toolbar"><div><p class="eyebrow">Missions quotidiennes</p><h2>Objectifs du jour</h2></div><span class="muted">Nouvelles missions dans ${fmtDur(left)}</span></div>
     <div class="missions">
       ${MISSIONS.map(m => { const p = Math.min(m.goal, d.prog[m.id] || 0), done = p >= m.goal, cl = d.claimed[m.id];
@@ -1372,6 +1389,7 @@ function renderMissions() {
       </div>
     </div>`;
   document.querySelectorAll("[data-claim]").forEach(b => b.onclick = () => claim(b.dataset.claim));
+  bindLunar();
 }
 
 /* ================== ÉQUIPE : CONSTELLATION ET RÉSONANCE ================== */
@@ -1594,7 +1612,7 @@ function startTower() {
   launchSpecial({ kind: "tower", label: `Tour · étage ${info.f}`, foes: info.foes, back: "adv",
     onEnd: win => {
       const T2 = tower();
-      if (win) { grant(info.reward); T2.floor++; return `Étage ${info.f} franchi ! ${rewardTxt(info.reward)}.`; }
+      if (win) { grant(info.reward); T2.floor++; passXP(20); return `Étage ${info.f} franchi ! ${rewardTxt(info.reward)}.`; }
       if (T2.energy >= TOWER_MAX) T2.t = Date.now();
       T2.energy = Math.max(0, T2.energy - 1);
       return `L'étage ${info.f} résiste. −1 Souffle d'éther (${T2.energy}/${TOWER_MAX}).`;
@@ -1622,7 +1640,7 @@ function startSanct(el, L) {
   launchSpecial({ kind: "sanct", label: `${SANCT_NAMES[el]} · niv. ${L}`, foes: info.foes, back: "adv",
     onEnd: win => {
       const s = sanct(); s.tries[el] = (s.tries[el] || 0) + 1;
-      if (win) { grant(info.reward); s.best[el] = Math.max(s.best[el] || 0, L); return `${SANCT_NAMES[el]} niv. ${L} réussi ! ${rewardTxt(info.reward)}.`; }
+      if (win) { grant(info.reward); s.best[el] = Math.max(s.best[el] || 0, L); passXP(20); return `${SANCT_NAMES[el]} niv. ${L} réussi ! ${rewardTxt(info.reward)}.`; }
       return `${SANCT_NAMES[el]} niv. ${L} : défaite. Essais restants : ${triesLeft(el)}.`;
     } });
 }
@@ -1797,6 +1815,88 @@ function renderForge() {
 }
 function openForge(id) { if (id) { ui.forgeId = id; ui.forge = null; } ui.tab = "forge"; render(); }
 
+/* ================== CARNET LUNAIRE ET CALENDRIER DES PHASES ================== */
+const DAY_MS = 86400000, SEASON_DAYS = 28, PASS_TIERS = 30, TIER_XP = 300;
+const dayNum = () => Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / DAY_MS);
+let moonId = 0;
+function moonSVG(phase, size = 28) { // phase 0..7 : nouvelle lune → pleine lune (4) → nouvelle lune
+  const p = ((phase % 8) + 8) % 8, d = p <= 4 ? -22 * p / 4 : 22 * (8 - p) / 4, id = "mc" + (moonId++);
+  return `<svg class="moon" viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true"><defs><clipPath id="${id}"><circle cx="12" cy="12" r="10"/></clipPath></defs>
+    <circle cx="12" cy="12" r="10" fill="#fff3c4"/><circle cx="${12 + d}" cy="12" r="10.5" fill="#2a2550" clip-path="url(#${id})"/>
+    <circle cx="12" cy="12" r="10" fill="none" stroke="rgba(255,243,196,.5)"/></svg>`;
+}
+// ---- Calendrier des phases : 7 jours de connexion en boucle
+const CAL = [{ gems: 100 }, { pots: 6 }, { gems: 150 }, { shards: 1 }, { gems: 200 }, { pots: 12 }, { gems: 320, shards: 2 }];
+function cal() { if (!S.cal) S.cal = { n: 0, last: "" }; return S.cal; }
+const calReady = () => cal().last !== today();
+function claimCal() {
+  const c = cal(); if (!calReady()) return;
+  const r = CAL[c.n % 7]; grant(r); c.n = (c.n % 7) + 1; c.last = today(); if (c.n >= 7) c.n = 7;
+  save(); passXP(40); toast(`Calendrier des phases : ${rewardTxt(r)}.`); gemBurst(6, $("#calgo")); setTimeout(renderWallet, 900); render();
+}
+function calDayIndex() { const c = cal(); return calReady() ? (c.n >= 7 ? 0 : c.n) : c.n - 1; }
+// ---- Carnet lunaire : passe gratuit de 28 jours, 30 paliers
+function pass() {
+  const d = dayNum();
+  if (!S.pass || d - S.pass.start >= SEASON_DAYS) {
+    if (S.pass) { const left = claimablePass(); if (left) { claimAllPass(true); } }
+    S.pass = { start: d, xp: 0, claimed: {}, season: (S.pass ? S.pass.season : 0) + 1, winDay: "", winXp: 0 };
+  }
+  return S.pass;
+}
+function tierReward(t) {
+  if (t === PASS_TIERS) return { hero5: 1, gems: 500 };
+  if (t % 10 === 0) return { gems: 800, shards: 2 };
+  if (t % 5 === 0) return { gems: 320, pots: 15 };
+  return [{ gems: 100 }, { pots: 8 }, { shards: 1 }, { gems: 150 }][t % 4];
+}
+const passTier = () => Math.min(PASS_TIERS, Math.floor(pass().xp / TIER_XP));
+function claimablePass() { const P = S.pass; if (!P) return 0; let n = 0; for (let t = 1; t <= Math.min(PASS_TIERS, Math.floor(P.xp / TIER_XP)); t++) if (!P.claimed[t]) n++; return n; }
+function passXP(n, kind) {
+  const P = pass();
+  if (kind === "win") { if (P.winDay !== today()) { P.winDay = today(); P.winXp = 0; } n = Math.min(n, 120 - P.winXp); if (n <= 0) return; P.winXp += n; }
+  const before = passTier(); P.xp += n; const after = passTier();
+  if (after > before) toast(`Carnet lunaire : palier ${after} atteint !`);
+  renderBadge();
+}
+function giveTier(t) {
+  const r = tierReward(t); grant(r);
+  if (r.hero5) { const pool = HEROES.filter(h => h.r === 5), h = pool[Math.floor(Math.random() * pool.length)];
+    if (S.heroes[h.id]) S.heroes[h.id].dupes++; else S.heroes[h.id] = { lvl: 1, stars: 5, dupes: 0 };
+    return `${h.name} ★5${r.gems ? ` + ${r.gems} gemmes` : ""}`; }
+  return rewardTxt(r);
+}
+function claimTier(t, quiet) { const P = pass(); if (P.claimed[t] || t > passTier()) return ""; P.claimed[t] = true; const txt = giveTier(t); if (!quiet) { save(); toast(`Palier ${t} : ${txt}.`); setTimeout(renderWallet, 300); render(); } return txt; }
+function claimAllPass(quiet) { const P = S.pass; let n = 0; for (let t = 1; t <= Math.min(PASS_TIERS, Math.floor(P.xp / TIER_XP)); t++) if (!P.claimed[t]) { P.claimed[t] = true; giveTier(t); n++; } if (!quiet) { save(); toast(`${n} palier${n > 1 ? "s" : ""} réclamé${n > 1 ? "s" : ""} !`); gemBurst(8, $("#passall")); setTimeout(renderWallet, 900); render(); } }
+function lunarHTML() {
+  const c = cal(), ci = calDayIndex(), ready = calReady(), P = pass(), tier = passTier(), into = P.xp - tier * TIER_XP;
+  const daysLeft = SEASON_DAYS - (dayNum() - P.start);
+  const calRow = CAL.map((r, i) => { const got = ready ? i < (c.n >= 7 ? 0 : c.n) : i <= ci, now = ready && i === (c.n >= 7 ? 0 : c.n);
+    return `<div class="cday${got ? " got" : ""}${now ? " now" : ""}">${moonSVG(i === 6 ? 4 : i + 1, 30)}<small>Jour ${i + 1}</small><span>${rewardTxt(r).replace(/ · /g, "<br>")}</span></div>`; }).join("");
+  const tiers = Array.from({ length: PASS_TIERS }, (_, k) => { const t = k + 1, r = tierReward(t), got = P.claimed[t], open = t <= tier;
+    return `<button class="tier${got ? " got" : open ? " open" : ""}${t % 10 === 0 || t === PASS_TIERS ? " big" : ""}" data-tier="${t}" ${open && !got ? "" : "disabled"}>
+      ${moonSVG(t % 8, 26)}<b>${t}</b><small>${r.hero5 ? "Héros ★5 aléatoire" : rewardTxt(r).replace(/ · /g, "<br>")}</small>${got ? `<i class="ok">✓</i>` : ""}</button>`; }).join("");
+  return `
+    <div class="adv-card lunar">
+      <div class="adv-head"><h3>Calendrier des phases</h3><span class="floor">Cycle de 7 jours</span></div>
+      <div class="calrow">${calRow}</div>
+      <button class="btn${ready ? " primary" : ""}" id="calgo" ${ready ? "" : "disabled"}>${ready ? "Récupérer la récompense du jour" : "Revenez demain pour la phase suivante"}</button>
+    </div>
+    <div class="adv-card lunar">
+      <div class="adv-head"><h3>Carnet lunaire · saison ${P.season}</h3><span class="floor">${daysLeft} jour${daysLeft > 1 ? "s" : ""} restant${daysLeft > 1 ? "s" : ""}</span></div>
+      <p class="muted">Gratuit. Gagnez de la lueur lunaire avec les missions, les victoires (120 max par jour), la Tour, les Sanctuaires, les invocations et le calendrier.</p>
+      <div class="passbar"><b>Palier ${tier}/${PASS_TIERS}</b><div class="bar"><i style="width:${tier >= PASS_TIERS ? 100 : into / TIER_XP * 100}%"></i></div><small>${tier >= PASS_TIERS ? "Carnet terminé !" : `${into} / ${TIER_XP} lueur`}</small></div>
+      <div class="tiers" id="tiers">${tiers}</div>
+      <button class="btn primary" id="passall" ${claimablePass() ? "" : "disabled"}>Tout réclamer (${claimablePass()})</button>
+    </div>`;
+}
+function bindLunar() {
+  const cg = $("#calgo"); if (cg) cg.onclick = claimCal;
+  const pa = $("#passall"); if (pa) pa.onclick = () => claimAllPass(false);
+  document.querySelectorAll("[data-tier]").forEach(b => b.onclick = () => claimTier(+b.dataset.tier));
+  const tr = $("#tiers"); if (tr) { const first = tr.querySelector(".tier.open:not(.got)") || tr.querySelectorAll(".tier.got")[Math.max(0, passTier() - 1)]; if (first) tr.scrollLeft = first.offsetLeft - 16; }
+}
+
 /* ================== GÉNÉRAL ================== */
 let toastT;
 function toast(msg) {
@@ -1804,7 +1904,7 @@ function toast(msg) {
   const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); t.textContent = msg; document.body.appendChild(t);
   clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2600);
 }
-const SHEET_TITLES = { forge: "Forge stellaire", adv: "Aventures", team: "Équipe", heroes: "Héros", summon: "Invocation", missions: "Missions", info: "Journal & infos" };
+const SHEET_TITLES = { missions: "Missions & Carnet lunaire", forge: "Forge stellaire", adv: "Aventures", team: "Équipe", heroes: "Héros", summon: "Invocation", info: "Journal & infos" };
 function renderInfo() {
   const r = idleRate(), p = pending();
   $("#p-info-top").innerHTML = `
