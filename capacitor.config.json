@@ -1,0 +1,6 @@
+{
+  "appId": "com.zrezzougui.eveildesastres",
+  "appName": "Éveil des Astres",
+  "webDir": "www",
+  "android": { "backgroundColor": "#121731" }
+}

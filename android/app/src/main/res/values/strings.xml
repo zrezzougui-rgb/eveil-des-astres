@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Éveil des Astres</string>
+    <string name="title_activity_main">Éveil des Astres</string>
+    <string name="package_name">com.zrezzougui.eveildesastres</string>
+    <string name="custom_url_scheme">com.zrezzougui.eveildesastres</string>
+</resources>
