@@ -1107,6 +1107,23 @@ body.page-full #p-heroes { height: 100%; display: block; } .hpage { height: 100%
 }
 .dmg.f-tag { color: #fff3c4; font-size: .78rem; font-weight: 800; letter-spacing: .02em; text-shadow: 0 0 3px #000, 0 1px 0 #000; margin-top: -22px; }
 .dmg.f-burn { color: #ff8a3a; }
+/* ---------- Éclipse hebdomadaire ---------- */
+.adv-card.eclipse-card { --acc: #e8622a; }
+.ecl-hero { position: relative; overflow: hidden; display: grid; grid-template-columns: 42% 1fr; gap: 10px; align-items: center; padding: 14px; border-radius: 20px; min-height: 230px;
+  background: linear-gradient(180deg, #2a0f0a, #140806); box-shadow: inset 0 0 0 2px #d7a24a, 0 6px 16px rgba(0,0,0,.4); }
+.ecl-sky { position: absolute; inset: 0; background: radial-gradient(circle at 28% 40%, #000 0 17%, #ffb04a 18%, rgba(255,120,40,.5) 24%, transparent 42%), radial-gradient(ellipse at 30% 100%, color-mix(in srgb, var(--el) 40%, transparent), transparent 60%); opacity: .9; }
+.ecl-boss { position: relative; z-index: 1; display: grid; place-items: center; animation: bnfloat 4s ease-in-out infinite; } .ecl-boss .mon, .ecl-boss > svg:not(.crown) { width: 100%; max-height: 210px; height: auto; object-fit: contain; filter: drop-shadow(0 0 18px rgba(255,140,60,.6)); }
+.ecl-boss svg.crown { position: absolute; width: 30%; height: auto; left: 50%; top: -4%; transform: translateX(-50%) rotate(-6deg); }
+.ecl-info { position: relative; z-index: 1; display: grid; gap: 8px; color: #fff3d6; } .ecl-info h3 { margin: 0; font-family: var(--f-display); font-size: 1.25rem; color: #ffd36a; }
+.ecl-info p { margin: 0; font-size: .82rem; color: #e6d2ae; }
+.ecl-bar { position: relative; height: 22px; border-radius: 11px; background: rgba(0,0,0,.55); overflow: hidden; box-shadow: inset 0 0 0 2px rgba(255,180,90,.4); }
+.ecl-bar b { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #8a1a10, #e8622a, #ffb04a); } .ecl-bar span { position: relative; display: block; text-align: center; line-height: 22px; font-family: var(--f-display); font-weight: 600; font-size: .8rem; text-shadow: 0 1px 2px #000; }
+.ecl-tiers { display: grid; gap: 8px; }
+.etier { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; padding: 8px 12px; border-radius: 14px; background: linear-gradient(180deg, rgba(110,70,36,.45), rgba(46,28,13,.8)); box-shadow: inset 0 0 0 1.5px rgba(215,162,74,.25); }
+.etier .en { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-family: var(--f-display); font-weight: 700; color: #4a2a00; background: #9a8a70; }
+.etier.ok .en { background: radial-gradient(circle at 40% 30%, #ffe58a, #e9a12a); } .etier b { font-family: var(--f-display); font-weight: 600; color: var(--cream); } .etier .rw { font-size: .8rem; }
+.etier.got { opacity: .6; } .etier .done { font-size: 1.3rem; color: #6fd34a; font-weight: 900; padding: 0 10px; }
+@media (orientation: portrait) { .ecl-hero { grid-template-columns: 1fr; } }
 </style>
 
 <div class="game">
@@ -1150,6 +1167,7 @@ body.page-full #p-heroes { height: 100%; display: block; } .hpage { height: 100%
       <div class="panel" id="p-relics"></div>
       <div class="panel" id="p-derive"></div>
       <div class="panel" id="p-explo"></div>
+      <div class="panel" id="p-eclipse"></div>
       <div class="panel" id="p-heroes"></div>
       <div class="panel" id="p-summon"></div>
       <div class="panel" id="p-missions"></div>
@@ -1774,7 +1792,8 @@ function simulate(E0) {
   const tagTxt = m => m > 1 ? " (efficace !)" : m < 1 ? " (peu efficace)" : "";
   const has = (u, id, p) => u.id === id && u.side === "a" && (p !== "p2" || u.stars >= P2_STAR);
   const pick = arr => arr[Math.floor(R() * arr.length)];
-  let lyraStacks = 0;
+  let lyraStacks = 0, dealt = 0;
+  const MAXT = (ui.special && ui.special.turns) || 25;
   // passifs permanents et effets d'ouverture
   A.forEach(u => {
     if (has(u, "seve")) u.def += .15; if (has(u, "gorm")) u.def += .10;
@@ -1816,7 +1835,7 @@ function simulate(E0) {
     d *= 1 - Math.min(.6, t.def);
     d = Math.max(1, Math.round(d));
     let left = d; if (t.sh > 0) { const ab = Math.min(t.sh, left); t.sh -= ab; left -= ab; }
-    t.hp = Math.max(0, t.hp - left);
+    const hp0 = t.hp; t.hp = Math.max(0, t.hp - left); if (t.side === "e") dealt += hp0 - t.hp;
     if (src.ls && src.side === "a") src.hp = Math.min(src.max, src.hp + Math.round(d * src.ls));
     if (o.ls) src.hp = Math.min(src.max, src.hp + Math.round(d * o.ls));
     if (t.side === "e" && !t.boss && t.el === "Nature" && src.side === "a" && !RANGED[src.cls] && src.hp > 0) { src.hp = Math.max(1, src.hp - Math.round(d * .15)); }
@@ -1885,7 +1904,7 @@ function simulate(E0) {
       else if (e.el === "Feu") al.forEach(u => { const r = strike(e, u, .4); if (u.hp > 0) u.burns.push({ d: Math.round(atkOf(e) * .08), t: 2 }); add(ev, u, r, "Brûlure"); });
       else if (e.el === "Nature") al.sort(() => R() - .5).slice(0, 2).forEach(u => { const r = strike(e, u, .6); add(ev, u, r, stunT(u, .5) ? "Étourdi" : ""); });
       else if (e.el === "Terre") (fr.length ? fr : al).forEach(u => { const r = strike(e, u, 1.2); add(ev, u, r, stunT(u, .3) ? "Étourdi" : ""); });
-      else if (e.el === "Lumière") { e.hp = Math.min(e.max, e.hp + Math.round(e.max * .12)); al.forEach(u => add(ev, u, strike(e, u, .4))); }
+      else if (e.el === "Lumière") { if (!e.eclipse) e.hp = Math.min(e.max, e.hp + Math.round(e.max * .12)); al.forEach(u => add(ev, u, strike(e, u, .4))); }
       else { const t = al.sort((x, y) => x.hp - y.hp)[0]; add(ev, t, strike(e, t, 2.5)); }
       snap(`✦ ${e.name} — ${nm} : ${hitTxt(ev)}`, "bossline", ev);
       return;
@@ -1913,7 +1932,7 @@ function simulate(E0) {
 
   if (E[0].boss) snap(`BOSS — ${E[0].name} (${E[0].el}) barre la route !`, "bossline");
   else snap(`${ui.special ? ui.special.label : "Étape " + S.stage} : ${E.map(e => `${e.name} (${e.el})`).join(", ")} apparaissent.`);
-  for (let turn = 1; turn <= 25 && alive(A).length && alive(E).length; turn++) {
+  for (let turn = 1; turn <= MAXT && alive(A).length && alive(E).length; turn++) {
     A.forEach(u => { if (!alive(E).length) return; act(u, x => (turn % (x.sk || 3) === 0 ? active(x) : basic(x))); });
     for (const e of E.flatMap(x => x.boss ? [x, x] : [x])) { if (!alive(A).length) break; act(e, x => foeAct(x, turn)); }
     // fin de tour : soins passifs, brûlures, durées
@@ -1923,13 +1942,13 @@ function simulate(E0) {
     const burning = [...A, ...E].filter(u => u.hp > 0 && u.burns.length);
     if (burning.length) {
       const ev = { s: code(burning[0]), t: [], v: [], ms: [], tags: [], type: "tick", el: "Feu" };
-      burning.forEach(u => { const d = u.burns.reduce((s, b) => s + b.d, 0); u.hp = Math.max(0, u.hp - d); ev.t.push(code(u)); ev.v.push(d); ev.tags.push(u.hp <= 0 ? death(u, null).join(" ") : ""); });
+      burning.forEach(u => { const d = u.burns.reduce((s, b) => s + b.d, 0), h0 = u.hp; u.hp = Math.max(0, u.hp - d); if (u.side === "e") dealt += h0 - u.hp; ev.t.push(code(u)); ev.v.push(d); ev.tags.push(u.hp <= 0 ? death(u, null).join(" ") : ""); });
       snap(`Les flammes brûlent : ${burning.map(u => u.name).join(", ")}.`, "", ev);
     }
     [...A, ...E].forEach(u => { u.burns = u.burns.filter(b => --b.t > 0); u.buf = u.buf.filter(b => --b.t > 0); u.mark = u.mark.filter(b => --b.t > 0); });
   }
   const win = alive(A).length > 0 && !alive(E).length;
-  return { A, E, frames, win };
+  return { A, E, frames, win, dealt };
 }
 
 /* ---- Décor animé (canvas plein écran) ---- */
@@ -2240,7 +2259,7 @@ function startBattle(spec) {
   b.A.forEach((u, i) => setBar("a" + i, b.frames[0].a[i], u.max)); b.E.forEach((u, i) => setBar("e" + i, u.max, u.max));
   $("#stage").classList.add("walking"); BG.target = 1;
   $("#banner").hidden = true;
-  if (bossFight) setTimeout(() => banner("BOSS", "boss"), 300);
+  if (bossFight) setTimeout(() => banner(ui.special && ui.special.kind === "eclipse" ? "ÉCLIPSE" : "BOSS", "boss"), 300);
   else if (ui.special) setTimeout(() => banner(ui.special.label, "special"), 200);
   renderHUD();
   ui.battle.timer = setTimeout(() => { BG.target = 0; $("#stage").classList.remove("walking"); $("#banner").hidden = true; step(); }, 1100 / speed() + (bossFight || ui.special ? 600 : 0));
@@ -2348,7 +2367,7 @@ function renderBadge() {
   t.querySelector(".badge-slot").innerHTML = n ? `<span class="badge">${n}</span>` : "";
   const ta = $("#tab-adv"); if (ta && typeof exploReady === "function") {
     let sl = ta.querySelector(".badge-slot"); if (!sl) { sl = document.createElement("span"); sl.className = "badge-slot"; ta.appendChild(sl); }
-    const k = exploReady(); sl.innerHTML = k ? `<span class="badge">${k}</span>` : "";
+    const k = exploReady() + (typeof eclReady === "function" && eclReady() ? 1 : 0); sl.innerHTML = k ? `<span class="badge">${k}</span>` : "";
   }
 }
 function claim(id) {
@@ -2711,6 +2730,7 @@ function renderAdv() {
       <p class="muted">Un sanctuaire par jour (lundi Feu, mardi Eau, mercredi Nature, jeudi Terre, vendredi Lumière, samedi Ombre). ${SANCT_TRIES} essais par jour. Un niveau réussi peut être balayé sans combattre.</p>
       ${sanctHTML}
     </div>
+    ${eclCardHTML()}
     ${exploCardHTML()}
     ${deriveCardHTML()}
     <div class="adv-card soon">
@@ -2721,6 +2741,7 @@ function renderAdv() {
   $("#advforge").onclick = () => openForge(null);
   $("#derivego").onclick = () => openTab("derive");
   $("#explogo").onclick = () => openTab("explo");
+  $("#eclgo").onclick = () => openTab("eclipse");
   $("#towergo").onclick = startTower;
   box.querySelectorAll("[data-sanct]").forEach(b => b.onclick = () => startSanct(b.dataset.sanct, +b.dataset.l));
   box.querySelectorAll(".sweep").forEach(b => b.onclick = () => sweepSanct(b.dataset.el));
@@ -2789,6 +2810,83 @@ function renderHome() {
   on("hmis", () => openTab("missions")); on("hrel", () => openRelics(lead, null)); on("hher", () => openTab("heroes"));
 }
 setInterval(() => { if (ui.home && ui.tab === "battle") { const sig = HOME_SPOTS.map(x => +spotBadge(x.k)).join("") + S.gems + "/" + S.pots + "/" + pending().gems; if (sig !== ui.homeSig) { ui.homeSig = sig; renderHome(); } } }, 20000);
+
+/* ================== ÉCLIPSE HEBDOMADAIRE ================== */
+// Un colosse par semaine (élément tournant). Sa vie est une réserve commune à toute la semaine :
+// 1 assaut de 10 tours par jour, les dégâts s'additionnent. Paliers calibrés sur l'équipe en début de semaine.
+const ECL_NAMES = { Feu: "Colosse de l'éclipse ardente", Eau: "Léviathan de l'éclipse", Nature: "Hydre de l'éclipse verte", Terre: "Titan de l'éclipse grise", Lumière: "Séraphin de l'éclipse blanche", Ombre: "Dévoreur de l'éclipse noire" };
+const ECL_TIERS = [.4, .9, 1.6, 2.5, 3.6, 5, 7.2]; // multiples des dégâts estimés d'un assaut
+const ECL_TURNS = 10;
+const weekId = () => Math.floor((Date.now() / 864e5 + 3) / 7); // semaine commençant le lundi
+const ECL_REWARDS = [{ gems: 150 }, { gems: 250, pots: 15 }, { gems: 350, shards: 1 }, { gems: 500, pots: 40 }, { gems: 700, shards: 2, relic: 2 }, { gems: 900, pots: 80 }, { gems: 1500, shards: 4, relic: 3 }];
+function eclReward(i) {
+  const k = 1 + S.stage / 40, r = { ...ECL_REWARDS[i] };
+  if (r.gems) r.gems = Math.round(r.gems * k); if (r.pots) r.pots = Math.round(r.pots * k);
+  return r;
+}
+function eclBossBase(el, p0) {
+  let L = 1; while (L < 300 && foePowerOf(genFoes(L, [el], true)) < p0 * 0.9) L++;
+  return genFoes(L, [el], true)[0];
+}
+function eclipse() {
+  if (!S.eclipse || S.eclipse.week !== weekId()) {
+    const w = weekId(), el = CYCLE_EL[w % CYCLE_EL.length], p0 = teamPower();
+    // estimation des dégâts d'un assaut avec l'équipe actuelle (sert à calibrer les paliers)
+    const base = eclBossBase(el, p0), probe = { ...base, hp: 1e9, max: 1e9, eclipse: true };
+    const keep = ui.special; ui.special = { turns: ECL_TURNS, foes: () => [probe] };
+    let est = 0; for (let i = 0; i < 3; i++) est += simulate([{ ...probe }]).dealt; est = Math.max(1000, Math.round(est / 3));
+    ui.special = keep;
+    const tiers = ECL_TIERS.map(m => Math.round(est * m / 100) * 100);
+    S.eclipse = { week: w, el, p0, atk: base.atk, pool: tiers[tiers.length - 1], dealt: 0, tiers, claimed: [], day: "", runs: 0, best: 0, last: 0 };
+    save();
+  }
+  return S.eclipse;
+}
+const eclLeft = X => Math.max(0, X.pool - X.dealt);
+const eclTierReached = X => X.tiers.filter(t => X.dealt >= t).length;
+function eclReady() { const X = S.eclipse && S.eclipse.week === weekId() ? S.eclipse : null; return !X || (X.day !== today() && eclLeft(X) > 0); }
+function startEclipse() {
+  const X = eclipse();
+  if (X.day === today()) return toast("Un seul assaut par jour : l'Éclipse vous attend demain.");
+  if (!eclLeft(X)) return toast("L'Éclipse est dissipée cette semaine. Récupérez vos paliers !");
+  X.day = today(); X.runs++; save();
+  const boss = { name: ECL_NAMES[X.el], el: X.el, hp: eclLeft(X), max: X.pool, atk: X.atk, foe: true, boss: true, front: true, eclipse: true };
+  launchSpecial({ kind: "eclipse", label: "Éclipse hebdomadaire", turns: ECL_TURNS, foes: () => [{ ...boss }], back: "eclipse",
+    onSim: b => { const X2 = eclipse(), d = Math.min(eclLeft(X2), b.dealt); X2.dealt += d; X2.last = d; X2.best = Math.max(X2.best, d); passXP(25); save(); },
+    onEnd: () => { const X2 = eclipse(); return `Éclipse : ${X2.last.toLocaleString("fr-FR")} dégâts infligés (total ${X2.dealt.toLocaleString("fr-FR")}).`; } });
+}
+function claimEcl(i, el) {
+  const X = eclipse(); if (X.claimed.includes(i) || X.dealt < X.tiers[i]) return;
+  const r = eclReward(i); X.claimed.push(i); grant(r);
+  if (r.relic) setTimeout(() => gainRelic(Math.max(r.relic, rollRarity(S.stage))), 600);
+  gemBurst(8, el); setTimeout(renderWallet, 900); save(); renderEclipse(); renderBadge();
+  toast(`Palier ${i + 1} : ${rewardTxt(r)}${r.relic ? " + relique" : ""}.`);
+}
+function eclCardHTML() {
+  const X = eclipse(), n = eclTierReached(X), toClaim = X.tiers.filter((t, i) => X.dealt >= t && !X.claimed.includes(i)).length;
+  return `<div class="adv-card eclipse-card">
+    <div class="adv-head"><h3>Éclipse hebdomadaire</h3><span class="floor">${toClaim ? `${toClaim} palier${toClaim > 1 ? "s" : ""} à récupérer` : X.day === today() ? "Revenez demain" : "Assaut disponible"}</span></div>
+    <p class="muted">Un colosse par semaine. Un assaut de ${ECL_TURNS} tours par jour : vos dégâts s'additionnent jusqu'à dimanche.</p>
+    <p class="rw">Cette semaine : ${ECL_NAMES[X.el]} <span class="elc" style="--el:var(${EL[X.el]})">${X.el}</span> · paliers ${n}/${X.tiers.length}</p>
+    <button class="btn primary big" id="eclgo">Ouvrir l'Éclipse</button></div>`;
+}
+function renderEclipse() {
+  const box = $("#p-eclipse"); if (!box) return;
+  const X = eclipse(), left = eclLeft(X), pct = left / X.pool * 100, can = X.day !== today() && left > 0;
+  const dLeft = 7 - ((Math.floor(Date.now() / 864e5) + 3) % 7);
+  box.innerHTML = `<div class="ecl-hero" style="--el:var(${EL[X.el]})">
+      <div class="ecl-sky"></div><div class="ecl-boss">${monsterArt(X.el, true)}</div>
+      <div class="ecl-info"><h3>${ECL_NAMES[X.el]}</h3><p>Élément ${X.el} · conseil : héros ${counterOf(X.el)} · spéciale : ${BOSS_SKILLS[X.el][0]}</p>
+        <div class="ecl-bar"><b style="width:${pct}%"></b><span>${left.toLocaleString("fr-FR")} / ${X.pool.toLocaleString("fr-FR")}</span></div>
+        <p class="ecl-meta">Fin dans ${dLeft} jour${dLeft > 1 ? "s" : ""} · ${X.runs} assaut${X.runs > 1 ? "s" : ""} · meilleur : ${X.best.toLocaleString("fr-FR")}${X.last ? ` · dernier : ${X.last.toLocaleString("fr-FR")}` : ""}</p>
+        <button class="btn primary big" id="eclfight" ${can ? "" : "disabled"}>${left <= 0 ? "Éclipse dissipée !" : can ? `Lancer l'assaut (${ECL_TURNS} tours)` : "Prochain assaut demain"}</button></div>
+    </div>
+    <div class="ecl-tiers">${X.tiers.map((t, i) => { const ok = X.dealt >= t, got = X.claimed.includes(i), r = eclReward(i);
+      return `<div class="etier${ok ? " ok" : ""}${got ? " got" : ""}"><span class="en">${i + 1}</span><div><b>${t.toLocaleString("fr-FR")} dégâts</b><div class="rw">${rewardHTML(r)}${r.relic ? `<span class="rwi">${ico("amulet")}${r.relic >= 3 ? "Légendaire" : "Épique+"}</span>` : ""}</div></div>
+        ${got ? `<span class="done">✓</span>` : `<button class="btn${ok ? " primary" : ""}" data-ec="${i}" ${ok ? "" : "disabled"}>Récupérer</button>`}</div>`; }).join("")}</div>`;
+  $("#eclfight").onclick = startEclipse;
+  box.querySelectorAll("[data-ec]").forEach(b => b.onclick = () => claimEcl(+b.dataset.ec, b));
+}
 
 /* ================== EXPLORATIONS (missions minutées, même jeu fermé) ================== */
 // Tableau de missions renouvelé chaque jour. Les héros envoyés continuent de combattre ailleurs,
@@ -3468,7 +3566,7 @@ function toast(msg) {
   const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); t.textContent = msg; document.body.appendChild(t);
   clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2600);
 }
-const SHEET_TITLES = { explo: "Explorations", derive: "Dérive céleste", relics: "Reliques", missions: "Missions & Carnet lunaire", forge: "Forge stellaire", adv: "Aventures", team: "Équipe", heroes: "Héros", summon: "Invocation", info: "Journal & infos" };
+const SHEET_TITLES = { eclipse: "Éclipse hebdomadaire", explo: "Explorations", derive: "Dérive céleste", relics: "Reliques", missions: "Missions & Carnet lunaire", forge: "Forge stellaire", adv: "Aventures", team: "Équipe", heroes: "Héros", summon: "Invocation", info: "Journal & infos" };
 function renderInfo() {
   const r = idleRate(), p = pending();
   $("#p-info-top").innerHTML = `
@@ -3484,7 +3582,7 @@ function render() {
   $("#sheet").hidden = !open; document.body.classList.toggle("sheet-open", open);
   if (open) $("#sheet-title").textContent = SHEET_TITLES[ui.tab] || "";
   document.querySelectorAll(".dock button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === ui.tab));
-  ["explo", "derive", "relics", "forge", "adv", "team", "summon", "heroes", "missions", "info"].forEach(t => { $("#p-" + t).hidden = ui.tab !== t; });
+  ["eclipse", "explo", "derive", "relics", "forge", "adv", "team", "summon", "heroes", "missions", "info"].forEach(t => { $("#p-" + t).hidden = ui.tab !== t; });
   if (ui.tab === "summon") renderSummon();
   if (ui.tab === "heroes") renderHeroes();
   if (ui.tab === "missions") renderMissions();
@@ -3495,6 +3593,7 @@ function render() {
   if (ui.tab === "relics") renderRelics();
   if (ui.tab === "derive") renderDerive();
   if (ui.tab === "explo") renderExplo();
+  if (ui.tab === "eclipse") renderEclipse();
 }
 function openTab(t) {
   daily();
