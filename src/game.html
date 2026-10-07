@@ -1635,6 +1635,20 @@ const FOES = [
   { name:"Slime des brumes", el:"Eau" }, { name:"Spectre errant", el:"Ombre" }, { name:"Diablotin de braise", el:"Feu" },
   { name:"Golem de pierre", el:"Terre" }, { name:"Bulbe carnivore", el:"Nature" }, { name:"Feu follet", el:"Lumière" }
 ];
+// Traits des monstres (par élément) et attaques spéciales des boss
+const FOE_TRAITS = {
+  Eau: ["Gélatineux", "Tous les 3 tours, soigne le monstre le plus blessé (50 % d'ATQ)."],
+  Ombre: ["Insaisissable", "15 % d'esquive ; vise surtout la ligne arrière."],
+  Feu: ["Étincelle", "Ses coups enflamment la cible (15 % d'ATQ par tour, 2 tours)."],
+  Terre: ["Carapace", "Dégâts subis −20 %."],
+  Nature: ["Épines", "Renvoie 15 % des dégâts subis au corps à corps."],
+  Lumière: ["Bénédiction", "Tous les 3 tours, protège les monstres d'un bouclier (40 % d'ATQ)."],
+};
+const BOSS_SKILLS = {
+  Eau: ["Raz-de-marée", "frappe tous les héros (70 %)"], Feu: ["Pluie de cendres", "frappe tous les héros (40 %) et les enflamme"],
+  Nature: ["Étreinte des ronces", "frappe 2 héros (60 %), 50 % de chance d'étourdir"], Terre: ["Fracas", "frappe la ligne avant (120 %), 30 % d'étourdir"],
+  Lumière: ["Lumière sacrée", "récupère 12 % de ses PV et frappe tous les héros (40 %)"], Ombre: ["Faille du néant", "frappe le héros le plus affaibli (250 %)"],
+};
 const BOSSES = [
   { name:"Roi Slime des abysses", el:"Eau" }, { name:"Seigneur des braises", el:"Feu" }, { name:"Reine des ronces", el:"Nature" },
   { name:"Titan de basalte", el:"Terre" }, { name:"Archange terni", el:"Lumière" }, { name:"Seigneur du néant", el:"Ombre" }
@@ -1759,6 +1773,7 @@ function simulate(E0) {
     if (has(u, "brasa")) u.crit = (u.crit || 0) + .2;
     if (has(u, "tallo")) u.sh += Math.round(u.max * .15);
   });
+  E.forEach(e => { if (!e.boss && e.el === "Terre") e.def += .2; if (!e.boss && e.el === "Ombre") e.dodge = .15; });
   const iris = A.find(u => has(u, "iris"));
   if (iris) A.forEach(u => u.sh += Math.round(iris.atk * .6));
   const atkOf = u => {
@@ -1795,6 +1810,8 @@ function simulate(E0) {
     t.hp = Math.max(0, t.hp - left);
     if (src.ls && src.side === "a") src.hp = Math.min(src.max, src.hp + Math.round(d * src.ls));
     if (o.ls) src.hp = Math.min(src.max, src.hp + Math.round(d * o.ls));
+    if (t.side === "e" && !t.boss && t.el === "Nature" && src.side === "a" && !RANGED[src.cls] && src.hp > 0) { src.hp = Math.max(1, src.hp - Math.round(d * .15)); }
+    if (src.side === "e" && !src.boss && src.el === "Feu" && t.hp > 0) t.burns.push({ d: Math.round(atkOf(src) * .15), t: 2 });
     if (has(src, "mira")) t.mark.push({ v: .10, t: 1 });
     if (has(src, "rook")) t.buf.push({ v: -.10, t: 1 });
     const tags = t.hp <= 0 ? death(t, src) : [];
@@ -1847,16 +1864,41 @@ function simulate(E0) {
     if (has(u, "lyra", "p2") && R() < .2 && alive(E).length) once();
     if (has(u, "iris", "p2")) { const w = mostHurt(); if (w && w.hp < w.max) { const ev = ev0(u, "heal"); ev.t.push(code(w)); ev.v.push(heal(u, w, atkOf(u) * .3)); ev.tags.push(""); snap(`${u.name} soigne ${w.name} (+${ev.v[0]}).`, "", ev); } }
   }
-  function foeAct(e) {
+  function foeAct(e, turn) {
     const al = alive(A); if (!al.length) return;
-    const fr = al.filter(u => u.front), tallo = al.find(u => has(u, "tallo")), guard = al.find(u => u.cls === "Gardien");
-    const t = tallo && R() < .4 ? tallo : guard && R() < .3 ? guard : fr.length && R() < .75 ? pick(fr) : pick(al);
+    const idx = E.indexOf(e), K = FOE_TRAITS[e.el];
+    // boss : rage sous 50 % de PV, attaque spéciale tous les 3 tours
+    if (e.boss && !e.used.rage && e.hp < e.max / 2) { e.used.rage = 1; e.buf.push({ v: .2, t: 999 }); snap(`${e.name} entre en rage ! (+20 % d'ATQ)`, "bossline", { s: code(e), t: [code(e)], v: ["RAGE !"], ms: [1], tags: [""], type: "tick", el: e.el }); }
+    if (e.boss && turn % 3 === 0 && !e.used["sp" + turn]) {
+      e.used["sp" + turn] = 1;
+      const [nm] = BOSS_SKILLS[e.el] || ["Assaut"], ev = { s: code(e), t: [], v: [], ms: [], tags: [], type: "skill", el: e.el, ranged: true, name: nm }, fr = al.filter(u => u.front);
+      if (e.el === "Eau") al.forEach(u => add(ev, u, strike(e, u, .7)));
+      else if (e.el === "Feu") al.forEach(u => { const r = strike(e, u, .4); if (u.hp > 0) u.burns.push({ d: Math.round(atkOf(e) * .08), t: 2 }); add(ev, u, r, "Brûlure"); });
+      else if (e.el === "Nature") al.sort(() => R() - .5).slice(0, 2).forEach(u => { const r = strike(e, u, .6); add(ev, u, r, stunT(u, .5) ? "Étourdi" : ""); });
+      else if (e.el === "Terre") (fr.length ? fr : al).forEach(u => { const r = strike(e, u, 1.2); add(ev, u, r, stunT(u, .3) ? "Étourdi" : ""); });
+      else if (e.el === "Lumière") { e.hp = Math.min(e.max, e.hp + Math.round(e.max * .12)); al.forEach(u => add(ev, u, strike(e, u, .4))); }
+      else { const t = al.sort((x, y) => x.hp - y.hp)[0]; add(ev, t, strike(e, t, 2.5)); }
+      snap(`✦ ${e.name} — ${nm} : ${hitTxt(ev)}`, "bossline", ev);
+      return;
+    }
+    // monstres de soutien
+    if (!e.boss && e.el === "Eau" && (turn + idx) % 3 === 0) {
+      const w = alive(E).filter(x => x.hp < x.max).sort((x, y) => x.hp / x.max - y.hp / y.max)[0];
+      if (w) { const v = Math.round(atkOf(e) * .5); w.hp = Math.min(w.max, w.hp + v); snap(`${e.name} soigne ${w.name} (+${v}).`, "", { s: code(e), t: [code(w)], v: [v], ms: [1], tags: [""], type: "heal", el: e.el, ranged: true }); return; }
+    }
+    if (!e.boss && e.el === "Lumière" && (turn + idx) % 3 === 0) {
+      const sh = Math.round(atkOf(e) * .4), ev = { s: code(e), t: [], v: [], ms: [], tags: [], type: "heal", el: e.el, ranged: true, name: K[0] };
+      alive(E).forEach(x => { x.sh += sh; ev.t.push(code(x)); ev.v.push(sh); ev.tags.push("Bouclier"); });
+      snap(`${e.name} protège les monstres (${K[0]}).`, "", ev); return;
+    }
+    const fr = al.filter(u => u.front), back = al.filter(u => !u.front), tallo = al.find(u => has(u, "tallo")), guard = al.find(u => u.cls === "Gardien");
+    const t = tallo && R() < .4 ? tallo : guard && R() < .3 ? guard : (!e.boss && e.el === "Ombre" && back.length && R() < .7) ? pick(back) : fr.length && R() < .75 ? pick(fr) : pick(al);
     const ev = { s: code(e), t: [], v: [], ms: [], tags: [], type: "hit", el: e.el, ranged: false }, r = strike(e, t, 1);
-    add(ev, t, r);
+    add(ev, t, r, !e.boss && e.el === "Feu" && typeof r.d === "number" && t.hp > 0 ? "Brûlure" : "");
     snap(`${e.name} → ${t.name} : ${r.d}${tagTxt(r.m)}${t.hp === 0 ? " — K.O." : ""}`, "", ev);
     if (t.hp > 0 && has(t, "tallo", "p2") && R() < .35 && e.hp > 0) { const c = ev0(t, "hit"); add(c, e, strike(t, e, .8), "Riposte"); snap(`${t.name} riposte !`, "", c); }
     const oren = alive(A).find(u => has(u, "oren", "p2") && !u.used.bub);
-    if (oren && t.hp > 0 && t.hp / t.max < .3) { oren.used.bub = 1; const sh = Math.round(atkOf(oren) * 2); t.sh += sh; const b = ev0(oren, "heal"); b.t.push(code(t)); b.v.push(sh); b.tags.push("Bouclier"); snap(`${oren.name} protège ${t.name} d'une bulle (${sh}).`, "", b); }
+    if (oren && t.hp > 0 && t.hp / t.max < .3) { oren.used.bub = 1; const sh = Math.round(atkOf(oren) * 2); t.sh += sh; const bb = ev0(oren, "heal"); bb.t.push(code(t)); bb.v.push(sh); bb.tags.push("Bouclier"); snap(`${oren.name} protège ${t.name} d'une bulle (${sh}).`, "", bb); }
   }
   const act = (u, fn) => { if (u.hp <= 0) return; if (u.stun > 0) { u.stun--; snap(`${u.name} est étourdi.`, "weak", { s: code(u), t: [code(u)], v: ["Étourdi"], ms: [1], tags: [""], type: "tick", el: u.el }); return; } fn(u); };
 
@@ -1864,7 +1906,7 @@ function simulate(E0) {
   else snap(`${ui.special ? ui.special.label : "Étape " + S.stage} : ${E.map(e => `${e.name} (${e.el})`).join(", ")} apparaissent.`);
   for (let turn = 1; turn <= 25 && alive(A).length && alive(E).length; turn++) {
     A.forEach(u => { if (!alive(E).length) return; act(u, x => (turn % (x.sk || 3) === 0 ? active(x) : basic(x))); });
-    for (const e of E.flatMap(x => x.boss ? [x, x] : [x])) { if (!alive(A).length) break; act(e, foeAct); }
+    for (const e of E.flatMap(x => x.boss ? [x, x] : [x])) { if (!alive(A).length) break; act(e, x => foeAct(x, turn)); }
     // fin de tour : soins passifs, brûlures, durées
     const oren = alive(A).find(u => has(u, "oren")), w = mostHurt();
     if (oren && w && w.hp < w.max) { const ev = ev0(oren, "heal"); ev.t.push(code(w)); ev.v.push(heal(oren, w, atkOf(oren) * .4)); ev.tags.push(""); snap(`Courant apaisant : ${w.name} +${ev.v[0]}.`, "", ev); }
@@ -2650,7 +2692,7 @@ function renderAdv() {
       <div class="adv-head"><h3>Tour des Astres</h3><span class="floor">Étage ${T.floor}</span></div>
       <p class="muted">Gravissez la tour étage par étage. Le Souffle d'éther n'est consommé qu'en cas de défaite : une victoire ne coûte rien.</p>
       <div class="energy"><span class="dots">${dots}</span><span>Souffle d'éther ${T.energy}/${TOWER_MAX}${regen}</span></div>
-      <p class="rw">Ennemis : ${chips(fi.els)}${fi.boss ? ' <span class="bosstag">Boss</span>' : ""} · conseil : ${counterOf(fi.els[0])}
+      <p class="rw">Ennemis : ${chips(fi.els)}${fi.boss ? ' <span class="bosstag">Boss</span>' : ""} · ${fi.boss ? `spéciale : ${BOSS_SKILLS[fi.els[0]][0]}` : fi.els.map(e => FOE_TRAITS[e][0]).join(", ")} · conseil : ${counterOf(fi.els[0])}
         <span class="pw ${powerState(tf)}">⚔ ${teamPower().toLocaleString("fr-FR")} / ${foePowerOf(tf).toLocaleString("fr-FR")}</span></p>
       <p class="rw">Récompense : ${rewardHTML(fi.reward)}${T.floor % 5 ? ` · palier à l'étage ${next5}` : ""}</p>
       <button class="btn primary big" id="towergo" ${T.energy ? "" : "disabled"}>Gravir l'étage ${T.floor}</button>
