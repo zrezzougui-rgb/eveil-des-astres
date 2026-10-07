@@ -1149,6 +1149,9 @@ body.page-full #p-heroes, body.page-full #p-team { height: 100%; display: block;
 .ttag.in { background: #3f9e2a; } .ttag.good { background: #2a7fc4; } .ttag.bad { background: #b33a2a; }
 .tp-hint { margin: 6px 4px 0; font-size: .74rem; color: #6b4423; text-align: center; font-weight: 700; }
 @media (orientation: portrait) { .tp-body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; } .tp-field { min-height: 46vh; } }
+.hsnd { width: 40px; height: 40px; margin-top: 6px; border: 0; border-radius: 50%; font-size: 1.1rem; cursor: pointer; background: radial-gradient(circle at 40% 30%, #8a5a30, #4a2c14); box-shadow: inset 0 0 0 2px var(--gold-edge), 0 3px 0 #1f1208; }
+.hsnd.off { filter: grayscale(.8); }
+.sndset { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; } .sndset .t { flex-basis: 100%; }
 </style>
 
 <div class="game">
@@ -1363,13 +1366,13 @@ function playSummonFx(res) {
   const cards = o.querySelector(".cards"), g = altarGeom(), pt = o.querySelector(".portal"), bm = o.querySelector(".beam");
   pt.style.left = g.x + "px"; pt.style.top = g.y + "px"; pt.style.width = g.d + "px";
   bm.style.top = "0"; bm.style.bottom = "auto"; bm.style.height = g.y + "px";
-  let done = false;
+  let done = false; SND.play("portal");
   const close = () => { o.hidden = true; o.innerHTML = ""; ui.tab = "summon"; render(); };
   setTimeout(() => {
     o.classList.add("burst"); if (top === 5) shake(10, 500);
     res.forEach((r, i) => setTimeout(() => {
       const h = H[r.id], d = document.createElement("div");
-      d.className = `scard r${h.r}`; d.style.setProperty("--el", `var(${EL[h.el]})`);
+      d.className = `scard r${h.r}`; d.style.setProperty("--el", `var(${EL[h.el]})`); SND.play("reveal" + h.r);
       d.innerHTML = `<div class="face">${SPRITES[r.id] ? `<img src="${SPRITES[r.id]}" alt="">` : `<span>${h.name[0]}</span>`}</div>
         <div class="nm">${h.name}</div><div class="st">${"★".repeat(h.r)}</div>${r.isNew ? `<div class="new">NOUVEAU</div>` : ""}`;
       cards.appendChild(d);
@@ -1578,7 +1581,7 @@ function renderHeroDetail(box, list) {
   on(".hd-back", () => { ui.hdetail = false; renderHeroes(); });
   on("#hprev", () => { ui.sel = list[(i - 1 + list.length) % list.length]; renderHeroes(); });
   on("#hnext", () => { ui.sel = list[(i + 1) % list.length]; renderHeroes(); });
-  on("#lv1", () => { if (up()) { save(); render(); box.querySelector(".hd-hero")?.animate([{ filter: "brightness(1.8)" }, { filter: "none" }], 400); } });
+  on("#lv1", () => { if (up()) { SND.play("level"); save(); render(); box.querySelector(".hd-hero")?.animate([{ filter: "brightness(1.8)" }, { filter: "none" }], 400); } });
   on("#lvmax", () => { let n = 0; while (up()) n++; save(); render(); toast(`${h.name} gagne ${n} niveau${n > 1 ? "x" : ""}.`); });
   on("#teamtg", () => {
     if (S.team.includes(id)) { if (teamIds().length <= 1) return toast("Gardez au moins un héros dans l'équipe."); S.team[S.team.indexOf(id)] = null; }
@@ -2247,7 +2250,8 @@ function playFrame(f) {
   logLine(f.text, f.kind);
   if (!ev) { applyHP(f); return; }
   const src = unitEl(ev.s), dir = ev.s[0] === "a" ? 1 : -1;
-  if (ev.type === "tick") { applyHP(f); ev.t.forEach((t, i) => { const el = unitEl(t); if (!el) return; floatText(el, String(ev.v[i]), ev.v[i] === "Étourdi" ? "tag" : "burn"); if (ev.tags[i]) setTimeout(() => floatText(el, ev.tags[i], "tag"), 260); }); return; }
+  if (ev.type === "tick") { SND.play(ev.v[0] === "RAGE !" ? "rage" : "burn"); applyHP(f); ev.t.forEach((t, i) => { const el = unitEl(t); if (!el) return; floatText(el, String(ev.v[i]), ev.v[i] === "Étourdi" ? "tag" : "burn"); if (ev.tags[i]) setTimeout(() => floatText(el, ev.tags[i], "tag"), 260); }); return; }
+  SND.play(ev.type === "skill" ? "skill" : ev.type === "heal" ? "heal" : ev.crit ? "crit" : "hit");
   if (ev.type === "skill" || (ev.type === "heal" && ev.name)) { const w = $("#world"); w && w.animate([{ filter: "brightness(1.9) saturate(1.3)" }, { filter: "none" }], { duration: dur }); floatText(src, ev.name || "ÉVEIL !", "skill"); if (ev.type === "skill") shake(9, 400); }
   if (ev.type === "heal") src && src.querySelector(".body").animate([{ transform: "translateY(0)" }, { transform: "translateY(-12px)" }, { transform: "translateY(0)" }], { duration: dur * .5, composite: "add" });
   else lunge(src, dir, dur * .6, !ev.ranged);
@@ -2268,7 +2272,7 @@ function gemBurst(n, fromEl) {
     g.style.left = x + "px"; g.style.top = y + "px"; document.body.appendChild(g);
     const a = g.animate([{ transform: "translate(0,0) rotate(45deg) scale(.4)", opacity: 0 }, { transform: `translate(${(Math.random() - .5) * 90}px,-50px) rotate(45deg) scale(1.1)`, opacity: 1, offset: .3 },
       { transform: `translate(${t.left - x}px,${t.top - y}px) rotate(45deg) scale(.6)`, opacity: .9 }], { duration: 900 + i * 50, easing: "ease-in", delay: i * 35 });
-    a.onfinish = () => { g.remove(); target.parentElement.animate([{ transform: "scale(1.15)" }, { transform: "scale(1)" }], { duration: 160 }); };
+    a.onfinish = () => { g.remove(); SND.play("coin"); target.parentElement.animate([{ transform: "scale(1.15)" }, { transform: "scale(1)" }], { duration: 160 }); };
   }
 }
 
@@ -2304,7 +2308,7 @@ function finish() {
   if (ui.special) {
     const sp = ui.special; ui.special = null;
     msg = sp.onEnd(b.win, b);
-    banner(b.win ? "VICTOIRE" : "DÉFAITE", b.win ? "win" : "lose");
+    banner(b.win ? "VICTOIRE" : "DÉFAITE", b.win ? "win" : "lose"); SND.play(b.win ? "win" : "lose");
     if (b.win) { gemBurst(8); toast(msg); } else toast(msg);
     b.result = { win: b.win, msg };
     save(); setTimeout(renderWallet, 800); renderHUD(); logLine(msg, b.win ? "win" : "lose");
@@ -2315,11 +2319,11 @@ function finish() {
     const boss = isBoss(S.stage), g = (240 + S.stage * 20) * (boss ? 3 : 1), p = (3 + Math.floor(S.stage / 2)) * (boss ? 2 : 1);
     S.gems += g; S.pots += p; S.stage++; track("win"); passXP(boss ? 30 : 6, boss ? "" : "win");
     msg = `${boss ? "Boss vaincu ! " : "Victoire ! "}+${g} gemmes, +${p} potions. Étape ${S.stage} débloquée.`;
-    banner(boss ? "BOSS VAINCU !" : "VICTOIRE", "win"); gemBurst(boss ? 14 : 7);
+    banner(boss ? "BOSS VAINCU !" : "VICTOIRE", "win"); gemBurst(boss ? 14 : 7); SND.play("win");
     document.querySelectorAll("#stage .u.hero:not(.dead) .body").forEach((e, i) => e.animate([{ transform: "translateY(0)" }, { transform: "translateY(-16px)" }, { transform: "translateY(0)" }], { duration: 420, delay: i * 80, composite: "add" }));
     if (boss) toast(msg);
     if (boss) setTimeout(() => gainRelic(rollRarity(S.stage, 1)), 900); else if (Math.random() < .35) setTimeout(() => gainRelic(rollRarity(S.stage)), 900);
-  } else { S.gems += 60; msg = "Défaite… +60 gemmes. Montez vos héros en niveau ou en étoiles."; banner("DÉFAITE", "lose"); }
+  } else { S.gems += 60; msg = "Défaite… +60 gemmes. Montez vos héros en niveau ou en étoiles."; banner("DÉFAITE", "lose"); SND.play("lose"); }
   b.result = { win: b.win, msg };
   save(); setTimeout(renderWallet, 800); renderHUD(); renderChest(); logLine(msg, b.win ? "win" : "lose");
   scheduleAuto();
@@ -2825,7 +2829,7 @@ function renderHome() {
     <div class="home-top">
       <button class="hprof" id="hprof"><img src="${artOf(lead)}" alt=""><b>${S.stage}</b></button>
       <div class="hres"><span class="hcoin">${ico("gem")}<b>${S.gems.toLocaleString("fr-FR")}</b></span><span class="hcoin">${ico("potion")}<b>${S.pots.toLocaleString("fr-FR")}</b></span><span class="hcoin">${ico("shard")}<b>${S.shards || 0}</b></span></div>
-      <div class="hright">${rb("hcal", "moon", "Carnet", nMiss)}${rb("hchest", "chest", p.gems ? `+${p.gems}` : "Coffre", p.gems >= 50)}</div>
+      <div class="hright"><button class="hsnd${S.sound && !S.sound.music ? " off" : ""}" id="hsnd" aria-label="Musique">${S.sound && !S.sound.music ? "🔇" : "🎵"}</button>${rb("hcal", "moon", "Carnet", nMiss)}${rb("hchest", "chest", p.gems ? `+${p.gems}` : "Coffre", p.gems >= 50)}</div>
     </div>
     <div class="home-left">${rb("hteam", "sword", "Équipe")}${rb("hlog", "scroll", "Journal")}</div>
     <div class="home-chap"><img src="${artOf(lead)}" alt=""><div><b>Étape ${S.stage}</b><span>${inChap}/5 avant le boss</span><div class="bar"><i style="width:${inChap / 5 * 100}%"></i></div></div></div>
@@ -2835,11 +2839,95 @@ function renderHome() {
     </div>`;
   box.querySelectorAll(".spot, .isle").forEach(b => b.onclick = () => HOME_SPOTS.find(x => x.k === b.dataset.k).go());
   const on = (id, f) => { const e = box.querySelector("#" + id); if (e) e.onclick = f; };
-  on("hfight", goBattle); on("hprof", () => openTab("heroes")); on("hcal", () => openTab("missions"));
+  on("hfight", goBattle); on("hsnd", () => { toggleSound("music"); renderHome(); }); on("hprof", () => openTab("heroes")); on("hcal", () => openTab("missions"));
   on("hchest", () => { collect(); renderHome(); }); on("hteam", () => openTeam(null)); on("hlog", () => openTab("info"));
   on("hmis", () => openTab("missions")); on("hrel", () => openRelics(lead, null)); on("hher", () => openTab("heroes"));
 }
 setInterval(() => { if (ui.home && ui.tab === "battle") { const sig = HOME_SPOTS.map(x => +spotBadge(x.k)).join("") + S.gems + "/" + S.pots + "/" + pending().gems; if (sig !== ui.homeSig) { ui.homeSig = sig; renderHome(); } } }, 20000);
+
+/* ================== SON : effets synthétisés + musique générative (Web Audio, aucun fichier) ================== */
+const SND = (() => {
+  let ctx = null, master, sfxBus, musBus, noiseBuf, musTimer = null, mood = null, step = 0, nextT = 0, lastSfx = {};
+  const pref = () => (S && S.sound) || { music: true, sfx: true };
+  function init() {
+    if (ctx) return ctx.state === "suspended" && ctx.resume();
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    ctx = new AC(); master = ctx.createGain(); master.gain.value = .9; master.connect(ctx.destination);
+    sfxBus = ctx.createGain(); sfxBus.gain.value = pref().sfx ? .42 : 0; sfxBus.connect(master);
+    musBus = ctx.createGain(); musBus.gain.value = pref().music ? .16 : 0;
+    const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2600; musBus.connect(lp); lp.connect(master);
+    noiseBuf = ctx.createBuffer(1, ctx.sampleRate * .5, ctx.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    if (mood) startMusic(mood, true);
+  }
+  const t0 = () => ctx.currentTime;
+  function tone(f, dur, { type = "sine", vol = .5, at = 0, attack = .005, bus = sfxBus, glide = 0, detune = 0 } = {}) {
+    const o = ctx.createOscillator(), g = ctx.createGain(), t = t0() + at;
+    o.type = type; o.frequency.setValueAtTime(f, t); if (glide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f * glide), t + dur); o.detune.value = detune;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + attack); g.gain.exponentialRampToValueAtTime(.0008, t + dur);
+    o.connect(g); g.connect(bus); o.start(t); o.stop(t + dur + .05);
+  }
+  function noise(dur, { vol = .4, at = 0, freq = 1800, q = .8, type = "bandpass", bus = sfxBus, sweep = 0 } = {}) {
+    const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), t = t0() + at;
+    src.buffer = noiseBuf; f.type = type; f.frequency.setValueAtTime(freq, t); if (sweep) f.frequency.exponentialRampToValueAtTime(freq * sweep, t + dur); f.Q.value = q;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0008, t + dur);
+    src.connect(f); f.connect(g); g.connect(bus); src.start(t); src.stop(t + dur + .05);
+  }
+  const N = m => 440 * Math.pow(2, (m - 69) / 12);
+  const FX = {
+    hit: () => { noise(.09, { vol: .5, freq: 1400 }); tone(150, .12, { type: "triangle", vol: .35, glide: .5 }); },
+    crit: () => { noise(.14, { vol: .6, freq: 2400, q: 1.2 }); tone(220, .2, { type: "square", vol: .18, glide: .4 }); tone(880, .12, { vol: .15, at: .02 }); },
+    heal: () => { [72, 76, 79].forEach((m, i) => tone(N(m), .35, { vol: .16, at: i * .06 })); },
+    skill: () => { noise(.45, { vol: .35, freq: 500, sweep: 6, q: .6 }); [60, 67, 72, 76].forEach((m, i) => tone(N(m), .6, { type: "triangle", vol: .14, at: .05 + i * .04 })); },
+    burn: () => { noise(.25, { vol: .25, freq: 900, type: "highpass", q: .3 }); },
+    rage: () => { tone(70, .9, { type: "sawtooth", vol: .25, glide: .6 }); noise(.6, { vol: .25, freq: 300, q: .5 }); },
+    win: () => { [67, 72, 76, 79, 84].forEach((m, i) => tone(N(m), .5, { type: "triangle", vol: .2, at: i * .09 })); },
+    lose: () => { [67, 63, 60, 55].forEach((m, i) => tone(N(m), .5, { type: "triangle", vol: .16, at: i * .14 })); },
+    click: () => { tone(1250, .04, { vol: .08 }); },
+    coin: () => { tone(N(88), .12, { vol: .14 }); tone(N(93), .2, { vol: .12, at: .06 }); },
+    level: () => { [72, 76, 79, 84].forEach((m, i) => tone(N(m), .25, { type: "square", vol: .06, at: i * .05 })); },
+    portal: () => { noise(1.4, { vol: .2, freq: 200, sweep: 12, q: .7 }); tone(N(48), 1.4, { type: "sawtooth", vol: .06, glide: 2 }); },
+    reveal3: () => tone(N(79), .3, { vol: .14 }),
+    reveal4: () => { tone(N(79), .4, { vol: .16 }); tone(N(83), .5, { vol: .14, at: .08 }); },
+    reveal5: () => { [72, 76, 79, 84, 88].forEach((m, i) => tone(N(m), .9, { type: "triangle", vol: .16, at: i * .07 })); noise(.8, { vol: .15, freq: 6000, type: "highpass" }); },
+  };
+  function play(k) {
+    if (!ctx || !pref().sfx || document.hidden) return;
+    const now = performance.now(); if (now - (lastSfx[k] || 0) < 45) return; lastSfx[k] = now;
+    try { FX[k] && FX[k](); } catch (e) {}
+  }
+  // Musique : progression I–vi–IV–V en ré majeur ; « calme » = nappes + arpège lent, « combat » = tempo plus vif + percussions
+  const CH = [[62, 66, 69], [59, 62, 66], [55, 59, 62], [57, 61, 64]];
+  function schedule() {
+    if (!ctx || !mood) return;
+    const fight = mood === "combat", spb = fight ? .21 : .38; // durée d'une croche
+    while (nextT < ctx.currentTime + .3) {
+      const bar = Math.floor(step / 8) % 4, ch = CH[bar], i = step % 8, at = nextT - ctx.currentTime;
+      if (i === 0) ch.forEach(m => { tone(N(m - 12), spb * 8.5, { type: "triangle", vol: fight ? .1 : .13, at, attack: .4, bus: musBus }); tone(N(m - 12), spb * 8.5, { type: "sine", vol: .06, at, attack: .5, bus: musBus, detune: 7 }); });
+      if (i === 0 || (fight && i === 4)) tone(N(ch[0] - 24), spb * 3, { type: "sine", vol: .22, at, attack: .01, bus: musBus });
+      const arp = fight ? [0, 1, 2, 1, 2, 0, 1, 2] : [0, 1, 2, 1, 0, 2, 1, 2];
+      if (fight || i % 2 === 0) tone(N(ch[arp[i]] + 12), spb * 1.6, { type: "sine", vol: fight ? .07 : .08, at, attack: .01, bus: musBus });
+      if (fight) { if (i % 4 === 0) tone(110, .18, { type: "sine", vol: .35, at, glide: .35, attack: .002, bus: musBus }); if (i % 2 === 1) noise(.05, { vol: .08, at, freq: 7000, type: "highpass", bus: musBus }); if (i === 4) noise(.12, { vol: .12, at, freq: 1800, bus: musBus }); }
+      step++; nextT += spb;
+    }
+  }
+  function startMusic(m, force) {
+    if (m === mood && !force) return; mood = m;
+    if (!ctx) return;
+    clearInterval(musTimer); step = 0; nextT = ctx.currentTime + .1;
+    musTimer = setInterval(schedule, 100); schedule();
+  }
+  function apply() {
+    if (!ctx) return; const p = pref();
+    sfxBus.gain.setTargetAtTime(p.sfx ? .42 : 0, ctx.currentTime, .05);
+    musBus.gain.setTargetAtTime(p.music && !document.hidden ? .16 : 0, ctx.currentTime, .2);
+  }
+  document.addEventListener("visibilitychange", () => { if (!ctx) return; if (document.hidden) ctx.suspend(); else { ctx.resume(); apply(); } });
+  ["pointerdown", "keydown"].forEach(ev => window.addEventListener(ev, init, { once: false, passive: true }));
+  document.addEventListener("click", e => { if (e.target.closest("button, .spot, .isle")) play("click"); }, true);
+  return { play, music: startMusic, apply, init };
+})();
+function setMusicFor() { SND.music(!ui.home && ui.tab === "battle" ? "combat" : "calme"); }
+function toggleSound(k) { S.sound = S.sound || { music: true, sfx: true }; S.sound[k] = !S.sound[k]; save(); SND.apply(); toast(`${k === "music" ? "Musique" : "Effets sonores"} ${S.sound[k] ? "activés" : "coupés"}.`); }
 
 /* ================== ÉCLIPSE HEBDOMADAIRE ================== */
 // Un colosse par semaine (élément tournant). Sa vie est une réserve commune à toute la semaine :
@@ -3602,11 +3690,17 @@ function renderInfo() {
   $("#p-info-top").innerHTML = `
     <div class="mission"><div><div class="t">Coffre d'absence</div><div class="r">${r.gems.toFixed(1)} gemmes et ${r.pots.toFixed(2)} potions par minute, même jeu fermé (maximum ${IDLE_CAP_H} h). Contenu actuel : ${p.gems} gemmes, ${p.pots} potions.</div></div></div>
     <div class="chart"><b>Éléments :</b> Feu &gt; Nature &gt; Terre &gt; Eau &gt; Feu · Lumière ⇄ Ombre · Astre neutre. Avantage : dégâts ×1,3. Désavantage : ×0,75.</div>
+    <div class="mission sndset"><div class="t">Son</div>
+      <button class="btn${!S.sound || S.sound.music ? " primary" : ""}" id="sndm">${!S.sound || S.sound.music ? "🎵 Musique : activée" : "🔇 Musique : coupée"}</button>
+      <button class="btn${!S.sound || S.sound.sfx ? " primary" : ""}" id="snds">${!S.sound || S.sound.sfx ? "🔊 Effets : activés" : "🔈 Effets : coupés"}</button></div>
     <p class="eyebrow">Journal du combat en cours</p>`;
+  $("#sndm").onclick = () => { toggleSound("music"); renderInfo(); };
+  $("#snds").onclick = () => { toggleSound("sfx"); renderInfo(); };
 }
 function render() {
   renderWallet(); renderHUD(); renderBadge(); renderChest();
   document.body.classList.toggle("home-on", !!ui.home); if (ui.home) renderHome();
+  setMusicFor();
   document.body.classList.toggle("page-full", ui.tab === "heroes" || ui.tab === "team");
   const open = ui.tab !== "battle";
   $("#sheet").hidden = !open; document.body.classList.toggle("sheet-open", open);
