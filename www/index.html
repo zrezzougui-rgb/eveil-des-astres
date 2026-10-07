@@ -940,7 +940,7 @@ body.page-full #sheet { inset: 0 !important; width: auto !important; height: aut
 body.page-full #sheet .drawer-head { display: none; }
 body.page-full #sheet { grid-template-rows: minmax(0, 1fr) !important; }
 body.page-full #sheet .drawer-body { padding: 0; overflow: hidden; height: 100%; }
-body.page-full #p-heroes { height: 100%; display: block; } .hpage { height: 100%; overflow: hidden; }
+body.page-full #p-heroes, body.page-full #p-team { height: 100%; display: block; } .hpage { height: 100%; overflow: hidden; }
 .hpage { height: 100%; display: grid; grid-template-rows: auto 1fr; padding: calc(6px + env(safe-area-inset-top, 0px)) calc(10px + env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) calc(10px + env(safe-area-inset-left, 0px)); gap: 6px; }
 .hp-top { display: grid; grid-template-columns: 52px 1fr 52px; align-items: center; }
 .hp-back { width: 46px; height: 46px; border: 0; border-radius: 50%; padding: 9px; color: #ffd36a; background: radial-gradient(circle at 40% 30%, #8a5a30, #4a2c14); box-shadow: inset 0 0 0 3px var(--gold-edge), 0 3px 0 #1f1208; cursor: pointer; }
@@ -1124,6 +1124,40 @@ body.page-full #p-heroes { height: 100%; display: block; } .hpage { height: 100%
 .etier.ok .en { background: radial-gradient(circle at 40% 30%, #ffe58a, #e9a12a); } .etier b { font-family: var(--f-display); font-weight: 600; color: var(--cream); } .etier .rw { font-size: .8rem; }
 .etier.got { opacity: .6; } .etier .done { font-size: 1.3rem; color: #6fd34a; font-weight: 900; padding: 0 10px; }
 @media (orientation: portrait) { .ecl-hero { grid-template-columns: 1fr; } }
+/* ================= FORMATION (plein écran) ================= */
+.tp-pow { justify-self: end; font-family: var(--f-display); font-weight: 700; font-size: 1.05rem; color: #fff; padding: 4px 14px; border-radius: 999px; background: linear-gradient(180deg, #4a2e17, #2a190b); box-shadow: inset 0 0 0 2px var(--gold-edge); white-space: nowrap; }
+.tpage .hp-top { grid-template-columns: 52px 1fr auto; }
+.tp-body { min-height: 0; display: grid; grid-template-columns: 1.15fr 1fr; gap: 10px; }
+.tp-field { position: relative; min-height: 0; display: grid; grid-template-rows: 1fr auto; gap: 6px; padding: 10px; border-radius: 22px; overflow: hidden;
+  background: linear-gradient(rgba(20,12,4,.15), rgba(20,12,4,.45)), var(--fbg) center 60% / cover no-repeat; box-shadow: inset 0 0 0 3px #b98b4e, inset 0 0 0 6px #f6e7c4, inset 0 0 0 8px #8a5a30, 0 6px 0 #4a2c14, 0 12px 24px rgba(0,0,0,.4); }
+.tp-lines { min-height: 0; display: grid; grid-template-columns: 1fr 1fr .8fr; gap: 6px; padding: 6px 6px 0; }
+.tp-col { display: grid; align-content: center; gap: 4px; justify-items: center; }
+.tp-col.foes { border-left: 2px dashed rgba(255,240,210,.45); padding-left: 6px; }
+.tp-col .rlab { margin: 0; font-size: .82rem; color: #fff; text-shadow: 0 1px 2px #000, 0 0 4px #000; }
+.tslot.fs { position: relative; width: 100%; max-width: 128px; min-height: 0; padding: 0; border: 0; background: none; box-shadow: none; display: grid; justify-items: center; grid-template-rows: auto auto; cursor: pointer; }
+.tslot.fs .disc { position: absolute; left: 12%; right: 12%; top: 46%; height: 20%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--el, #f3e3c0) 70%, white), color-mix(in srgb, var(--el, #8a6a46) 45%, transparent) 70%, transparent); opacity: .85; }
+.tslot.fs .spr { position: relative; height: var(--sh); display: grid; place-items: end center; } .tslot.fs .spr img { height: var(--sh); width: auto; max-width: 120px; object-fit: contain; filter: drop-shadow(0 4px 3px rgba(0,0,0,.45)); }
+.tp-field { --sh: clamp(40px, 11vh, 96px); } @media (orientation: portrait) { .tp-field { --sh: clamp(60px, 9vh, 110px); } }
+.tslot.fs .plate { padding: 1px 8px; } .tslot.fs .plate b { font-size: .72rem; }
+.tslot.fs .plate { position: relative; display: grid; justify-items: center; margin-top: -2px; padding: 2px 10px; border-radius: 8px; background: linear-gradient(180deg, #5e3a1d, #3a2311); box-shadow: inset 0 0 0 1.5px var(--gold-edge); }
+.tslot.fs .plate b { font-family: var(--f-display); font-weight: 600; font-size: .78rem; color: var(--cream); white-space: nowrap; max-width: 100px; overflow: hidden; text-overflow: ellipsis; } .tslot.fs .plate i { font-style: normal; font-size: .66rem; color: #ffd36a; }
+.tslot.fs.empty { height: clamp(70px, 19vh, 128px); } .tslot.fs.empty .disc { top: 40%; height: 26%; background: radial-gradient(closest-side, rgba(255,240,210,.45), transparent); border: 2px dashed rgba(255,240,210,.7); }
+.tslot.fs.empty .plus { position: relative; z-index: 1; font-size: 1.8rem; color: #fff3d6; text-shadow: 0 2px 2px #000; margin-top: 18%; } .tslot.fs.empty small { position: relative; color: #fff3d6; font-size: .7rem; text-shadow: 0 1px 2px #000; }
+.tslot.fs.sel .disc, .tslot.fs.wait .disc { opacity: 1; box-shadow: 0 0 0 3px #ffd36a, 0 0 16px #ffd36a; }
+.tslot.fs.over .disc { box-shadow: 0 0 0 3px #6fd34a, 0 0 16px #6fd34a; }
+.tslot.fs .mu { position: absolute; top: 0; left: 0; font-size: .58rem; padding: 1px 6px; } .tslot.fs .warnb { top: 16px; }
+.tslot.fs .rm { top: 0; right: 4px; }
+.tp-foe { position: relative; width: clamp(34px, 9vh, 58px); aspect-ratio: 1; display: grid; place-items: center; } .tp-foe img, .tp-foe svg:not(.crown) { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 2px rgba(0,0,0,.5)); }
+.tp-foe.boss { width: clamp(70px, 22vh, 130px); } .tp-foe svg.crown { position: absolute; width: 40%; top: -12%; left: 30%; }
+.tp-foe i { position: absolute; right: -2px; bottom: 0; width: 18px; height: 18px; padding: 3px; border-radius: 50%; background: var(--el); box-shadow: 0 0 0 1.5px #fff3d6; } .tp-foe i svg { width: 100%; height: 100%; display: block; }
+.tp-reso { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; } .tp-reso .rchip { font-size: .72rem; background: rgba(30,18,8,.82); }
+.tp-roster { grid-template-rows: auto 1fr auto; } .tp-roster .hp-grid { grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); gap: 8px; padding: 10px; }
+.tp-roster .hp-els { justify-content: flex-start; } .tp-roster .med { width: 34px; height: 34px; padding: 7px; }
+.tcard.ht { touch-action: none; } .tcard.ht.in { box-shadow: 0 0 0 3px #6fd34a, 0 3px 0 #2a1608; } .tcard.ht.pend { box-shadow: 0 0 0 3px #ffd36a, 0 0 14px #ffd36a; }
+.ttag { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); padding: 0 6px; border-radius: 6px; font-family: var(--f-display); font-weight: 600; font-size: .6rem; white-space: nowrap; color: #fff; }
+.ttag.in { background: #3f9e2a; } .ttag.good { background: #2a7fc4; } .ttag.bad { background: #b33a2a; }
+.tp-hint { margin: 6px 4px 0; font-size: .74rem; color: #6b4423; text-align: center; font-weight: 700; }
+@media (orientation: portrait) { .tp-body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; } .tp-field { min-height: 46vh; } }
 </style>
 
 <div class="game">
@@ -2494,41 +2528,46 @@ function slotHTML(i, foes, res) {
     ${m !== "neutral" ? `<span class="mu ${m}">${m === "good" ? "Efficace" : "Faible"}</span>` : ""}
     <span class="rm" data-rm="${i}" role="button" aria-label="Retirer ${h.name}">✕</span></button>`;
 }
+function fslotHTML(i, foes, res) {
+  const id = S.team[i], sel = ui.slot === i ? " sel" : "", wait = ui.pending && !sel ? " wait" : "";
+  if (!id) return `<button class="tslot fs empty${sel}${wait}" data-slot="${i}"><span class="disc"></span><span class="plus">+</span><small>${isFront(i) ? "Avant" : "Arrière"}</small></button>`;
+  const h = H[id], o = S.heroes[id], m = matchup(h.el, foes), us = unitStats(id, i, res), warn = !isFront(i) && BACK_MALUS[h.cls];
+  return `<button class="tslot fs${sel}${wait}${evolved(o) ? " evo" : ""}" data-slot="${i}" data-id="${id}" style="--el:var(${EL[h.el]})">
+    <span class="disc"></span><span class="spr">${faceImg(id)}</span>
+    <span class="plate"><b>${evolved(o) ? h.evo : h.name}</b><i>⚔ ${us.power.toLocaleString("fr-FR")}</i></span>
+    ${m !== "neutral" ? `<span class="mu ${m}">${m === "good" ? "Efficace" : "Faible"}</span>` : ""}${warn ? `<span class="mu bad warnb">−20 % ATQ</span>` : ""}
+    <span class="rm" data-rm="${i}" role="button" aria-label="Retirer ${h.name}">✕</span></button>`;
+}
 function renderTeam() {
   const box = $("#p-team"); if (!box) return;
-  const foes = makeFoes(S.stage), foeEls = [...new Set(foes.map(f => f.el))], res = resonance();
-  const filter = ui.filter || "all";
-  const owned = Object.keys(S.heroes).filter(id => filter === "all" || H[id].el === filter)
-    .sort((a, b) => teamScore(b, foes) - teamScore(a, foes));
-  const list = owned.map(id => {
-    const h = H[id], o = S.heroes[id], m = matchup(h.el, foes), inT = S.team.includes(id), pend = ui.pending === id;
-    return `<button class="tcard r${h.r}${inT ? " in" : ""}${pend ? " pend" : ""}${evolved(o) ? " evo" : ""}" data-id="${id}" style="--el:var(${EL[h.el]})">
-      <span class="face">${faceImg(id)}</span>
-      <span class="nm">${evolved(o) ? h.evo : h.name}</span>
-      <span class="meta">${"★".repeat(o.stars)} · ${h.cls}</span>
-      <span class="pw">⚔ ${stats(id).power.toLocaleString("fr-FR")}</span>
-      ${inT ? `<span class="tag in">Équipe</span>` : m === "good" ? `<span class="tag good">Conseillé</span>` : m === "bad" ? `<span class="tag bad">Faible</span>` : ""}</button>`;
-  }).join("");
-  const hint = ui.slot != null ? `Choisissez le héros pour cet emplacement (${isFront(ui.slot) ? "ligne avant" : "ligne arrière"}).`
-    : ui.pending ? `Touchez l'emplacement où placer ${H[ui.pending].name}.`
-    : "Touchez un emplacement puis un héros, ou maintenez un héros et glissez-le sur un emplacement.";
-  box.innerHTML = `
-    <div class="foes">Étape ${S.stage}${isBoss(S.stage) ? " · Boss" : ""} — ennemis : ${foeEls.map(e => `<span class="elc" style="--el:var(${EL[e]})">${e}</span>`).join(" ")}
-      <span class="muted">· Puissance ⚔ ${teamPower().toLocaleString("fr-FR")}</span></div>
-    <div class="formation">
-      <div class="frow back"><p class="rlab">Ligne arrière <small>moins ciblée · idéale pour mages, archers, soigneurs</small></p>${[2, 3, 4].map(i => slotHTML(i, foes, res)).join("")}</div>
-      <div class="frow front"><p class="rlab">Ligne avant <small>encaisse ~75 % des coups · +10 % PV · guerriers et gardiens</small></p>${[0, 1].map(i => slotHTML(i, foes, res)).join("")}</div>
-    </div>
-    <div class="reso">
-      ${res.list.length ? res.list.map(r => `<span class="rchip" ${r.el ? `style="--el:var(${EL[r.el]})"` : ""}><b>${r.name}</b> ${r.txt}</span>`).join("") : `<span class="rchip off"><b>Aucune résonance</b> Réunissez 3 héros du même élément.</span>`}
-      ${res.hint ? `<span class="rhint">${res.hint}</span>` : ""}
-    </div>
-    <p class="thint">${hint}</p>
-    <div class="tbar">
-      <div class="tfilter">${["all", ...ELS.filter(e => Object.keys(S.heroes).some(id => H[id].el === e))].map(e => `<button class="fchip${filter === e ? " on" : ""}" data-f="${e}" ${e !== "all" ? `style="--el:var(${EL[e]})"` : ""}>${e === "all" ? "Tous" : e}</button>`).join("")}</div>
-      <button class="btn primary" id="autoteam">Meilleure équipe</button>
-    </div>
-    <div class="troster">${list || `<p class="muted">Aucun héros de cet élément.</p>`}</div>`;
+  const foes = makeFoes(S.stage), res = resonance(), filter = ui.filter || "all";
+  const owned = Object.keys(S.heroes).filter(id => filter === "all" || H[id].el === filter).sort((a, b) => teamScore(b, foes) - teamScore(a, foes));
+  const cnt = {}; foes.forEach(f => cnt[f.el] = (cnt[f.el] || 0) + 1); const domEl = Object.entries(cnt).sort((x, y) => y[1] - x[1])[0][0];
+  const tiles = owned.map(id => { const h = H[id], o = S.heroes[id], m = matchup(h.el, foes), inT = S.team.includes(id), pend = ui.pending === id;
+    return `<button class="tcard ht r${h.r}${inT ? " in" : ""}${pend ? " pend" : ""}${evolved(o) ? " evo" : ""}" data-id="${id}" style="--el:var(${EL[h.el]})" aria-label="${h.name}">
+      <span class="ht-art face"><img src="${artOf(id)}" alt="" draggable="false"></span><i class="ht-el">${elGlyph(h.el)}</i><b class="ht-lv">${o.lvl}</b>
+      <span class="ht-st">${"★".repeat(o.stars)}</span>${inT ? `<span class="ttag in">Équipe</span>` : m === "good" ? `<span class="ttag good">Conseillé</span>` : m === "bad" ? `<span class="ttag bad">Faible</span>` : ""}</button>`; }).join("");
+  const hint = ui.slot != null ? `Choisissez un héros pour l'emplacement ${isFront(ui.slot) ? "avant" : "arrière"}.` : ui.pending ? `Touchez l'emplacement où placer ${H[ui.pending].name}.` : "Touchez un emplacement puis un héros, ou glissez un héros sur le terrain.";
+  const els = ["all", ...ELS.filter(e => Object.keys(S.heroes).some(id => H[id].el === e))];
+  box.innerHTML = `<div class="hpage tpage">
+    <div class="hp-top"><button class="hp-back" aria-label="Fermer">${backSVG()}</button><h2 class="hp-title">Formation</h2><span class="tp-pow">⚔ ${teamPower().toLocaleString("fr-FR")}</span></div>
+    <div class="tp-body">
+      <div class="tp-field" style="--fbg:url('${BG_SRC[domEl] || BG_SRC.Astre}')">
+        <div class="tp-lines">
+          <div class="tp-col back"><p class="rlab">Arrière</p>${[2, 3, 4].map(i => fslotHTML(i, foes, res)).join("")}</div>
+          <div class="tp-col front"><p class="rlab">Avant</p>${[0, 1].map(i => fslotHTML(i, foes, res)).join("")}</div>
+          <div class="tp-col foes"><p class="rlab">Étape ${S.stage}${isBoss(S.stage) ? " · Boss" : ""}</p>${foes.map(f => `<span class="tp-foe${f.boss ? " boss" : ""}" title="${f.name}">${monsterArt(f.el, f.boss)}<i style="--el:var(${EL[f.el]})">${elGlyph(f.el)}</i></span>`).join("")}</div>
+        </div>
+        <div class="tp-reso">${res.list.length ? res.list.map(r => `<span class="rchip" ${r.el ? `style="--el:var(${EL[r.el]})"` : ""}><b>${r.name}</b> ${r.txt}</span>`).join("") : `<span class="rchip off"><b>Aucune résonance</b> 3 héros du même élément</span>`}</div>
+      </div>
+      <div class="hp-frame tp-roster">
+        <div class="hp-bar"><div class="hp-els">${els.map(e => `<button class="med fchip${filter === e ? " on" : ""}" data-f="${e}" style="--el:${e === "all" ? "#d7a24a" : `var(${EL[e]})`}" aria-label="${e === "all" ? "Tous" : e}">${e === "all" ? "<b>Tous</b>" : elGlyph(e)}</button>`).join("")}</div>
+          <button class="hp-sort" id="autoteam">Meilleure équipe</button></div>
+        <div class="hp-grid troster">${tiles || `<p class="muted">Aucun héros de cet élément.</p>`}</div>
+        <p class="tp-hint">${hint}</p>
+      </div>
+    </div></div>`;
+  box.querySelector(".hp-back").onclick = () => openTab("battle");
   box.querySelectorAll(".tslot").forEach(b => b.onclick = e => {
     const rm = e.target.closest("[data-rm]"); if (rm) { e.stopPropagation(); return removeFromTeam(+rm.dataset.rm); }
     const i = +b.dataset.slot;
@@ -3577,7 +3616,7 @@ function renderInfo() {
 function render() {
   renderWallet(); renderHUD(); renderBadge(); renderChest();
   document.body.classList.toggle("home-on", !!ui.home); if (ui.home) renderHome();
-  document.body.classList.toggle("page-full", ui.tab === "heroes");
+  document.body.classList.toggle("page-full", ui.tab === "heroes" || ui.tab === "team");
   const open = ui.tab !== "battle";
   $("#sheet").hidden = !open; document.body.classList.toggle("sheet-open", open);
   if (open) $("#sheet-title").textContent = SHEET_TITLES[ui.tab] || "";
