@@ -2861,10 +2861,10 @@ const SND = (() => {
   function init() {
     if (ctx) return ctx.state === "suspended" && ctx.resume();
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
-    ctx = new AC(); master = ctx.createGain(); master.gain.value = .9; master.connect(ctx.destination);
+    ctx = new AC(); master = ctx.createGain(); master.gain.value = .9; const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -10; comp.ratio.value = 6; comp.attack.value = .005; comp.release.value = .2; master.connect(comp); comp.connect(ctx.destination);
     sfxBus = ctx.createGain(); sfxBus.gain.value = pref().sfx ? .42 : 0; sfxBus.connect(master);
-    musBus = ctx.createGain(); musBus.gain.value = pref().music ? .16 : 0;
-    const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2600; musBus.connect(lp); lp.connect(master);
+    musBus = ctx.createGain(); musBus.gain.value = 0;
+    const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 6000; musBus.connect(lp); lp.connect(master);
     noiseBuf = ctx.createBuffer(1, ctx.sampleRate * .5, ctx.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     if (mood) startMusic(mood, true);
   }
@@ -2904,36 +2904,89 @@ const SND = (() => {
     const now = performance.now(); if (now - (lastSfx[k] || 0) < 45) return; lastSfx[k] = now;
     try { FX[k] && FX[k](); } catch (e) {}
   }
-  // Musique : progression I–vi–IV–V en ré majeur ; « calme » = nappes + arpège lent, « combat » = tempo plus vif + percussions
-  const CH = [[62, 66, 69], [59, 62, 66], [55, 59, 62], [57, 61, 64]];
+  // ---- Musique « fantasy » : harpe, cordes, flûte, célesta, réverbération de salle ----
+  let rev = null, revIn = null;
+  function ensureReverb() {
+    if (rev) return;
+    const len = ctx.sampleRate * 3.2, ir = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
+    rev = ctx.createConvolver(); rev.buffer = ir; revIn = ctx.createGain(); revIn.gain.value = .55;
+    const wet = ctx.createGain(); wet.gain.value = .9; revIn.connect(rev); rev.connect(wet); wet.connect(musBus);
+  }
+  // voix générique : oscillateurs → filtre passe-bas → enveloppe → sec + réverbération
+  function voice(freqs, dur, { type = "sine", vol = .1, at = 0, attack = .01, release = .6, cut = 2400, send = .5, vib = 0, partial = 0 } = {}) {
+    const t = t0() + at, g = ctx.createGain(), f = ctx.createBiquadFilter(), sd = ctx.createGain();
+    f.type = "lowpass"; f.frequency.value = cut; f.Q.value = .4;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + attack);
+    g.gain.setValueAtTime(vol, t + Math.max(attack, dur - release)); g.gain.exponentialRampToValueAtTime(.0005, t + dur + release);
+    f.connect(g); g.connect(musBus); sd.gain.value = send; g.connect(sd); sd.connect(revIn);
+    let lfo = null;
+    if (vib) { lfo = ctx.createOscillator(); const lg = ctx.createGain(); lfo.frequency.value = 5.2; lg.gain.value = vib; lfo.connect(lg); lfo.start(t); lfo.stop(t + dur + release + .1); lfo.lg = lg; }
+    freqs.forEach((fr, i) => { const o = ctx.createOscillator(); o.type = type; o.frequency.value = fr; o.detune.value = (i % 3 - 1) * 6; if (lfo) lfo.lg.connect(o.frequency); o.connect(f); o.start(t); o.stop(t + dur + release + .1); });
+    if (partial) { const o = ctx.createOscillator(), pg = ctx.createGain(); o.frequency.value = freqs[0] * partial; pg.gain.value = .35; o.connect(pg); pg.connect(f); o.start(t); o.stop(t + Math.min(dur, .4) + release); }
+  }
+  const harp = (m, at, v = .09) => voice([N(m)], .05, { type: "triangle", vol: v, at, attack: .004, release: 1.6, cut: 3200, send: .55, partial: 2 });
+  const strings = (ms, dur, at, v = .035) => voice(ms.flatMap(m => [N(m), N(m) * 1.003]), dur, { type: "sawtooth", vol: v, at, attack: 1.1, release: 1.4, cut: 1300, send: .7, vib: 2.5 });
+  const flute = (m, dur, at) => voice([N(m)], dur, { type: "sine", vol: .075, at, attack: .12, release: .5, cut: 4000, send: .6, vib: 4 });
+  const celesta = (m, at) => { voice([N(m)], .02, { type: "sine", vol: .045, at, attack: .002, release: 1.2, cut: 8000, send: .8, partial: 3.98 }); };
+  const horn = (ms, dur, at) => voice(ms.map(N), dur, { type: "sawtooth", vol: .02, at, attack: .35, release: .6, cut: 900, send: .6, vib: 1.5 });
+  const cello = (m, dur, at, v = .05) => voice([N(m), N(m) * 1.004], dur, { type: "sawtooth", vol: v, at, attack: .02, release: .15, cut: 700, send: .3 });
+  const timpani = at => { const t = t0() + at, o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(98, t); o.frequency.exponentialRampToValueAtTime(70, t + .5);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.1, t + .01); g.gain.exponentialRampToValueAtTime(.0005, t + 1.2); o.connect(g); g.connect(musBus); const sd = ctx.createGain(); sd.gain.value = .4; g.connect(sd); sd.connect(revIn); o.start(t); o.stop(t + 1.3); };
+  // Calme : ré majeur (Dmaj7 – Bm7 – Gmaj7 – Asus4/A) ; Combat : ré mineur héroïque (Dm – B♭ – F – C)
+  const CALM = [[50, [62, 66, 69, 73]], [47, [59, 62, 66, 69]], [43, [55, 59, 62, 66]], [45, [57, 62, 64, 69]]];
+  const EPIC = [[38, [62, 65, 69]], [34, [58, 62, 65]], [41, [60, 65, 69]], [36, [60, 64, 67]]];
+  let melo = 74;
   function schedule() {
     if (!ctx || !mood) return;
-    const fight = mood === "combat", spb = fight ? .21 : .38; // durée d'une croche
-    while (nextT < ctx.currentTime + .3) {
-      const bar = Math.floor(step / 8) % 4, ch = CH[bar], i = step % 8, at = nextT - ctx.currentTime;
-      if (i === 0) ch.forEach(m => { tone(N(m - 12), spb * 8.5, { type: "triangle", vol: fight ? .1 : .13, at, attack: .4, bus: musBus }); tone(N(m - 12), spb * 8.5, { type: "sine", vol: .06, at, attack: .5, bus: musBus, detune: 7 }); });
-      if (i === 0 || (fight && i === 4)) tone(N(ch[0] - 24), spb * 3, { type: "sine", vol: .22, at, attack: .01, bus: musBus });
-      const arp = fight ? [0, 1, 2, 1, 2, 0, 1, 2] : [0, 1, 2, 1, 0, 2, 1, 2];
-      if (fight || i % 2 === 0) tone(N(ch[arp[i]] + 12), spb * 1.6, { type: "sine", vol: fight ? .07 : .08, at, attack: .01, bus: musBus });
-      if (fight) { if (i % 4 === 0) tone(110, .18, { type: "sine", vol: .35, at, glide: .35, attack: .002, bus: musBus }); if (i % 2 === 1) noise(.05, { vol: .08, at, freq: 7000, type: "highpass", bus: musBus }); if (i === 4) noise(.12, { vol: .12, at, freq: 1800, bus: musBus }); }
+    ensureReverb();
+    const fight = mood === "combat", spb = fight ? .3 : .42, PR = fight ? EPIC : CALM; // durée d'une croche
+    while (nextT < ctx.currentTime + .4) {
+      const barN = Math.floor(step / 8), bar = barN % 4, [root, ch] = PR[bar], i = step % 8, at = Math.max(0, nextT - ctx.currentTime);
+      if (!fight) {
+        if (i === 0) { strings(ch.slice(0, 3).map(m => m - 12), spb * 8, at); voice([N(root)], spb * 7, { type: "sine", vol: .08, at, attack: .3, release: 1, cut: 600, send: .3 }); }
+        const arp = [0, 1, 2, 3, 2, 1, 2, 3], up = barN % 2 ? 12 : 0;
+        harp(ch[arp[i]] + up - 12 + (i > 3 && i % 2 ? 12 : 0), at, .075);
+        if (barN % 4 >= 2 && i % 2 === 0) { const sc = [62, 64, 66, 69, 71, 74, 76, 78, 81]; let k = sc.indexOf(melo); if (k < 0) k = 4; k = Math.max(0, Math.min(sc.length - 1, k + [-1, 1, 1, -2, 2, 0][Math.floor(Math.random() * 6)])); melo = sc[k]; flute(melo, spb * (i === 6 ? 2.6 : 1.8), at); }
+        if (Math.random() < .12) celesta(ch[Math.floor(Math.random() * ch.length)] + 24, at);
+      } else {
+        if (i === 0) { strings(ch.map(m => m - 12), spb * 8, at, .022); horn([ch[0], ch[2]], spb * 6, at + spb); }
+        cello(root + (i % 2 ? 12 : 0), spb * .7, at, i % 4 === 0 ? .035 : .025);
+        if (i === 0 || i === 4) timpani(at);
+        if (i % 2 === 0) harp(ch[(i / 2) % ch.length] + 12, at, .06);
+        if (barN % 4 === 3 && i >= 4) harp(ch[i % ch.length] + 24, at, .05);
+      }
       step++; nextT += spb;
     }
   }
   function startMusic(m, force) {
     if (m === mood && !force) return; mood = m;
     if (!ctx) return;
-    clearInterval(musTimer); step = 0; nextT = ctx.currentTime + .1;
-    musTimer = setInterval(schedule, 100); schedule();
+    clearInterval(musTimer); step = 0; nextT = ctx.currentTime + .15;
+    musTimer = setInterval(schedule, 120); schedule(); apply();
   }
   function apply() {
     if (!ctx) return; const p = pref();
     sfxBus.gain.setTargetAtTime(p.sfx ? .42 : 0, ctx.currentTime, .05);
-    musBus.gain.setTargetAtTime(p.music && !document.hidden ? .16 : 0, ctx.currentTime, .2);
+    musBus.gain.setTargetAtTime(p.music && !document.hidden ? (mood === "combat" ? .6 : .38) : 0, ctx.currentTime, .4);
   }
   document.addEventListener("visibilitychange", () => { if (!ctx) return; if (document.hidden) ctx.suspend(); else { ctx.resume(); apply(); } });
   ["pointerdown", "keydown"].forEach(ev => window.addEventListener(ev, init, { once: false, passive: true }));
   document.addEventListener("click", e => { if (e.target.closest("button, .spot, .isle")) play("click"); }, true);
-  return { play, music: startMusic, apply, init };
+  // rendu hors ligne d'un extrait (aperçu)
+  async function preview(m, secs) {
+    const OAC = window.OfflineAudioContext; const saved = { ctx, master, sfxBus, musBus, noiseBuf, rev, revIn, mood, step, nextT };
+    ctx = new OAC(2, 44100 * secs, 44100); master = ctx.createGain(); master.connect(ctx.destination);
+    musBus = ctx.createGain(); musBus.gain.value = m === "combat" ? .6 : .38; musBus.connect(master); sfxBus = ctx.createGain(); sfxBus.connect(master); rev = null; revIn = null;
+    mood = m; step = 0; nextT = .15; ensureReverb();
+    const realNow = Object.getOwnPropertyDescriptor(BaseAudioContext.prototype, "currentTime");
+    let fake = 0; Object.defineProperty(ctx, "currentTime", { get: () => fake });
+    for (fake = 0; fake < secs - 1; fake += .3) schedule();
+    const buf = await ctx.startRendering();
+    ({ ctx, master, sfxBus, musBus, noiseBuf, rev, revIn, mood, step, nextT } = saved);
+    return buf;
+  }
+  return { play, music: startMusic, apply, init, preview };
 })();
 function setMusicFor() { SND.music(!ui.home && ui.tab === "battle" ? "combat" : "calme"); }
 function toggleSound(k) { S.sound = S.sound || { music: true, sfx: true }; S.sound[k] = !S.sound[k]; save(); SND.apply(); toast(`${k === "music" ? "Musique" : "Effets sonores"} ${S.sound[k] ? "activés" : "coupés"}.`); }
