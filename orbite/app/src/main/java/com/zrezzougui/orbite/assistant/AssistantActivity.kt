@@ -72,7 +72,10 @@ class AssistantActivity : Activity() {
     private var listening = false
     private var pendingQuery: String? = null
     private var pendingListen = false
-    private var useOnDevice = true
+    /** Moteur standard d'abord (le moteur hors ligne de certains téléphones n'a pas le français : erreur 7). */
+    private var useOnDevice = false
+    private var triedOnDevice = false
+    private var retriedSilence = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -192,6 +195,7 @@ class AssistantActivity : Activity() {
         when {
             !q.isNullOrBlank() -> send(q)
             i?.getBooleanExtra(EXTRA_VOICE, false) == true -> {
+                retriedSilence = false; triedSystemDialog = false
                 if (i.getBooleanExtra(EXTRA_FROM_WAKE, false)) live.text = "Oui${Persona.suffix(this)} ?"
                 listen()
             }
@@ -229,6 +233,7 @@ class AssistantActivity : Activity() {
     }
 
     private fun show(reply: Reply, query: String) {
+        com.zrezzougui.orbite.jarvis.Diag.log(this, "Réponse : " + reply.text.replace("\n", " ").take(90))
         val autoStart = reply.actions.firstOrNull()?.intent?.getBooleanExtra(Assistant.AUTO_START, false) == true
         val spoken = (if (autoStart) Persona.ack(this) + " " else "") + reply.text
         bubble(spoken, mine = false)
@@ -320,9 +325,10 @@ class AssistantActivity : Activity() {
         tts?.stop()
         JarvisService.send(this, JarvisService.ACTION_PAUSE)
         stopListening()
-        val r = if (useOnDevice && Build.VERSION.SDK_INT >= 31 && SpeechRecognizer.isOnDeviceRecognitionAvailable(this))
-            SpeechRecognizer.createOnDeviceSpeechRecognizer(this) else SpeechRecognizer.createSpeechRecognizer(this)
+        val onDeviceNow = useOnDevice && Build.VERSION.SDK_INT >= 31 && SpeechRecognizer.isOnDeviceRecognitionAvailable(this)
+        val r = if (onDeviceNow) SpeechRecognizer.createOnDeviceSpeechRecognizer(this) else SpeechRecognizer.createSpeechRecognizer(this)
         recognizer = r
+        com.zrezzougui.orbite.jarvis.Diag.log(this, "Écoute de la demande : moteur " + if (onDeviceNow) "hors ligne" else "standard")
         r.setRecognitionListener(object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
                 listening = true
@@ -336,15 +342,27 @@ class AssistantActivity : Activity() {
             override fun onBufferReceived(buffer: ByteArray?) {}
             override fun onEndOfSpeech() { reactor.state = ArcReactorView.State.IDLE; setState("Traitement") }
             override fun onError(error: Int) {
-                val onDevice = useOnDevice && Build.VERSION.SDK_INT >= 31
                 endListening()
-                com.zrezzougui.orbite.jarvis.Diag.log(this@AssistantActivity, "Reconnaissance vocale : erreur $error" + if (onDevice) " (sur l'appareil)" else "")
-                // Langue française absente du moteur hors ligne : on repasse sur la reconnaissance standard.
-                if (onDevice && error in intArrayOf(5, 12, 13, 14)) {
-                    useOnDevice = false
-                    listen()
-                    return
+                com.zrezzougui.orbite.jarvis.Diag.log(this@AssistantActivity,
+                    "Reconnaissance vocale : erreur $error (${errorName(error)}), moteur " + if (onDeviceNow) "hors ligne" else "standard")
+                // Moteur en panne ou indisponible : on essaie l'autre moteur une fois.
+                val engineProblem = error !in intArrayOf(SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT,
+                    SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS)
+                if (engineProblem && !onDeviceNow && !triedOnDevice && Build.VERSION.SDK_INT >= 31 &&
+                    SpeechRecognizer.isOnDeviceRecognitionAvailable(this@AssistantActivity)) {
+                    triedOnDevice = true; useOnDevice = true; listen(); return
                 }
+                if (onDeviceNow) {
+                    useOnDevice = false
+                    if (engineProblem || error == SpeechRecognizer.ERROR_NO_MATCH) { listen(); return }
+                }
+                // Rien entendu (on a peut-être parlé trop tôt après le bip) : une seconde chance.
+                if (!retriedSilence && (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT)) {
+                    retriedSilence = true
+                    live.text = "Je n'ai pas compris. Répétez ?"
+                    listen(); return
+                }
+                if (engineProblem && !triedSystemDialog) { triedSystemDialog = true; listenWithSystemDialog(); return }
                 setState("En veille")
                 live.text = when (error) {
                     SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "Je n'ai rien entendu. Touchez le réacteur pour réessayer."
@@ -355,6 +373,8 @@ class AssistantActivity : Activity() {
             override fun onResults(results: Bundle?) {
                 val text = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()
                 endListening()
+                retriedSilence = false
+                com.zrezzougui.orbite.jarvis.Diag.log(this@AssistantActivity, "Demande comprise : « ${text.orEmpty()} »")
                 if (!text.isNullOrBlank()) send(text) else live.text = "Je n'ai rien entendu."
             }
             override fun onPartialResults(partial: Bundle?) {
@@ -366,7 +386,32 @@ class AssistantActivity : Activity() {
             .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             .putExtra(RecognizerIntent.EXTRA_LANGUAGE, "fr-FR")
             .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-        runCatching { r.startListening(i) }.onFailure { destroyRecognizer(); listenWithSystemDialog() }
+            .putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, packageName)
+            .putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
+        runCatching { r.startListening(i) }.onFailure {
+            com.zrezzougui.orbite.jarvis.Diag.log(this, "Reconnaissance vocale : démarrage impossible ${it.message}")
+            destroyRecognizer(); listenWithSystemDialog()
+        }
+    }
+
+    private var triedSystemDialog = false
+
+    private fun errorName(e: Int) = when (e) {
+        SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "délai réseau"
+        SpeechRecognizer.ERROR_NETWORK -> "réseau"
+        SpeechRecognizer.ERROR_AUDIO -> "audio / micro occupé"
+        SpeechRecognizer.ERROR_SERVER -> "serveur"
+        SpeechRecognizer.ERROR_CLIENT -> "client"
+        SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "aucune parole"
+        SpeechRecognizer.ERROR_NO_MATCH -> "rien compris"
+        SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "moteur occupé"
+        SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "autorisation"
+        10 -> "trop de requêtes"
+        11 -> "serveur déconnecté"
+        12 -> "langue non prise en charge"
+        13 -> "langue indisponible"
+        14 -> "impossible de vérifier"
+        else -> "inconnue"
     }
 
     private fun stopListening() {
