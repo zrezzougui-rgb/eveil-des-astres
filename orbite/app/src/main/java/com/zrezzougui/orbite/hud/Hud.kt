@@ -100,7 +100,7 @@ class HudBackgroundDrawable(private val density: Float, private val glowY: Float
 
 /** Icônes au trait (grille 24 × 24), même famille visuelle que le reste du HUD. */
 class HudIcon(private val kind: Kind, color: Int, private val density: Float, strokeDp: Float = 1.7f) : Drawable() {
-    enum class Kind { MIC, GRID, LAYERS, CAMERA, GEAR, BACK, SPEAKER, MUTE, SEND, CLOSE, CALENDAR, MENU }
+    enum class Kind { MIC, GRID, LAYERS, CAMERA, GEAR, BACK, SPEAKER, MUTE, SEND, CLOSE, CALENDAR, MENU, STOP, WAVES, CHEVRON_UP, CHEVRON_DOWN }
 
     private val p = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE; this.color = color; strokeWidth = strokeDp * density
@@ -162,6 +162,16 @@ class HudIcon(private val kind: Kind, color: Int, private val density: Float, st
                 path.moveTo(4f, 10f); path.lineTo(20f, 10f); path.moveTo(8f, 3f); path.lineTo(8f, 7f); path.moveTo(16f, 3f); path.lineTo(16f, 7f)
             }
             Kind.MENU -> { for (y in listOf(7f, 12f, 17f)) { path.moveTo(5f, y); path.lineTo(19f, y) } }
+            Kind.STOP -> {
+                val f = Paint(p).apply { style = Paint.Style.FILL }
+                c.drawRoundRect(7f, 7f, 17f, 17f, 1.5f, 1.5f, f)
+            }
+            Kind.WAVES -> {
+                c.drawCircle(12f, 15f, 1.2f, p)
+                for (r in listOf(4f, 7.5f)) c.drawArc(12f - r, 15f - r, 12f + r, 15f + r, 200f, 140f, false, p)
+            }
+            Kind.CHEVRON_UP -> { path.moveTo(6f, 15f); path.lineTo(12f, 9f); path.lineTo(18f, 15f) }
+            Kind.CHEVRON_DOWN -> { path.moveTo(6f, 9f); path.lineTo(12f, 15f); path.lineTo(18f, 9f) }
         }
         c.drawPath(path, p)
         p.strokeWidth = sw
@@ -248,3 +258,23 @@ fun Context.hudSensor(title: String): Triple<LinearLayout, TextView, TextView> {
     box.addView(v, matchWrap()); box.addView(s, matchWrap())
     return Triple(box, v, s)
 }
+
+/** Bouton rond au trait (barre du bas façon démo) ; `big` = bouton principal lumineux. */
+fun Context.roundHudButton(kind: HudIcon.Kind, description: String, big: Boolean = false, onClick: (View) -> Unit): FrameLayout =
+    FrameLayout(this).apply {
+        background = android.graphics.drawable.GradientDrawable().apply {
+            shape = android.graphics.drawable.GradientDrawable.OVAL
+            setColor(0xCC020A12.toInt())
+            setStroke(dp(if (big) 2 else 1), if (big) Palette.PRIMARY else 0x8C4FD8FF.toInt())
+        }
+        if (big) {
+            elevation = dp(10).toFloat()
+            outlineAmbientShadowColor = Palette.PRIMARY
+            outlineSpotShadowColor = Palette.PRIMARY
+        }
+        addView(ImageView(context).apply { setImageDrawable(icon(kind)) },
+            FrameLayout.LayoutParams(dp(if (big) 26 else 22), dp(if (big) 26 else 22), Gravity.CENTER))
+        contentDescription = description
+        isClickable = true
+        setOnClickListener(onClick)
+    }

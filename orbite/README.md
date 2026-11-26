@@ -40,8 +40,10 @@ l'ancienne sans perdre vos dossiers. Pour une publication sur le Play Store, il 
   Une appli ne peut pas déplacer elle-même les icônes ou dossiers de l'écran du fabricant : c'est une limite d'Android.
 
 ### Jarvis
-- **Interface HUD** : réacteur animé (heure, date), capteurs météo / énergie / agenda, actions rapides, modules (dossiers)
-  en panneaux à coins coupés, icônes au trait, journal de conversation. Tout est dessiné dans l'appli (aucune image).
+- **Interface** inspirée de la démo J.A.R.V.I.S de TechEnClair : fond noir, sphère de particules 3D animée (réagit à la voix,
+  pulse quand Jarvis parle), panneau horloge (batterie · HH:MM:SS · mémoire, SYS_CLOCK, date, ONLINE),
+  trois boutons ronds (parler, modules, « Hey Jarvis » on/off) et état « veille... ». Glisser vers le haut : panneau Modules
+  (capteurs, actions rapides, dossiers, recherche). Tout est dessiné dans l'appli (aucune image).
 - **« Hey Jarvis » mains libres** (Réglages Jarvis) : détection sur le téléphone avec
   [openWakeWord](https://github.com/dscripka/openWakeWord) (le moteur libre utilisé par Home Assistant) et TensorFlow Lite.
   Pipeline vérifié contre l'implémentation de référence (scores identiques). Sensibilité réglable, option « seulement en charge ».

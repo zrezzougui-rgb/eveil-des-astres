@@ -38,6 +38,7 @@ import com.zrezzougui.orbite.hud.hudPanel
 import com.zrezzougui.orbite.hud.icon
 import com.zrezzougui.orbite.hud.iconButton
 import com.zrezzougui.orbite.hud.micButton
+import com.zrezzougui.orbite.hud.roundHudButton
 import com.zrezzougui.orbite.jarvis.JarvisService
 import com.zrezzougui.orbite.jarvis.Persona
 import com.zrezzougui.orbite.label
@@ -93,7 +94,7 @@ class AssistantActivity : Activity() {
             })
         }
 
-        val frame = android.widget.FrameLayout(this).apply { background = hudBackground(0.16f) }
+        val frame = android.widget.FrameLayout(this).apply { setBackgroundColor(0xFF010307.toInt()) }
         val root = vertical()
         root.padForSystemBars()
         frame.addView(root)
@@ -118,8 +119,10 @@ class AssistantActivity : Activity() {
             setOnClickListener { if (listening) stopListening() else listen() }
             contentDescription = "Parler à Jarvis"
         }
-        root.addView(reactor, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(190)))
-        stateLabel = hudLabel("En veille", Palette.PRIMARY, 10f).apply { gravity = Gravity.CENTER; letterSpacing = 0.3f }
+        root.addView(reactor, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(240)))
+        stateLabel = label("veille...", 13f, 0xFF2E6A82.toInt()).apply {
+            typeface = Fonts.mono(context); gravity = Gravity.CENTER; letterSpacing = 0.3f
+        }
         root.addView(stateLabel, matchWrap())
         live = label("", 16f, Palette.TEXT).apply { gravity = Gravity.CENTER; setPadding(dp(24), dp(6), dp(24), dp(4)) }
         root.addView(live, matchWrap())
@@ -165,7 +168,12 @@ class AssistantActivity : Activity() {
         bar.addView(input, weighted())
         sendButton = iconButton(HudIcon.Kind.SEND, "Envoyer", Palette.PRIMARY) { send(input.text.toString()) }.apply { visibility = View.GONE }
         bar.addView(sendButton)
-        bar.addView(micButton { if (listening) stopListening() else listen() }, LinearLayout.LayoutParams(dp(48), dp(48)).margins(l = dp(8)))
+        bar.addView(roundHudButton(HudIcon.Kind.STOP, "Arrêter") {
+            stopListening(); tts?.stop(); afterSpeaking()
+        }, LinearLayout.LayoutParams(dp(48), dp(48)).margins(l = dp(8)))
+        bar.addView(roundHudButton(HudIcon.Kind.MIC, "Parler à Jarvis", big = true) {
+            if (listening) stopListening() else listen()
+        }, LinearLayout.LayoutParams(dp(54), dp(54)).margins(l = dp(8)))
         root.addView(bar, matchWrap())
 
         setContentView(frame)
@@ -267,7 +275,11 @@ class AssistantActivity : Activity() {
         if (!listening) { reactor.state = ArcReactorView.State.IDLE; setState("En veille") }
     }
 
-    private fun setState(s: String) { if (::stateLabel.isInitialized) stateLabel.text = s.uppercase() }
+    private fun setState(s: String) {
+        if (!::stateLabel.isInitialized) return
+        stateLabel.text = s.lowercase() + "..."
+        stateLabel.setTextColor(if (s == "En veille") 0xFF2E6A82.toInt() else Palette.PRIMARY)
+    }
 
     /** Fin d'une écoute (résultat, silence ou erreur) : « Hey Jarvis » redevient disponible tout de suite. */
     private fun endListening() {

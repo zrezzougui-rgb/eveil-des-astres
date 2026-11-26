@@ -53,6 +53,8 @@ object Fonts {
     /** Orbitron : chiffres et étiquettes du HUD (horloge, capteurs). */
     fun hud(ctx: Context) = load(ctx, "orbitron_medium.ttf", Typeface.MONOSPACE)
     fun hudBold(ctx: Context) = load(ctx, "orbitron_bold.ttf", Typeface.MONOSPACE)
+    /** Share Tech Mono : horloge et textes d'état façon terminal (démo TechEnClair). */
+    fun mono(ctx: Context) = load(ctx, "sharetechmono.ttf", Typeface.MONOSPACE)
 }
 
 fun Context.dp(v: Int): Int = (v * resources.displayMetrics.density + 0.5f).toInt()

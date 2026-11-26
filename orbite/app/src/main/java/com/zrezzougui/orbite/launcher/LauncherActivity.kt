@@ -46,7 +46,9 @@ import com.zrezzougui.orbite.hud.hudLabel
 import com.zrezzougui.orbite.hud.hudPanel
 import com.zrezzougui.orbite.hud.hudSection
 import com.zrezzougui.orbite.hud.hudSensor
+import com.zrezzougui.orbite.hud.icon
 import com.zrezzougui.orbite.hud.iconButton
+import com.zrezzougui.orbite.hud.roundHudButton
 import com.zrezzougui.orbite.hud.micButton
 import com.zrezzougui.orbite.jarvis.JarvisService
 import com.zrezzougui.orbite.jarvis.JarvisSettingsActivity
@@ -72,6 +74,13 @@ class LauncherActivity : Activity() {
     private lateinit var actions: AppActions
     private lateinit var reactor: ArcReactorView
     private lateinit var status: TextView
+    private lateinit var clockText: TextView
+    private lateinit var dateText: TextView
+    private lateinit var onlineText: TextView
+    private lateinit var battGauge: TextView
+    private lateinit var ramGauge: TextView
+    private lateinit var wakeButton: View
+    private lateinit var drawer: FrameLayout
     private lateinit var statusDot: View
     private lateinit var hint: TextView
     private lateinit var weatherV: TextView
@@ -88,8 +97,13 @@ class LauncherActivity : Activity() {
     private var weatherAt = 0L
     private var loading = false
     private val tick = Handler(Looper.getMainLooper())
+    private var ticks = 0
     private val clockTask = object : Runnable {
-        override fun run() { updateHud(); tick.postDelayed(this, 15_000) }
+        override fun run() {
+            updateClock()
+            if (++ticks % 15 == 0) updateHud()
+            tick.postDelayed(this, 1000)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -100,37 +114,106 @@ class LauncherActivity : Activity() {
         actions = AppActions(this, repo, { apps }, onChanged = { reload() })
         NewAppsJob.schedule(this)
 
-        val root = FrameLayout(this).apply { background = hudBackground() }
+        val root = FrameLayout(this).apply { setBackgroundColor(0xFF010307.toInt()) }
+
+        // ================= Écran principal (d'après la démo TechEnClair) =================
+        val main = vertical()
+        main.padForSystemBars()
+        root.addView(main)
+
+        // Panneau horloge : énergie · HH:MM:SS · mémoire, puis SYS_CLOCK · date · état
+        val clockBox = FrameLayout(this).apply { background = hudPanel(fill = 0xB305101A.toInt()) }
+        val clockRow = horizontal().apply { setPadding(dp(14), dp(12), dp(14), 0) }
+        fun gauge(title: String): Pair<View, TextView> {
+            val col = vertical().apply { gravity = Gravity.CENTER_HORIZONTAL }
+            col.addView(label(title, 8f, Palette.LINE_STRONG).apply { typeface = Fonts.mono(context); letterSpacing = 0.2f })
+            val v = label("--", 15f, Palette.PRIMARY).apply { typeface = Fonts.mono(context) }
+            col.addView(v)
+            return col to v
+        }
+        val (battCol, battV) = gauge("BATT"); battGauge = battV
+        val (ramCol, ramV) = gauge("RAM"); ramGauge = ramV
+        clockText = label("--:--:--", 40f, Palette.PRIMARY).apply {
+            typeface = Fonts.mono(context); letterSpacing = 0.12f; gravity = Gravity.CENTER
+            setShadowLayer(dp(10).toFloat(), 0f, 0f, 0xB34FD8FF.toInt()); maxLines = 1
+        }
+        clockRow.addView(battCol, wrapWrap())
+        clockRow.addView(clockText, weighted())
+        clockRow.addView(ramCol, wrapWrap())
+        clockBox.addView(clockRow, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        val foot = horizontal().apply { setPadding(dp(14), 0, dp(14), dp(8)) }
+        fun tiny(t: String) = label(t, 8f, Palette.LINE_STRONG).apply { typeface = Fonts.mono(context); letterSpacing = 0.25f }
+        foot.addView(tiny("SYS_CLOCK"), weighted())
+        dateText = tiny("--/--/----").apply { gravity = Gravity.CENTER }
+        foot.addView(dateText, weighted())
+        onlineText = tiny("ONLINE").apply { gravity = Gravity.END }
+        foot.addView(onlineText, weighted())
+        clockBox.addView(foot, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM))
+        main.addView(clockBox, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(92)).margins(l = dp(16), r = dp(16), t = dp(10)))
+
+        // Sphère de particules : toucher = parler, glisser vers le haut = modules, appui long = réglages
+        reactor = ArcReactorView(this).apply {
+            contentDescription = "Parler à Jarvis"
+            setOnClickListener { AssistantActivity.open(this@LauncherActivity, voice = true) }
+            setOnLongClickListener { startActivity(Intent(this@LauncherActivity, JarvisSettingsActivity::class.java)); true }
+        }
+        main.addView(reactor, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
+        val swipe = android.view.GestureDetector(this, object : android.view.GestureDetector.SimpleOnGestureListener() {
+            override fun onFling(e1: android.view.MotionEvent?, e2: android.view.MotionEvent, vx: Float, vy: Float): Boolean {
+                if (vy < -1200 && Math.abs(vy) > Math.abs(vx)) { openDrawer(); return true }
+                return false
+            }
+        })
+        reactor.setOnTouchListener { _, ev -> swipe.onTouchEvent(ev); false }
+
+        // Trois boutons ronds + état
+        val buttons = horizontal().apply { gravity = Gravity.CENTER }
+        buttons.addView(roundHudButton(HudIcon.Kind.MIC, "Parler à Jarvis", big = true) { AssistantActivity.open(this, voice = true) },
+            LinearLayout.LayoutParams(dp(66), dp(66)))
+        buttons.addView(roundHudButton(HudIcon.Kind.GRID, "Ouvrir les modules") { openDrawer() },
+            LinearLayout.LayoutParams(dp(56), dp(56)).margins(l = dp(16)))
+        wakeButton = roundHudButton(HudIcon.Kind.WAVES, "Activer ou couper « Hey Jarvis »") { toggleWake() }
+        buttons.addView(wakeButton, LinearLayout.LayoutParams(dp(56), dp(56)).margins(l = dp(16)))
+        main.addView(buttons, matchWrap().margins(t = dp(8)))
+        status = label("veille...", 13f, 0xFF2E6A82.toInt()).apply {
+            typeface = Fonts.mono(context); letterSpacing = 0.3f; gravity = Gravity.CENTER
+        }
+        main.addView(status, matchWrap().margins(t = dp(12)))
+        hint = label("", 12f, Palette.MUTED).apply { gravity = Gravity.CENTER; setPadding(dp(24), dp(4), dp(24), 0) }
+        main.addView(hint, matchWrap())
+        val handle = horizontal().apply {
+            gravity = Gravity.CENTER; setPadding(0, dp(10), 0, dp(12)); isClickable = true
+            setOnClickListener { openDrawer() }; contentDescription = "Ouvrir les modules"
+        }
+        handle.addView(ImageView(this).apply { setImageDrawable(icon(HudIcon.Kind.CHEVRON_UP, Palette.MUTED)) }, LinearLayout.LayoutParams(dp(14), dp(14)))
+        handle.addView(label("MODULES", 9f, Palette.MUTED).apply { typeface = Fonts.mono(context); letterSpacing = 0.3f; setPadding(dp(6), 0, 0, 0) })
+        main.addView(handle, matchWrap())
+
+        // ================= Panneau « Modules » (applis, capteurs, recherche) =================
+        drawer = FrameLayout(this).apply {
+            background = hudBackground(0.05f)
+            visibility = View.GONE
+            isClickable = true
+        }
+        root.addView(drawer, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
         val column = vertical()
         column.padForSystemBars()
-        root.addView(column)
+        drawer.addView(column)
 
-        // Barre du haut
-        val top = horizontal().apply { setPadding(dp(16), dp(6), dp(6), 0) }
-        top.addView(hudLabel("J.A.R.V.I.S", Palette.PRIMARY, 12f).apply { typeface = Fonts.hudBold(context); letterSpacing = 0.3f }, weighted())
+        val top = horizontal().apply { setPadding(dp(6), dp(4), dp(6), 0) }
+        top.addView(iconButton(HudIcon.Kind.CHEVRON_DOWN, "Fermer les modules") { closeDrawer() })
+        top.addView(hudLabel("Modules", Palette.PRIMARY, 12f).apply { typeface = Fonts.hudBold(context); letterSpacing = 0.3f }, weighted())
         statusDot = View(this).apply {
             background = android.graphics.drawable.GradientDrawable().apply { shape = android.graphics.drawable.GradientDrawable.OVAL; setColor(Palette.SUCCESS) }
         }
         top.addView(statusDot, LinearLayout.LayoutParams(dp(6), dp(6)).margins(r = dp(8)))
-        status = hudLabel("", Palette.MUTED, 9f)
-        top.addView(status)
         top.addView(iconButton(HudIcon.Kind.GEAR, "Menu") { menu() })
         column.addView(top, matchWrap())
 
         val scroll = ScrollView(this).apply { isVerticalScrollBarEnabled = false }
-        val content = vertical().apply { setPadding(dp(16), 0, dp(16), dp(16)) }
+        val content = vertical().apply { setPadding(dp(16), dp(4), dp(16), dp(16)) }
         scroll.addView(content)
         column.addView(scroll, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
-
-        // Réacteur
-        reactor = ArcReactorView(this).apply {
-            setOnClickListener { AssistantActivity.open(this@LauncherActivity, voice = true) }
-            setOnLongClickListener { startActivity(Intent(this@LauncherActivity, JarvisSettingsActivity::class.java)); true }
-            contentDescription = "Parler à Jarvis"
-        }
-        content.addView(reactor, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(250)))
-        hint = label("", 14f, Palette.MUTED).apply { gravity = Gravity.CENTER }
-        content.addView(hint, matchWrap().margins(b = dp(16)))
 
         // Capteurs
         val sensors = horizontal()
@@ -154,10 +237,9 @@ class LauncherActivity : Activity() {
         quick.addView(hudAction(HudIcon.Kind.CAMERA, "Caméra") { startActivity(Intent(this, CameraActivity::class.java)) }, weighted())
         content.addView(quick, matchWrap())
 
-        // Résultats de recherche puis modules
         results = vertical().apply { visibility = View.GONE }
         content.addView(results, matchWrap().margins(t = dp(18)))
-        modulesHeader = hudSection("Modules")
+        modulesHeader = hudSection("Dossiers")
         content.addView(modulesHeader, matchWrap().margins(t = dp(22), b = dp(10)))
         folderGrid = GridLayout(this).apply { columnCount = 3 }
         content.addView(folderGrid, matchWrap())
@@ -167,7 +249,7 @@ class LauncherActivity : Activity() {
         search = EditText(this).apply {
             hint = "Commande ou appli…"
             setHintTextColor(Palette.MUTED); setTextColor(Palette.TEXT); textSize = 15f
-            typeface = com.zrezzougui.orbite.Fonts.body(context)
+            typeface = Fonts.body(context)
             background = hudPanel()
             setPadding(dp(16), dp(12), dp(16), dp(12))
             isSingleLine = true
@@ -194,6 +276,43 @@ class LauncherActivity : Activity() {
         setContentView(root)
     }
 
+    // ------------------------------------------------------------------ panneau Modules
+
+    private fun openDrawer() {
+        if (drawer.visibility == View.VISIBLE) return
+        drawer.visibility = View.VISIBLE
+        drawer.translationY = drawer.height.takeIf { it > 0 }?.toFloat() ?: dp(800).toFloat()
+        drawer.animate().translationY(0f).setDuration(260).setInterpolator(android.view.animation.DecelerateInterpolator()).start()
+    }
+
+    private fun closeDrawer() {
+        if (drawer.visibility != View.VISIBLE) return
+        search.setText("")
+        (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(search.windowToken, 0)
+        drawer.animate().translationY(drawer.height.toFloat()).setDuration(220)
+            .withEndAction { drawer.visibility = View.GONE }.start()
+    }
+
+    private fun toggleWake() {
+        val on = !Persona.wakeEnabled(this)
+        if (on && checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            startActivity(Intent(this, JarvisSettingsActivity::class.java)); return
+        }
+        Persona.setWakeEnabled(this, on)
+        if (on) JarvisService.start(this) else JarvisService.stop(this)
+        refreshWakeUi()
+        Toast.makeText(this, if (on) "« Hey Jarvis » activé" else "« Hey Jarvis » coupé", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun refreshWakeUi() {
+        val wake = Persona.wakeEnabled(this)
+        wakeButton.alpha = if (wake) 1f else 0.45f
+        onlineText.text = if (wake) "ONLINE" else "STANDBY"
+        statusDot.background.setTint(if (wake) Palette.SUCCESS else Palette.MUTED)
+        status.text = if (wake) "veille... dites « hey jarvis »" else "veille..."
+        hint.text = ""
+    }
+
     override fun onResume() {
         super.onResume()
         reload()
@@ -201,11 +320,8 @@ class LauncherActivity : Activity() {
         tick.post(clockTask)
         // L'écoute « Hey Jarvis » ne peut démarrer que quand Orbite est à l'écran.
         JarvisService.start(this)
-        val wake = Persona.wakeEnabled(this)
-        status.text = if (wake) "À L'ÉCOUTE" else "EN VEILLE"
-        statusDot.background.setTint(if (wake) Palette.SUCCESS else Palette.MUTED)
-        hint.text = Persona.greeting(this) + ". " +
-            if (wake) "Dites « Hey Jarvis » ou touchez le réacteur." else "Touchez le réacteur pour parler."
+        refreshWakeUi()
+        updateHud()
     }
 
     override fun onPause() {
@@ -215,15 +331,26 @@ class LauncherActivity : Activity() {
 
     @Deprecated("Écran d'accueil : le bouton retour ne quitte pas")
     override fun onBackPressed() {
-        if (search.text.isNotEmpty()) search.setText("")
+        if (search.text.isNotEmpty()) search.setText("") else closeDrawer()
     }
 
     // ------------------------------------------------------------------ capteurs
 
+    /** Horloge à la seconde, date, batterie et mémoire (le processeur n'est plus lisible par les applis depuis Android 8). */
+    private fun updateClock() {
+        val now = Calendar.getInstance()
+        clockText.text = "%02d:%02d:%02d".format(now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.MINUTE), now.get(Calendar.SECOND))
+        dateText.text = SimpleDateFormat("dd/MM/yyyy", Locale.FRENCH).format(now.time)
+        val bm = getSystemService(BatteryManager::class.java)
+        val pct = bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: -1
+        battGauge.text = if (pct in 0..100) "$pct%" else "--"
+        val mi = android.app.ActivityManager.MemoryInfo()
+        getSystemService(android.app.ActivityManager::class.java)?.getMemoryInfo(mi)
+        if (mi.totalMem > 0) ramGauge.text = "${((mi.totalMem - mi.availMem) * 100 / mi.totalMem)}%"
+    }
+
     private fun updateHud() {
         val now = Calendar.getInstance()
-        reactor.centerText = "%02d:%02d".format(now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.MINUTE))
-        reactor.subText = SimpleDateFormat("EEE d MMM", Locale.FRENCH).format(now.time).replace(".", "")
         val bm = getSystemService(BatteryManager::class.java)
         val pct = bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: -1
         val charging = bm?.isCharging == true
