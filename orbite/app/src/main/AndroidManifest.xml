@@ -11,6 +11,11 @@
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <!-- Prévenir quand une nouvelle appli est rangée ; garder la surveillance après redémarrage. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Jarvis mains libres : micro, écoute au premier plan, ouverture par-dessus les autres applis. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Statistiques d'utilisation : accordées par l'utilisateur dans les réglages, facultatives. -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
@@ -66,6 +71,7 @@
         <activity
             android:name=".assistant.AssistantActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:label="Assistant"
             android:windowSoftInputMode="adjustResize"
             android:screenOrientation="portrait">
@@ -87,6 +93,17 @@
             android:exported="false"
             android:label="Ranger mon écran"
             android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".jarvis.JarvisSettingsActivity"
+            android:exported="false"
+            android:label="Réglages Jarvis"
+            android:screenOrientation="portrait" />
+
+        <service
+            android:name=".jarvis.JarvisService"
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
 
         <service
             android:name=".launcher.NewAppsJob"

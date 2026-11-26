@@ -39,6 +39,15 @@ l'ancienne sans perdre vos dossiers. Pour une publication sur le Play Store, il 
   (appui long sur un dossier → « Mettre sur l'écran d'accueil du téléphone »). Android demande une confirmation par dossier.
   Une appli ne peut pas déplacer elle-même les icônes ou dossiers de l'écran du fabricant : c'est une limite d'Android.
 
+### Jarvis
+- **Look HUD** : réacteur animé au centre de l'accueil (heure, date), capteurs météo / énergie / agenda, tons cyan et or.
+  Touchez le réacteur pour parler, appui long pour les réglages.
+- **« Jarvis » mains libres** (facultatif, menu ⋮ → Réglages Jarvis) : le mot est reconnu sur le téléphone par
+  [Vosk](https://alphacephei.com/vosk/) (libre, Apache 2.0, modèle de 40 Mo téléchargé une fois), aucun son n'est envoyé.
+  Demande l'autorisation du micro et « Afficher par-dessus les autres applis » ; option « seulement en charge ».
+- **Réponses parlées** : toujours lues à voix haute, avec une formule (« Tout de suite, monsieur. »), forme d'adresse
+  au choix (rien, monsieur, madame, prénom) et choix de la voix. « Bonjour Jarvis » ou « briefing » : heure, météo, agenda, batterie.
+
 ### Assistant (sans IA, sans jeton)
 Fonctionne par règles en français. Seules la météo et la recherche utilisent internet, via des services gratuits sans clé ni compte.
 
@@ -72,6 +81,7 @@ Orbite est écrit de zéro (aucun code copié), en reprenant les approches de ce
 - [KISS Launcher](https://github.com/Neamar/KISS) et [Olauncher](https://github.com/tanujnotes/Olauncher) : lanceur léger, recherche d'applis au clavier.
 - [Dicio](https://github.com/Stypox/dicio-android) : assistant libre par « compétences » et phrases-types, sans service cloud.
 - [Open Camera](https://opencamera.org.uk) : réglages manuels Camera2, grille, niveau à bulle.
+- Les assistants libres « Jarvis » (mot d'éveil, réponses parlées, interface tête haute) et [Vosk](https://github.com/alphacep/vosk-api) pour l'écoute hors ligne.
 - Données : [Open-Meteo](https://open-meteo.com) (CC BY 4.0), Wikipédia, API instantanée DuckDuckGo.
 
 ## Structure
@@ -79,7 +89,7 @@ Orbite est écrit de zéro (aucun code copié), en reprenant les approches de ce
 - `app/src/main/java/com/zrezzougui/orbite/launcher/` : écran d'accueil et classement (`AppCatalog.kt`).
 - `app/src/main/java/com/zrezzougui/orbite/assistant/` : assistant, dates en français, météo.
 - `app/src/main/java/com/zrezzougui/orbite/camera/` : caméra manuelle et calibration.
-- Aucune bibliothèque externe : uniquement le SDK Android et Kotlin.
+- Une seule bibliothèque externe : Vosk (reconnaissance du mot « Jarvis »). Le reste : SDK Android et Kotlin.
 
 ## Design
 
@@ -87,5 +97,5 @@ L'interface suit le design system Orbite : thème Nuit, couleur primaire « Orbi
 secondaire « Soleil » `#FFD27A`, accent « Aurore » `#5EE0C2`, grille de 4 dp, boutons en pilule de 48 dp.
 Les jetons sont dans `Ui.kt` (`Palette`, `Space`, `Radius`, `Fonts`).
 
-Polices embarquées dans `app/src/main/assets/fonts/` : **Sora** (titres) et **Inter** (texte),
-toutes deux sous licence libre SIL Open Font License 1.1 (Google Fonts).
+Polices embarquées dans `app/src/main/assets/fonts/` : **Sora** (titres), **Inter** (texte) et **Orbitron** (HUD),
+toutes sous licence libre SIL Open Font License 1.1 (Google Fonts).

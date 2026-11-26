@@ -55,6 +55,14 @@ class LauncherActivity : Activity() {
     private lateinit var folderGrid: GridLayout
     private lateinit var results: LinearLayout
     private lateinit var weatherLine: TextView
+    private lateinit var batteryPod: TextView
+    private lateinit var agendaPod: TextView
+    private lateinit var reactor: com.zrezzougui.orbite.hud.ArcReactorView
+    private lateinit var wakeHint: View
+    private val tick = android.os.Handler(android.os.Looper.getMainLooper())
+    private val clockTask = object : Runnable {
+        override fun run() { updateHud(); tick.postDelayed(this, 15_000) }
+    }
     private lateinit var search: EditText
     private var apps: List<AppEntry> = emptyList()
     private var weatherAt = 0L
@@ -75,34 +83,40 @@ class LauncherActivity : Activity() {
         scroll.addView(content)
         root.addView(scroll, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
 
-        // En-tête : horloge + menu
+        // En-tête HUD : titre, menu, réacteur avec l'heure, capteurs
         val top = horizontal()
-        val clocks = vertical()
-        clocks.addView(TextClock(this).apply {
-            format24Hour = "HH:mm"; format12Hour = "HH:mm"
-            textSize = 56f; setTextColor(Palette.TEXT)
-            typeface = com.zrezzougui.orbite.Fonts.displayLight(context)
-            setOnClickListener { safeStart(Intent(android.provider.AlarmClock.ACTION_SHOW_ALARMS)) }
-        })
-        clocks.addView(TextClock(this).apply {
-            format24Hour = "EEEE d MMMM"; format12Hour = "EEEE d MMMM"
-            textSize = 16f; setTextColor(Palette.MUTED)
-        })
-        top.addView(clocks, weighted())
+        top.addView(label("J.A.R.V.I.S", 14f, Palette.PRIMARY).apply {
+            typeface = com.zrezzougui.orbite.Fonts.hudBold(context); letterSpacing = 0.25f
+        }, weighted())
         top.addView(label("⋮", 26f, Palette.MUTED).apply {
             setPadding(dp(12), dp(4), dp(4), dp(4)); setOnClickListener { menu() }
         })
         content.addView(top, matchWrap())
 
-        weatherLine = label("☁️  Touchez pour la météo", 15f, Palette.MUTED).apply {
-            setPadding(0, dp(6), 0, dp(14))
-            setOnClickListener { AssistantActivity.open(this@LauncherActivity, "Météo") }
+        reactor = com.zrezzougui.orbite.hud.ArcReactorView(this).apply {
+            setOnClickListener { AssistantActivity.open(this@LauncherActivity, voice = true) }
+            setOnLongClickListener { startActivity(Intent(this@LauncherActivity, com.zrezzougui.orbite.jarvis.JarvisSettingsActivity::class.java)); true }
+            contentDescription = "Parler à Jarvis"
         }
-        content.addView(weatherLine, matchWrap())
+        content.addView(reactor, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(230)))
+
+        val pods = horizontal().apply { setPadding(0, dp(4), 0, dp(12)) }
+        weatherLine = pod("MÉTÉO", "Touchez").apply { setOnClickListener { AssistantActivity.open(this@LauncherActivity, "Météo") } }
+        batteryPod = pod("ÉNERGIE", "—")
+        agendaPod = pod("AGENDA", "Touchez").apply { setOnClickListener { AssistantActivity.open(this@LauncherActivity, "Qu'est-ce que j'ai aujourd'hui") } }
+        listOf(weatherLine, batteryPod, agendaPod).forEachIndexed { i, v ->
+            pods.addView(v.parent as View, weighted().margins(l = if (i == 0) 0 else dp(8)))
+        }
+        content.addView(pods, matchWrap())
+
+        wakeHint = pill("🎙️ Activer « Jarvis » mains libres") {
+            startActivity(Intent(this, com.zrezzougui.orbite.jarvis.JarvisSettingsActivity::class.java))
+        }
+        content.addView(wakeHint, wrapWrap().margins(b = dp(12)))
 
         // Raccourcis
         val quick = horizontal()
-        quick.addView(pill("✨ Assistant", filled = true) { AssistantActivity.open(this) }, wrapWrap().margins(r = dp(8)))
+        quick.addView(pill("✨ Jarvis", filled = true) { AssistantActivity.open(this) }, wrapWrap().margins(r = dp(8)))
         quick.addView(pill("📷 Caméra pro") { startActivity(Intent(this, CameraActivity::class.java)) }, wrapWrap().margins(r = dp(8)))
         quick.addView(pill("🧹 Ranger mon écran") { startActivity(Intent(this, TidyActivity::class.java)) }, wrapWrap().margins(r = dp(8)))
         quick.addView(pill("🗂️ Mes applis") { startActivity(Intent(this, AppsActivity::class.java)) }, wrapWrap().margins(r = dp(8)))
@@ -156,6 +170,60 @@ class LauncherActivity : Activity() {
         super.onResume()
         reload()
         refreshWeather()
+        tick.post(clockTask)
+        wakeHint.visibility = if (com.zrezzougui.orbite.jarvis.Persona.wakeEnabled(this)) View.GONE else View.VISIBLE
+        // L'écoute « Jarvis » ne peut démarrer que quand Orbite est à l'écran.
+        com.zrezzougui.orbite.jarvis.JarvisService.start(this)
+    }
+
+    override fun onPause() {
+        tick.removeCallbacks(clockTask)
+        super.onPause()
+    }
+
+    /** Petit capteur du HUD : étiquette cyan + valeur. Renvoie la valeur ; la carte est son parent. */
+    private fun pod(title: String, value: String): TextView {
+        val box = vertical().apply {
+            background = rounded(Palette.SURFACE, dpf(com.zrezzougui.orbite.Radius.MD), dp(1), Palette.LINE_STRONG)
+            setPadding(dp(10), dp(8), dp(10), dp(10))
+        }
+        box.addView(label(title, 10f, Palette.PRIMARY).apply { typeface = com.zrezzougui.orbite.Fonts.hud(context); letterSpacing = 0.15f })
+        val v = label(value, 13f, Palette.TEXT).apply { maxLines = 2; ellipsize = TextUtils.TruncateAt.END; setPadding(0, dp(4), 0, 0) }
+        box.addView(v, matchWrap())
+        box.setOnClickListener { v.performClick() }
+        return v
+    }
+
+    private fun updateHud() {
+        val now = java.util.Calendar.getInstance()
+        reactor.centerText = "%02d:%02d".format(now.get(java.util.Calendar.HOUR_OF_DAY), now.get(java.util.Calendar.MINUTE))
+        reactor.subText = java.text.SimpleDateFormat("EEE d MMM", java.util.Locale.FRENCH).format(now.time)
+        val bm = getSystemService(android.os.BatteryManager::class.java)
+        val pct = bm?.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: -1
+        val charging = bm?.isCharging == true
+        batteryPod.text = if (pct in 0..100) "$pct %" + (if (charging) " ⚡" else "") else "—"
+        batteryPod.setTextColor(if (pct in 0..19 && !charging) Palette.ACCENT else Palette.TEXT)
+        Thread {
+            val next = nextEvent()
+            runOnUiThread { agendaPod.text = next }
+        }.start()
+    }
+
+    /** Prochain rendez-vous dans les 24 h (si l'agenda est autorisé). */
+    private fun nextEvent(): String {
+        if (checkSelfPermission(android.Manifest.permission.READ_CALENDAR) != android.content.pm.PackageManager.PERMISSION_GRANTED) return "Touchez"
+        val now = System.currentTimeMillis()
+        val uri = android.provider.CalendarContract.Instances.CONTENT_URI.buildUpon().also {
+            android.content.ContentUris.appendId(it, now)
+            android.content.ContentUris.appendId(it, now + 24 * 3600_000L)
+        }.build()
+        return runCatching {
+            contentResolver.query(uri, arrayOf(android.provider.CalendarContract.Instances.TITLE, android.provider.CalendarContract.Instances.BEGIN),
+                null, null, android.provider.CalendarContract.Instances.BEGIN + " ASC")?.use { c ->
+                if (c.moveToFirst()) java.text.SimpleDateFormat("HH'h'mm", java.util.Locale.FRENCH).format(java.util.Date(c.getLong(1))) + " " + (c.getString(0) ?: "")
+                else "Rien de prévu"
+            }
+        }.getOrNull() ?: "Rien de prévu"
     }
 
     @Deprecated("Écran d'accueil : le bouton retour ne quitte pas")
@@ -192,8 +260,8 @@ class LauncherActivity : Activity() {
                 } ?: return@runCatching null
                 val f = Weather.forecast(place)
                 val d = f.days.firstOrNull()
-                "${Weather.emoji(f.code)}  ${f.temp.toInt()}° · ${Weather.describe(f.code)} · ${place.name}" +
-                    (d?.let { "  (${it.tMin.toInt()}° / ${it.tMax.toInt()}°)" } ?: "")
+                "${Weather.emoji(f.code)} ${f.temp.toInt()}° ${place.name.substringBefore(',')}" +
+                    (d?.let { " · ${it.tMin.toInt()}/${it.tMax.toInt()}°" } ?: "")
             }.getOrNull()
             if (text != null) runOnUiThread { weatherLine.text = text; weatherLine.setTextColor(Palette.TEXT) }
             else weatherAt = 0L
@@ -286,26 +354,28 @@ class LauncherActivity : Activity() {
 
     private fun menu() {
         val items = arrayOf(
+            "Réglages Jarvis (voix, « Jarvis » mains libres)",
             "Gérer mes applis",
             "Ranger l'écran d'accueil du téléphone",
             "Définir Orbite comme écran d'accueil",
             "Réinitialiser le rangement automatique",
-            "Autoriser la position (météo)",
+            "Autoriser la position et l'agenda (capteurs du HUD)",
             "Réglages Android",
         )
         AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert)
             .setTitle("Orbite")
             .setItems(items) { _, which ->
                 when (which) {
-                    0 -> startActivity(Intent(this, AppsActivity::class.java))
-                    1 -> startActivity(Intent(this, TidyActivity::class.java))
-                    2 -> safeStart(Intent(Settings.ACTION_HOME_SETTINGS))
-                    3 -> AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert)
+                    0 -> startActivity(Intent(this, com.zrezzougui.orbite.jarvis.JarvisSettingsActivity::class.java))
+                    1 -> startActivity(Intent(this, AppsActivity::class.java))
+                    2 -> startActivity(Intent(this, TidyActivity::class.java))
+                    3 -> safeStart(Intent(Settings.ACTION_HOME_SETTINGS))
+                    4 -> AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert)
                         .setMessage("Remettre toutes les applis dans leurs dossiers automatiques et annuler les noms personnalisés ?")
                         .setPositiveButton("Réinitialiser") { _, _ -> repo.resetAll(); reload() }
                         .setNegativeButton("Annuler", null).show()
-                    4 -> requestPermissions(arrayOf(android.Manifest.permission.ACCESS_COARSE_LOCATION), 7)
-                    5 -> safeStart(Intent(Settings.ACTION_SETTINGS))
+                    5 -> requestPermissions(arrayOf(android.Manifest.permission.ACCESS_COARSE_LOCATION, android.Manifest.permission.READ_CALENDAR), 7)
+                    6 -> safeStart(Intent(Settings.ACTION_SETTINGS))
                 }
             }
             .show()

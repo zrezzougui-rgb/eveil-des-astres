@@ -38,6 +38,12 @@ object AppCategorizer {
     const val OTHER = "Autres"
     const val TOOLS = "Outils & Système"
 
+    /** Cas connus que les règles générales rangent mal (vérifiés en premier). */
+    private val exact: List<Pair<String, String>> = listOf(
+        "saracroche" to TOOLS, "taobao" to "Achats", "tmall" to "Achats", "alipay" to "Banque & Finance",
+        "truecaller" to TOOLS, "orange.phone" to TOOLS,
+    )
+
     /** Ordre important : la première règle qui correspond l'emporte. */
     private val rules: List<Pair<String, List<String>>> = listOf(
         "Messagerie" to listOf(
@@ -52,6 +58,10 @@ object AppCategorizer {
             "game", "games", "jeu", "supercell", "rovio", "gameloft", "ubisoft", "epicgames", "mojang",
             "minecraft", "roblox", "chess", "echecs", "puzzle", "candy", "clash", "pokemon", "nintendo",
             "playrix", "zynga", "miniclip", "solitaire", "sudoku", "voodoo", "ketchapp",
+        ),
+        "Dessin & Création" to listOf(
+            "drawing", "draw.", "paint", "sketch", "dessin", "coloring", "coloriage", "ibispaint", "procreate",
+            "infinite painter", "medibang", "tracing", "trace drawing", "canva", "pixelart", "pixel art",
         ),
         "Musique & Audio" to listOf(
             "spotify", "deezer", "music", "musique", "podcast", "soundcloud", "audio", "radio", "shazam",
@@ -117,6 +127,7 @@ object AppCategorizer {
 
     fun categorize(label: String, packageName: String, info: ApplicationInfo?): String {
         val hay = normalize("$packageName $label")
+        exact.firstOrNull { hay.contains(it.first) }?.let { return it.second }
         for ((folder, words) in rules) {
             if (words.any { hay.contains(it) }) return folder
         }

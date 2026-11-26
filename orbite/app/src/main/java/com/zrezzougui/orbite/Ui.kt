@@ -16,27 +16,29 @@ import android.widget.TextView
  * Toute l'interface est construite à partir d'eux, sans fichiers XML ni bibliothèque.
  */
 object Palette {
-    const val BG = 0xFF0E1124.toInt()
-    const val SURFACE = 0xFF1B2033.toInt()
-    const val SURFACE_2 = 0xFF262C45.toInt()
-    const val LINE_STRONG = 0xFF6B7499.toInt()
-    const val TEXT = 0xFFECEFF7.toInt()         // ink
-    const val MUTED = 0xFF9AA3BC.toInt()        // ink-muted
-    const val PRIMARY = 0xFF7C9CFF.toInt()      // « Orbite »
-    const val ON_PRIMARY = 0xFF0E1124.toInt()
-    const val PRIMARY_SOFT = 0xFF2A3566.toInt()
-    const val SECONDARY = 0xFFFFD27A.toInt()    // « Soleil »
-    const val ON_SECONDARY = 0xFF2A1E00.toInt()
-    const val ACCENT = 0xFF5EE0C2.toInt()       // « Aurore »
-    const val ON_ACCENT = 0xFF06231C.toInt()
+    // Thème « Jarvis » : interface tête haute, cyan lumineux sur nuit profonde, or et rouge en accents.
+    const val BG = 0xFF050B14.toInt()
+    const val SURFACE = 0xFF0B1726.toInt()
+    const val SURFACE_2 = 0xFF122338.toInt()
+    const val LINE_STRONG = 0xFF2C5873.toInt()
+    const val TEXT = 0xFFE4F6FF.toInt()         // ink
+    const val MUTED = 0xFF8DB2C8.toInt()        // ink-muted
+    const val PRIMARY = 0xFF4FD8FF.toInt()      // cyan HUD
+    const val ON_PRIMARY = 0xFF031220.toInt()
+    const val PRIMARY_SOFT = 0xFF0E3550.toInt()
+    const val SECONDARY = 0xFFFFB547.toInt()    // or
+    const val ON_SECONDARY = 0xFF2A1A00.toInt()
+    const val ACCENT = 0xFFFF6B5B.toInt()       // rouge
+    const val ON_ACCENT = 0xFF2A0603.toInt()
     const val SUCCESS = 0xFF6BE39B.toInt()
     const val DANGER = 0xFFFF7A85.toInt()
+    const val GLOW = 0x554FD8FF                 // halo cyan translucide
 }
 
 object Space { const val XS = 4; const val S = 8; const val M = 12; const val L = 16; const val XL = 24; const val XXL = 32; const val TOUCH = 48 }
 object Radius { const val SM = 8f; const val MD = 14f; const val LG = 20f; const val PILL = 999f }
 
-/** Sora (titres) et Inter (texte), embarquées dans assets/fonts. */
+/** Sora (titres), Inter (texte) et Orbitron (HUD), embarquées dans assets/fonts. */
 object Fonts {
     private val cache = HashMap<String, Typeface>()
     private fun load(ctx: Context, file: String, fallback: Typeface): Typeface =
@@ -46,6 +48,9 @@ object Fonts {
     fun strong(ctx: Context) = load(ctx, "inter_semibold.ttf", Typeface.DEFAULT_BOLD)
     fun display(ctx: Context) = load(ctx, "sora_semibold.ttf", Typeface.DEFAULT_BOLD)
     fun displayLight(ctx: Context) = load(ctx, "sora_light.ttf", Typeface.DEFAULT)
+    /** Orbitron : chiffres et étiquettes du HUD (horloge, capteurs). */
+    fun hud(ctx: Context) = load(ctx, "orbitron_medium.ttf", Typeface.MONOSPACE)
+    fun hudBold(ctx: Context) = load(ctx, "orbitron_bold.ttf", Typeface.MONOSPACE)
 }
 
 fun Context.dp(v: Int): Int = (v * resources.displayMetrics.density + 0.5f).toInt()

@@ -52,7 +52,7 @@ class AppActions(
         }
         val a = activity
         val d = Dialog(a, android.R.style.Theme_Material_NoActionBar)
-        d.window?.setBackgroundDrawable(ColorDrawable(0xE60E1124.toInt()))
+        d.window?.setBackgroundDrawable(ColorDrawable(0xEB050B14.toInt()))
         d.setOnDismissListener { onClose() }
         val box = a.vertical().apply { setPadding(a.dp(20), a.dp(48), a.dp(20), a.dp(24)); isClickable = true }
         val head = a.horizontal()

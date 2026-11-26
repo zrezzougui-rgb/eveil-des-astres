@@ -39,8 +39,11 @@ class Assistant(private val ctx: Context) {
     fun answer(raw: String): Reply {
         val q = raw.trim().trimEnd('?', '!', '.', ' ')
         val n = normalize(q)
-        if (n.isEmpty() || n.matches(Regex("(aide|help|que sais[- ]tu faire|que peux[- ]tu faire|bonjour|salut|coucou|hello)( .*)?"))) {
-            return help(n.startsWith("bonjour") || n.startsWith("salut") || n.startsWith("coucou"))
+        if (n.isEmpty() || n.matches(Regex("(aide|help|que sais[- ]tu faire|que peux[- ]tu faire)( .*)?"))) {
+            return help(false)
+        }
+        if (n.matches(Regex("(bonjour|bonsoir|salut|coucou|hello|hey)( jarvis)?|jarvis|briefing|(fais|donne)[- ]moi (le|un) (point|briefing|resume)|point du jour|resume (de )?(ma|la) journee|quoi de neuf|mon briefing|programme du jour"))) {
+            return briefing()
         }
         return try {
             when {
@@ -80,6 +83,25 @@ class Assistant(private val ctx: Context) {
             "• « Quelles applis je n'utilise jamais ? », « Applis les plus lourdes »\n" +
             "• « Ouvre la caméra », « Ma ville est Marseille »"
     )
+
+    /** Point du jour à la Jarvis : heure, météo, agenda, batterie. Chaque partie est facultative. */
+    private fun briefing(): Reply {
+        val c = Calendar.getInstance()
+        val parts = mutableListOf(
+            com.zrezzougui.orbite.jarvis.Persona.greeting(ctx) + ". Il est ${c.get(Calendar.HOUR_OF_DAY)}h${"%02d".format(c.get(Calendar.MINUTE))}, " +
+                SimpleDateFormat("EEEE d MMMM", Locale.FRENCH).format(c.time) + "."
+        )
+        runCatching { weather("météo") }.getOrNull()?.takeIf { it.needPermission == null }?.let { r ->
+            parts += r.text.lines().take(2).joinToString(" ")
+        }
+        if (ctx.checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED) {
+            runCatching { listEvents("aujourd'hui") }.getOrNull()?.let { parts += it.text }
+        }
+        val bm = ctx.getSystemService(android.os.BatteryManager::class.java)
+        val pct = bm?.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: -1
+        if (pct in 0..100) parts += "Batterie à $pct %." + if (pct < 20) " Je vous conseille de la recharger." else ""
+        return Reply(parts.joinToString("\n"))
+    }
 
     private fun has(n: String, vararg words: String) = words.any { n.contains(it) }
 

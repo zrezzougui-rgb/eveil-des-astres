@@ -176,7 +176,7 @@ class AppSkill(private val ctx: Context) {
         "achat" to "Achats", "achats" to "Achats", "courses" to "Achats", "banque" to "Banque & Finance",
         "finance" to "Banque & Finance", "argent" to "Banque & Finance", "musique" to "Musique & Audio",
         "video" to "Vidéo & TV", "videos" to "Vidéo & TV", "tv" to "Vidéo & TV", "film" to "Vidéo & TV",
-        "photo" to "Photo", "photos" to "Photo", "voyage" to "Navigation & Voyage", "transport" to "Navigation & Voyage",
+        "photo" to "Photo", "photos" to "Photo", "dessin" to "Dessin & Création", "dessins" to "Dessin & Création", "voyage" to "Navigation & Voyage", "transport" to "Navigation & Voyage",
         "gps" to "Navigation & Voyage", "sante" to "Santé & Sport", "medecine" to "Santé & Sport", "sport" to "Santé & Sport",
         "ecole" to "Éducation", "education" to "Éducation", "actu" to "Actualités & Lecture", "actualites" to "Actualités & Lecture",
         "lecture" to "Actualités & Lecture", "travail" to "Productivité", "productivite" to "Productivité",
