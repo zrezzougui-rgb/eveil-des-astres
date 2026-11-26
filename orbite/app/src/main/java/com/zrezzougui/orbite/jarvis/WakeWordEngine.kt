@@ -22,7 +22,10 @@ import kotlin.random.Random
  */
 class WakeWordEngine(ctx: Context) : AutoCloseable {
 
-    private val mel = interpreter(ctx, "wake/melspectrogram.tflite").apply { resizeInput(0, intArrayOf(1, RAW)); allocateTensors() }
+    // Le spectrogramme a une entrée de taille variable ([1, 1] par défaut) : l'accélérateur XNNPACK, appliqué dès la
+    // création, échoue sur cette taille (« BytesRequired number of elements overflowed »). On le désactive pour ce
+    // modèle, on fixe la taille, puis on alloue. Résultats identiques (vérifié : écart < 0,00002).
+    private val mel = interpreter(ctx, "wake/melspectrogram.tflite", xnnpack = false).apply { resizeInput(0, intArrayOf(1, RAW)); allocateTensors() }
     private val emb = interpreter(ctx, "wake/embedding_model.tflite").apply { resizeInput(0, intArrayOf(1, WINDOW, 32, 1)); allocateTensors() }
     private val ww = interpreter(ctx, "wake/hey_jarvis_v0.1.tflite")
 
@@ -150,11 +153,11 @@ class WakeWordEngine(ctx: Context) : AutoCloseable {
         private const val WINDOW = 76
         private const val FEATURES = 16
 
-        private fun interpreter(ctx: Context, asset: String): Interpreter {
+        private fun interpreter(ctx: Context, asset: String, xnnpack: Boolean = true): Interpreter {
             val bytes = ctx.assets.open(asset).use { it.readBytes() }
             val buf = ByteBuffer.allocateDirect(bytes.size).order(ByteOrder.nativeOrder()).put(bytes)
             buf.rewind()
-            return Interpreter(buf, Interpreter.Options().setNumThreads(1))
+            return Interpreter(buf, Interpreter.Options().setNumThreads(1).setUseXNNPACK(xnnpack))
         }
     }
 }
