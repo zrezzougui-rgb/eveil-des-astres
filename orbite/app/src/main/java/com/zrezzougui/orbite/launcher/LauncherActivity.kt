@@ -65,6 +65,7 @@ class LauncherActivity : Activity() {
         edgeToEdge()
         repo = AppRepository(this)
         actions = AppActions(this, repo, { apps }, onChanged = { reload() })
+        NewAppsJob.schedule(this)
 
         val root = vertical().apply { setBackgroundColor(Palette.BG) }
         root.padForSystemBars()
@@ -103,6 +104,7 @@ class LauncherActivity : Activity() {
         val quick = horizontal()
         quick.addView(pill("✨ Assistant", filled = true) { AssistantActivity.open(this) }, wrapWrap().margins(r = dp(8)))
         quick.addView(pill("📷 Caméra pro") { startActivity(Intent(this, CameraActivity::class.java)) }, wrapWrap().margins(r = dp(8)))
+        quick.addView(pill("🧹 Ranger mon écran") { startActivity(Intent(this, TidyActivity::class.java)) }, wrapWrap().margins(r = dp(8)))
         quick.addView(pill("🗂️ Mes applis") { startActivity(Intent(this, AppsActivity::class.java)) }, wrapWrap().margins(r = dp(8)))
         quick.addView(pill("📅 Agenda") { AssistantActivity.open(this, "Qu'est-ce que j'ai aujourd'hui") }, wrapWrap())
         content.addView(android.widget.HorizontalScrollView(this).apply {
@@ -168,6 +170,7 @@ class LauncherActivity : Activity() {
         loading = true
         Thread {
             val list = runCatching { repo.load() }.getOrDefault(emptyList())
+            HomeShortcuts.sync(this, list)
             runOnUiThread {
                 loading = false
                 apps = list
@@ -284,7 +287,7 @@ class LauncherActivity : Activity() {
     private fun menu() {
         val items = arrayOf(
             "Gérer mes applis",
-            "Mettre des dossiers sur l'écran d'accueil du téléphone",
+            "Ranger l'écran d'accueil du téléphone",
             "Définir Orbite comme écran d'accueil",
             "Réinitialiser le rangement automatique",
             "Autoriser la position (météo)",
@@ -295,7 +298,7 @@ class LauncherActivity : Activity() {
             .setItems(items) { _, which ->
                 when (which) {
                     0 -> startActivity(Intent(this, AppsActivity::class.java))
-                    1 -> pinPicker()
+                    1 -> startActivity(Intent(this, TidyActivity::class.java))
                     2 -> safeStart(Intent(Settings.ACTION_HOME_SETTINGS))
                     3 -> AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert)
                         .setMessage("Remettre toutes les applis dans leurs dossiers automatiques et annuler les noms personnalisés ?")

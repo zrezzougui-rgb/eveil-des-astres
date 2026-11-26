@@ -4,13 +4,8 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Intent
-import android.content.pm.ShortcutInfo
-import android.content.pm.ShortcutManager
-import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.graphics.drawable.Icon
 import android.net.Uri
 import android.provider.Settings
 import android.text.TextUtils
@@ -146,7 +141,9 @@ class AppActions(
 
     fun renameFolder(old: String, onDone: () -> Unit = {}) {
         askName("Renommer le dossier", old) { name ->
-            repo.renameFolder(old, name, apps()); onDone(); onChanged()
+            repo.renameFolder(old, name, apps())
+            HomeShortcuts.rename(activity, old, name, apps())
+            onDone(); onChanged()
         }
     }
 
@@ -170,51 +167,19 @@ class AppActions(
 
     // ------------------------------------------------------------------ dossiers sur l'écran du téléphone
 
-    fun canPin(): Boolean =
-        activity.getSystemService(ShortcutManager::class.java)?.isRequestPinShortcutSupported == true
+    fun canPin(): Boolean = HomeShortcuts.canPin(activity)
 
     /**
-     * Ajoute un raccourci « dossier » sur l'écran d'accueil actuel du téléphone (celui du fabricant).
+     * Ajoute le dossier sur l'écran d'accueil actuel du téléphone (celui du fabricant).
      * Android affiche toujours une confirmation : une appli ne peut pas modifier cet écran toute seule.
      */
     fun pinFolder(name: String) {
-        val sm = activity.getSystemService(ShortcutManager::class.java)
-        if (sm == null || !sm.isRequestPinShortcutSupported) {
+        if (!canPin()) {
             toast("Votre écran d'accueil n'accepte pas les raccourcis d'applis.")
             return
         }
-        val intent = Intent(activity, FolderActivity::class.java)
-            .setAction(Intent.ACTION_VIEW)
-            .putExtra(FolderActivity.EXTRA_FOLDER, name)
-        val info = ShortcutInfo.Builder(activity, "dossier:$name")
-            .setShortLabel(name.take(24))
-            .setLongLabel(name)
-            .setIcon(folderIcon(apps().filter { it.folder == name }))
-            .setIntent(intent)
-            .build()
-        val ok = runCatching { sm.requestPinShortcut(info, null) }.getOrDefault(false)
+        val ok = HomeShortcuts.request(activity, name, apps())
         toast(if (ok) "Confirmez l'ajout de « $name » sur l'écran d'accueil." else "Ajout refusé par l'écran d'accueil.")
-    }
-
-    /** Icône de dossier : fond Orbite et les 4 premières icônes, au format icône adaptative. */
-    private fun folderIcon(list: List<AppEntry>): Icon {
-        val px = activity.dp(108)
-        val bmp = Bitmap.createBitmap(px, px, Bitmap.Config.ARGB_8888)
-        val c = Canvas(bmp)
-        c.drawColor(Palette.SURFACE_2)
-        // Zone sûre d'une icône adaptative : les 66 % centraux.
-        val safe = px * 0.62f
-        val start = (px - safe) / 2
-        val gap = safe * 0.08f
-        val cellSize = (safe - gap) / 2
-        list.take(4).forEachIndexed { i, e ->
-            val x = start + (i % 2) * (cellSize + gap)
-            val y = start + (i / 2) * (cellSize + gap)
-            val d = e.iconCopy()
-            d.setBounds(x.toInt(), y.toInt(), (x + cellSize).toInt(), (y + cellSize).toInt())
-            d.draw(c)
-        }
-        return Icon.createWithAdaptiveBitmap(bmp)
     }
 
     // ------------------------------------------------------------------ utilitaires

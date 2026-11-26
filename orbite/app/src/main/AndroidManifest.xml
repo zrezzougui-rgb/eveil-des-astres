@@ -9,6 +9,9 @@
     <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
     <!-- Ouvrir la fenêtre de désinstallation d'Android (l'utilisateur confirme toujours). -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+    <!-- Prévenir quand une nouvelle appli est rangée ; garder la surveillance après redémarrage. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Statistiques d'utilisation : accordées par l'utilisateur dans les réglages, facultatives. -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
@@ -78,6 +81,17 @@
             android:label="Mes applis"
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".launcher.TidyActivity"
+            android:exported="false"
+            android:label="Ranger mon écran"
+            android:screenOrientation="portrait" />
+
+        <service
+            android:name=".launcher.NewAppsJob"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <!-- Ouverte par les dossiers épinglés sur l'écran d'accueil du téléphone. -->
         <activity

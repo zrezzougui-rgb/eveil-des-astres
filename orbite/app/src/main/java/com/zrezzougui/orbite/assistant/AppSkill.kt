@@ -23,7 +23,10 @@ class AppSkill(private val ctx: Context) {
     private val details = Regex("^(?:ouvre |affiche |montre )?(?:les )?(?:infos?|informations|parametres|reglages|autorisations|permissions|stockage|notifications) (?:de |d'|sur |du |pour )(?:l'appli(?:cation)? |l'app |l')?(.+)$")
     private val update = Regex("^(?:mets a jour|mettre a jour|met a jour|actualise|mise a jour (?:de |d'))(?: l'appli(?:cation)?| l'app)? (.+)$")
 
+    private fun isTidy(n: String) = Regex("(?:range[rz]? (?:mon |l')ecran|organise[rz]? (?:mon |l')ecran|nettoie[rz]? (?:mon |l')ecran|menage (?:de|sur) (?:mon |l')ecran|fais le menage|ecran d'accueil)").containsMatchIn(n)
+
     fun matches(n: String): Boolean =
+        isTidy(n) ||
         uninstall.matches(n) && !n.contains("rendez") && !n.contains("rdv") ||
             move.matches(n) && !n.contains("agenda") && !n.contains("calendrier") ||
             details.matches(n) || update.matches(n) ||
@@ -35,6 +38,10 @@ class AppSkill(private val ctx: Context) {
     private fun isManage(n: String) = Regex("(?:gere[rz]? (?:mes |les )?app|gestion (?:des |de mes )?app|mes applis|mes applications|toutes (?:mes|les) applis)").containsMatchIn(n)
 
     fun answer(q: String, n: String): Reply {
+        if (isTidy(n)) return Reply(
+            "J'ouvre « Ranger mon écran d'accueil » : je pose mes dossiers sur votre écran, je vous montre les icônes en double à retirer, et je range les nouvelles applis.",
+            listOf(Action("🧹 Ranger mon écran", Intent(ctx, com.zrezzougui.orbite.launcher.TidyActivity::class.java))).autoStart(),
+        )
         uninstall.matchEntire(n)?.let { m -> if (!n.contains("rendez") && !n.contains("rdv")) return doUninstall(m.groupValues[1]) }
         move.matchEntire(n)?.let { m -> if (!n.contains("agenda")) return doMove(q, m) }
         details.matchEntire(n)?.let { return doDetails(it.groupValues[1]) }

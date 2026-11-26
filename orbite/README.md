@@ -31,6 +31,10 @@ l'ancienne sans perdre vos dossiers. Pour une publication sur le Play Store, il 
   d'installation et leur dernière utilisation. Tri par nom, poids, installation récente ou usage ; filtre par dossier.
   Chaque appli : ouvrir, ranger, infos/autorisations/stockage, mise à jour Play Store, désinstaller.
 - La dernière utilisation demande l'autorisation « Accès aux données d'utilisation » (facultative, rien ne quitte le téléphone).
+- **Ranger mon écran d'accueil** (bouton 🧹, menu ⋮ ou « range mon écran » à l'assistant), sans remplacer l'écran du fabricant :
+  1. pose tous les dossiers d'Orbite d'affilée (Android confirme chacun), icônes mises à jour automatiquement ;
+  2. liste à cocher des icônes devenues doublons à retirer de l'écran (l'appli reste installée) ;
+  3. range les nouvelles applis dans le bon dossier (vérification environ toutes les heures) et peut prévenir par notification.
 - **Dossiers sur l'écran d'accueil du téléphone** : sans remplacer l'écran du fabricant, Orbite peut y ajouter ses dossiers
   (appui long sur un dossier → « Mettre sur l'écran d'accueil du téléphone »). Android demande une confirmation par dossier.
   Une appli ne peut pas déplacer elle-même les icônes ou dossiers de l'écran du fabricant : c'est une limite d'Android.
