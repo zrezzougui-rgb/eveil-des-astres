@@ -51,6 +51,7 @@ import com.zrezzougui.orbite.wrapWrap
 class LauncherActivity : Activity() {
 
     private lateinit var repo: AppRepository
+    private lateinit var actions: AppActions
     private lateinit var folderGrid: GridLayout
     private lateinit var results: LinearLayout
     private lateinit var weatherLine: TextView
@@ -63,6 +64,7 @@ class LauncherActivity : Activity() {
         super.onCreate(savedInstanceState)
         edgeToEdge()
         repo = AppRepository(this)
+        actions = AppActions(this, repo, { apps }, onChanged = { reload() })
 
         val root = vertical().apply { setBackgroundColor(Palette.BG) }
         root.padForSystemBars()
@@ -101,8 +103,11 @@ class LauncherActivity : Activity() {
         val quick = horizontal()
         quick.addView(pill("✨ Assistant", filled = true) { AssistantActivity.open(this) }, wrapWrap().margins(r = dp(8)))
         quick.addView(pill("📷 Caméra pro") { startActivity(Intent(this, CameraActivity::class.java)) }, wrapWrap().margins(r = dp(8)))
+        quick.addView(pill("🗂️ Mes applis") { startActivity(Intent(this, AppsActivity::class.java)) }, wrapWrap().margins(r = dp(8)))
         quick.addView(pill("📅 Agenda") { AssistantActivity.open(this, "Qu'est-ce que j'ai aujourd'hui") }, wrapWrap())
-        content.addView(quick, matchWrap().margins(b = dp(16)))
+        content.addView(android.widget.HorizontalScrollView(this).apply {
+            isHorizontalScrollBarEnabled = false; addView(quick)
+        }, matchWrap().margins(b = dp(16)))
 
         results = vertical().apply { visibility = View.GONE }
         content.addView(results, matchWrap().margins(b = dp(12)))
@@ -206,7 +211,7 @@ class LauncherActivity : Activity() {
                 background = rounded(Palette.SURFACE, dpf(com.zrezzougui.orbite.Radius.LG))
                 setPadding(dp(14), dp(12), dp(14), dp(12))
                 setOnClickListener { openFolder(name) }
-                setOnLongClickListener { renameFolder(name); true }
+                setOnLongClickListener { folderMenu(name); true }
             }
             val icons = GridLayout(this).apply { columnCount = 4 }
             list.take(8).forEach { a ->
@@ -228,58 +233,18 @@ class LauncherActivity : Activity() {
         }
     }
 
-    private fun openFolder(name: String) {
-        val list = apps.filter { it.folder == name }
-        val d = Dialog(this, android.R.style.Theme_Material_NoActionBar)
-        d.window?.setBackgroundDrawable(ColorDrawable(0xE60E1124.toInt()))
-        val box = vertical().apply { setPadding(dp(20), dp(48), dp(20), dp(24)); isClickable = true }
-        val head = horizontal()
-        head.addView(heading(name, 22f).apply {
-            setOnClickListener { d.dismiss(); renameFolder(name) }
-        }, weighted())
-        head.addView(label("✕", 22f, Palette.MUTED).apply { setPadding(dp(16), dp(4), 0, dp(4)); setOnClickListener { d.dismiss() } })
-        box.addView(head, matchWrap())
-        box.addView(label("Appui long sur une appli pour la déplacer · touchez le titre pour renommer", 12f, Palette.MUTED),
-            matchWrap().margins(t = dp(4), b = dp(16)))
-
-        val grid = GridLayout(this).apply { columnCount = 4 }
-        list.forEach { a -> grid.addView(appTile(a, onOpen = { d.dismiss() }), cell()) }
-        box.addView(ScrollView(this).apply { addView(grid) }, matchWrap())
-        d.setContentView(FrameLayout(this).apply {
-            addView(box)
-            setOnClickListener { d.dismiss() }
-        })
-        d.show()
-    }
-
-    private fun cell() = GridLayout.LayoutParams(
-        GridLayout.spec(GridLayout.UNDEFINED), GridLayout.spec(GridLayout.UNDEFINED, 1f),
-    ).apply { width = 0 }
-
-    private fun appTile(a: AppEntry, onOpen: () -> Unit = {}): View = vertical().apply {
-        gravity = Gravity.CENTER_HORIZONTAL
-        setPadding(dp(4), dp(8), dp(4), dp(8))
-        addView(ImageView(context).apply { setImageDrawable(a.iconCopy()) }, LinearLayout.LayoutParams(dp(52), dp(52)))
-        addView(label(a.label, 12f).apply {
-            gravity = Gravity.CENTER; maxLines = 1; ellipsize = TextUtils.TruncateAt.END
-        }, matchWrap().margins(t = dp(4)))
-        setOnClickListener { onOpen(); open(a) }
-        setOnLongClickListener { appMenu(a, onOpen); true }
-    }
-
     private fun open(a: AppEntry) {
         search.setText("")
         (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(search.windowToken, 0)
-        safeStart(a.launchIntent())
+        actions.launch(a)
     }
 
-    private fun safeStart(i: Intent) {
-        try {
-            startActivity(i)
-        } catch (_: Exception) {
-            Toast.makeText(this, "Impossible d'ouvrir cette appli.", Toast.LENGTH_SHORT).show()
-        }
-    }
+    private fun safeStart(i: Intent) = actions.safeStart(i)
+    private fun openFolder(name: String) = actions.openFolder(name)
+    private fun renameFolder(name: String) = actions.renameFolder(name)
+    private fun appTile(a: AppEntry) = actions.appTile(a)
+    private fun cell() = actions.cell()
+
 
     // ------------------------------------------------------------------ recherche
 
@@ -316,61 +281,10 @@ class LauncherActivity : Activity() {
 
     // ------------------------------------------------------------------ menus
 
-    private fun appMenu(a: AppEntry, onDone: () -> Unit) {
-        val items = arrayOf("Déplacer vers un dossier…", "Infos sur l'appli", "Désinstaller")
-        AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert)
-            .setTitle(a.label)
-            .setItems(items) { _, which ->
-                when (which) {
-                    0 -> moveDialog(a, onDone)
-                    1 -> safeStart(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${a.packageName}")))
-                    2 -> { onDone(); safeStart(Intent(Intent.ACTION_DELETE, Uri.parse("package:${a.packageName}"))) }
-                }
-            }
-            .show()
-    }
-
-    private fun moveDialog(a: AppEntry, onDone: () -> Unit) {
-        val names = (repo.orderedFolders(apps).map { it.first } + com.zrezzougui.orbite.launcher.AppCategorizer.defaultFolders)
-            .distinct().filter { it != a.folder }
-        val items = (listOf("➕ Nouveau dossier…") + names).toTypedArray()
-        AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert)
-            .setTitle("Ranger « ${a.label} » dans…")
-            .setItems(items) { _, which ->
-                if (which == 0) askName("Nom du nouveau dossier", "") { name ->
-                    repo.moveApp(a.packageName, name); onDone(); reload()
-                } else {
-                    repo.moveApp(a.packageName, items[which]); onDone(); reload()
-                }
-            }
-            .show()
-    }
-
-    private fun renameFolder(old: String) {
-        askName("Renommer le dossier", old) { name ->
-            repo.renameFolder(old, name, apps); reload()
-        }
-    }
-
-    private fun askName(title: String, initial: String, onOk: (String) -> Unit) {
-        val field = EditText(this).apply {
-            setText(initial); setSelection(initial.length); isSingleLine = true
-            setTextColor(Color.WHITE)
-        }
-        val frame = FrameLayout(this).apply { setPadding(dp(20), dp(8), dp(20), 0); addView(field) }
-        AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert)
-            .setTitle(title)
-            .setView(frame)
-            .setPositiveButton("OK") { _, _ ->
-                val v = field.text.toString().trim()
-                if (v.isNotEmpty()) onOk(v)
-            }
-            .setNegativeButton("Annuler", null)
-            .show()
-    }
-
     private fun menu() {
         val items = arrayOf(
+            "Gérer mes applis",
+            "Mettre des dossiers sur l'écran d'accueil du téléphone",
             "Définir Orbite comme écran d'accueil",
             "Réinitialiser le rangement automatique",
             "Autoriser la position (météo)",
@@ -380,15 +294,44 @@ class LauncherActivity : Activity() {
             .setTitle("Orbite")
             .setItems(items) { _, which ->
                 when (which) {
-                    0 -> safeStart(Intent(Settings.ACTION_HOME_SETTINGS))
-                    1 -> AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert)
+                    0 -> startActivity(Intent(this, AppsActivity::class.java))
+                    1 -> pinPicker()
+                    2 -> safeStart(Intent(Settings.ACTION_HOME_SETTINGS))
+                    3 -> AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert)
                         .setMessage("Remettre toutes les applis dans leurs dossiers automatiques et annuler les noms personnalisés ?")
                         .setPositiveButton("Réinitialiser") { _, _ -> repo.resetAll(); reload() }
                         .setNegativeButton("Annuler", null).show()
-                    2 -> requestPermissions(arrayOf(android.Manifest.permission.ACCESS_COARSE_LOCATION), 7)
-                    3 -> safeStart(Intent(Settings.ACTION_SETTINGS))
+                    4 -> requestPermissions(arrayOf(android.Manifest.permission.ACCESS_COARSE_LOCATION), 7)
+                    5 -> safeStart(Intent(Settings.ACTION_SETTINGS))
                 }
             }
+            .show()
+    }
+
+    private fun folderMenu(name: String) {
+        val items = arrayOf("Ouvrir", "Renommer", "Mettre sur l'écran d'accueil du téléphone")
+        AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert)
+            .setTitle(name)
+            .setItems(items) { _, which ->
+                when (which) {
+                    0 -> openFolder(name)
+                    1 -> renameFolder(name)
+                    2 -> actions.pinFolder(name)
+                }
+            }
+            .show()
+    }
+
+    /** Un dossier à la fois : Android demande une confirmation pour chaque raccourci. */
+    private fun pinPicker() {
+        if (!actions.canPin()) {
+            Toast.makeText(this, "Votre écran d'accueil n'accepte pas les raccourcis d'applis.", Toast.LENGTH_LONG).show()
+            return
+        }
+        val names = repo.orderedFolders(apps).map { it.first }.toTypedArray()
+        AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert)
+            .setTitle("Quel dossier ajouter à l'écran d'accueil du téléphone ?")
+            .setItems(names) { _, which -> actions.pinFolder(names[which]) }
             .show()
     }
 

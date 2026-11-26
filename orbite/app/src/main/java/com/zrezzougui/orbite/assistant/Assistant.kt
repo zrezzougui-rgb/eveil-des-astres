@@ -34,6 +34,7 @@ data class Reply(
 class Assistant(private val ctx: Context) {
 
     private val prefs = ctx.getSharedPreferences("assistant", Context.MODE_PRIVATE)
+    private val apps = AppSkill(ctx)
 
     fun answer(raw: String): Reply {
         val q = raw.trim().trimEnd('?', '!', '.', ' ')
@@ -50,6 +51,7 @@ class Assistant(private val ctx: Context) {
                 has(n, "reveille", "alarme", "reveil ") || n.endsWith("reveil") -> alarm(q)
                 isAgendaList(n) -> listEvents(q)
                 isAppointment(n) -> appointment(q, n)
+                apps.matches(n) -> apps.answer(q, n)
                 isWeather(n) -> weather(q)
                 has(n, "camera", "appareil photo") || n.matches(Regex(".*(prends|prendre|fais|faire) une photo.*")) -> camera()
                 isCalc(n) -> calc(n)
@@ -74,6 +76,8 @@ class Assistant(private val ctx: Context) {
             "• « Réveille-moi à 7h », « Minuteur 10 minutes »\n" +
             "• « Qui est Marie Curie ? », « 15 % de 80 »\n" +
             "• « Ouvre Spotify », « Itinéraire vers la gare »\n" +
+            "• « Désinstalle Duck Survival », « Range Waze dans Voyage »\n" +
+            "• « Quelles applis je n'utilise jamais ? », « Applis les plus lourdes »\n" +
             "• « Ouvre la caméra », « Ma ville est Marseille »"
     )
 

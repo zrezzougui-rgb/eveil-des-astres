@@ -145,7 +145,8 @@ class AppRepository(private val context: Context) {
 
     private val prefs = context.getSharedPreferences("dossiers", Context.MODE_PRIVATE)
 
-    fun load(): List<AppEntry> {
+    /** `withIcons = false` : chargement rapide pour l'assistant (icônes vides). */
+    fun load(withIcons: Boolean = true): List<AppEntry> {
         val pm = context.packageManager
         val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
         @Suppress("DEPRECATION")
@@ -159,7 +160,7 @@ class AppRepository(private val context: Context) {
                     label = label,
                     packageName = ai.packageName,
                     activityName = ai.name,
-                    icon = ri.loadIcon(pm),
+                    icon = if (withIcons) ri.loadIcon(pm) else android.graphics.drawable.ColorDrawable(0),
                     folder = folderFor(label, ai.packageName, ai.applicationInfo),
                 )
             }
@@ -174,6 +175,11 @@ class AppRepository(private val context: Context) {
 
     fun moveApp(pkg: String, folder: String) {
         prefs.edit().putString("app:$pkg", folder.trim()).apply()
+    }
+
+    /** Annule un choix manuel : l'appli retourne dans son dossier automatique. */
+    fun resetApp(pkg: String) {
+        prefs.edit().remove("app:$pkg").apply()
     }
 
     /** Renomme un dossier : les applis déjà rangées et les futures applis de cette catégorie suivent. */

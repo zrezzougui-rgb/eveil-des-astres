@@ -26,6 +26,15 @@ l'ancienne sans perdre vos dossiers. Pour une publication sur le Play Store, il 
 - **Appui long sur un dossier** (ou toucher son titre une fois ouvert) → renommer. Les nouvelles applis du même genre suivent.
 - La barre du bas cherche une appli en tapant ; Entrée envoie la phrase à l'assistant.
 
+### Gérer ses applis
+- **Mes applis** (bouton sur l'accueil ou menu ⋮) : toutes les applis avec leur dossier, leur taille, leur date
+  d'installation et leur dernière utilisation. Tri par nom, poids, installation récente ou usage ; filtre par dossier.
+  Chaque appli : ouvrir, ranger, infos/autorisations/stockage, mise à jour Play Store, désinstaller.
+- La dernière utilisation demande l'autorisation « Accès aux données d'utilisation » (facultative, rien ne quitte le téléphone).
+- **Dossiers sur l'écran d'accueil du téléphone** : sans remplacer l'écran du fabricant, Orbite peut y ajouter ses dossiers
+  (appui long sur un dossier → « Mettre sur l'écran d'accueil du téléphone »). Android demande une confirmation par dossier.
+  Une appli ne peut pas déplacer elle-même les icônes ou dossiers de l'écran du fabricant : c'est une limite d'Android.
+
 ### Assistant (sans IA, sans jeton)
 Fonctionne par règles en français. Seules la météo et la recherche utilisent internet, via des services gratuits sans clé ni compte.
 
@@ -38,6 +47,8 @@ Fonctionne par règles en français. Seules la météo et la recherche utilisent
 | « Qui est Marie Curie ? », « C'est quoi un trou noir » | Résumé DuckDuckGo / Wikipédia |
 | « 15 % de 80 », « combien font 12 x 7 » | Calcul hors ligne |
 | « Ouvre Spotify », « Itinéraire vers la gare », « Ouvre la caméra » | Ouvre l'appli / la carte / la caméra |
+| « Désinstalle Duck Survival », « Range Waze dans Voyage » | Gère l'appli (Android confirme la désinstallation) |
+| « Quelles applis je n'utilise jamais ? », « Applis les plus lourdes », « Montre mes jeux » | Listes calculées sur le téléphone |
 | « Ma ville est Marseille » | Ville par défaut si la position est refusée |
 
 Le micro utilise la reconnaissance vocale du téléphone, les réponses sont lues à voix haute.
