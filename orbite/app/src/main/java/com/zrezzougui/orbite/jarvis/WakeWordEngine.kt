@@ -22,10 +22,11 @@ import kotlin.random.Random
  */
 class WakeWordEngine(ctx: Context) : AutoCloseable {
 
-    // Le spectrogramme a une entrée de taille variable ([1, 1] par défaut) : l'accélérateur XNNPACK, appliqué dès la
-    // création, échoue sur cette taille (« BytesRequired number of elements overflowed »). On le désactive pour ce
-    // modèle, on fixe la taille, puis on alloue. Résultats identiques (vérifié : écart < 0,00002).
-    private val mel = interpreter(ctx, "wake/melspectrogram.tflite", xnnpack = false).apply { resizeInput(0, intArrayOf(1, RAW)); allocateTensors() }
+    // Le spectrogramme d'origine a une entrée de taille variable, [1, 1] par défaut : TensorFlow Lite pour Android
+    // prépare le modèle dès sa création avec cette taille et échoue (« Node number 3 (CONV_2D) failed to prepare »).
+    // Le fichier embarqué a donc la taille [1, 1760] inscrite par défaut (signature inchangée) ;
+    // sorties vérifiées identiques à l'original.
+    private val mel = interpreter(ctx, "wake/melspectrogram.tflite")
     private val emb = interpreter(ctx, "wake/embedding_model.tflite").apply { resizeInput(0, intArrayOf(1, WINDOW, 32, 1)); allocateTensors() }
     private val ww = interpreter(ctx, "wake/hey_jarvis_v0.1.tflite")
 
@@ -153,11 +154,15 @@ class WakeWordEngine(ctx: Context) : AutoCloseable {
         private const val WINDOW = 76
         private const val FEATURES = 16
 
-        private fun interpreter(ctx: Context, asset: String, xnnpack: Boolean = true): Interpreter {
+        /** Avec l'accélérateur XNNPACK si possible, sinon sans (repli automatique). */
+        private fun interpreter(ctx: Context, asset: String): Interpreter {
             val bytes = ctx.assets.open(asset).use { it.readBytes() }
-            val buf = ByteBuffer.allocateDirect(bytes.size).order(ByteOrder.nativeOrder()).put(bytes)
-            buf.rewind()
-            return Interpreter(buf, Interpreter.Options().setNumThreads(1).setUseXNNPACK(xnnpack))
+            fun buffer() = ByteBuffer.allocateDirect(bytes.size).order(ByteOrder.nativeOrder()).put(bytes).also { it.rewind() }
+            return try {
+                Interpreter(buffer(), Interpreter.Options().setNumThreads(1))
+            } catch (e: Exception) {
+                Interpreter(buffer(), Interpreter.Options().setNumThreads(1).setUseXNNPACK(false))
+            }
         }
     }
 }

@@ -3,3 +3,4 @@ Code d'openWakeWord : licence Apache 2.0 (voir LICENSE-openWakeWord.txt).
 Modèles pré-entraînés (melspectrogram, embedding_model, hey_jarvis_v0.1) :
 Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0) — usage non commercial uniquement.
 Le modèle d'empreinte vocale est dérivé du « speech embedding » de Google (Apache 2.0).
+melspectrogram.tflite : taille d'entrée par défaut fixée à [1, 1760] (seule modification, sorties identiques).
