@@ -1,0 +1,52 @@
+name: Construire l'APK Orbite
+
+on:
+  push:
+    paths:
+      - "orbite/**"
+      - ".github/workflows/build-orbite.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: orbite
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Compiler l'APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Renommer l'APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk orbite.apk
+
+      - name: Garder l'APK comme artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: orbite-apk
+          path: orbite/orbite.apk
+
+      - name: Publier l'APK dans la release "orbite"
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: orbite
+          target_commitish: ${{ github.sha }}
+          name: Orbite (application Android)
+          body: |
+            APK de test d'Orbite construit automatiquement depuis le commit ${{ github.sha }}.
+            Téléchargez **orbite.apk** depuis votre téléphone puis ouvrez-le pour l'installer.
+          files: orbite/orbite.apk
+          prerelease: true
+          make_latest: false
