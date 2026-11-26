@@ -77,20 +77,29 @@ class WakeWordEngine(ctx: Context) : AutoCloseable {
      * quand le score dépasse `threshold` (au plus une fois toutes les 2 s). `onError` si le micro est indisponible.
      */
     @SuppressLint("MissingPermission")
-    fun start(threshold: Float, onWake: (Float) -> Unit, onError: (Exception) -> Unit) {
+    fun start(
+        threshold: Float,
+        onWake: (Float) -> Unit,
+        onError: (Exception) -> Unit,
+        onScore: ((score: Float, level: Float) -> Unit)? = null,
+    ) {
         if (running) return
         running = true
         thread = Thread({
             val minBuf = AudioRecord.getMinBufferSize(16000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
-            val rec = try {
-                AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION, 16000, AudioFormat.CHANNEL_IN_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT, maxOf(minBuf, CHUNK * 4)).also {
-                    if (it.state != AudioRecord.STATE_INITIALIZED) throw IllegalStateException("micro indisponible")
-                    it.startRecording()
-                }
-            } catch (e: Exception) {
-                running = false; onError(e); return@Thread
+            // Certaines surcouches refusent la source « reconnaissance vocale » : on essaie ensuite le micro brut.
+            var rec: AudioRecord? = null
+            var lastError: Exception? = null
+            for (source in intArrayOf(MediaRecorder.AudioSource.VOICE_RECOGNITION, MediaRecorder.AudioSource.MIC)) {
+                try {
+                    val r = AudioRecord(source, 16000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, maxOf(minBuf, CHUNK * 4))
+                    if (r.state != AudioRecord.STATE_INITIALIZED) { r.release(); throw IllegalStateException("micro indisponible (source $source)") }
+                    r.startRecording()
+                    if (r.recordingState != AudioRecord.RECORDSTATE_RECORDING) { r.release(); throw IllegalStateException("micro occupé (source $source)") }
+                    rec = r; break
+                } catch (e: Exception) { lastError = e }
             }
+            if (rec == null) { running = false; onError(lastError ?: IllegalStateException("micro indisponible")); return@Thread }
             val pcm = ShortArray(CHUNK)
             val chunk = FloatArray(CHUNK)
             var lastWake = 0L
@@ -103,8 +112,10 @@ class WakeWordEngine(ctx: Context) : AutoCloseable {
                         read += n
                     }
                     if (!running) break
-                    for (i in 0 until CHUNK) chunk[i] = pcm[i].toFloat()
+                    var energy = 0.0
+                    for (i in 0 until CHUNK) { chunk[i] = pcm[i].toFloat(); energy += chunk[i] * chunk[i] }
                     val score = step(chunk)
+                    onScore?.invoke(score, (Math.sqrt(energy / CHUNK) / 6000.0).coerceAtMost(1.0).toFloat())
                     val now = System.currentTimeMillis()
                     if (score >= threshold && now - lastWake > 2000) {
                         lastWake = now

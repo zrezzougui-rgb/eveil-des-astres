@@ -95,6 +95,7 @@ class LauncherActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         edgeToEdge()
+        com.zrezzougui.orbite.jarvis.Diag.install(this)
         repo = AppRepository(this)
         actions = AppActions(this, repo, { apps }, onChanged = { reload() })
         NewAppsJob.schedule(this)
@@ -374,6 +375,7 @@ class LauncherActivity : Activity() {
             "Réinitialiser le rangement automatique",
             "Autoriser la position et l'agenda (capteurs)",
             "Réglages Android",
+            "Diagnostic (si Jarvis ne répond pas)",
         )
         AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert)
             .setTitle("J.A.R.V.I.S")
@@ -389,6 +391,7 @@ class LauncherActivity : Activity() {
                         .setNegativeButton("Annuler", null).show()
                     5 -> requestPermissions(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.READ_CALENDAR), 7)
                     6 -> actions.safeStart(Intent(Settings.ACTION_SETTINGS))
+                    7 -> startActivity(Intent(this, com.zrezzougui.orbite.jarvis.DiagActivity::class.java))
                 }
             }
             .show()

@@ -45,7 +45,7 @@ class JarvisSettingsActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         edgeToEdge()
-        tts = Persona.newTts(this) { t, ok -> if (ok) runOnUiThread { Persona.applyVoice(this, t); render() } }
+        tts = Persona.newTts(this) { t, ok -> if (ok) loadVoices(t) }
         val root = vertical().apply { background = com.zrezzougui.orbite.hud.HudBackgroundDrawable(resources.displayMetrics.density, 0.05f) }
         root.padForSystemBars()
         val header = horizontal().apply { setPadding(dp(16), dp(12), dp(16), dp(4)) }
@@ -138,6 +138,9 @@ class JarvisSettingsActivity : Activity() {
             render()
         }, wrapWrap().margins(t = dp(14)))
         c.addView(label("Android ne permet de démarrer l'écoute que lorsqu'Orbite est à l'écran : elle reprend toute seule à chaque retour sur l'accueil.", 12f, Palette.MUTED), matchWrap().margins(t = dp(10)))
+        c.addView(pill("Diagnostic et test du micro") {
+            startActivity(Intent(this, DiagActivity::class.java))
+        }, wrapWrap().margins(t = dp(12)))
     }
 
     // ------------------------------------------------------------------ personnalité
@@ -172,8 +175,8 @@ class JarvisSettingsActivity : Activity() {
                 "(par exemple « fr_FR-tom » ou « fr_FR-siwis »), puis sélectionnez-la ici.",
         )
         val t = tts
-        val engines = t?.engines.orEmpty()
-        val current = Persona.preferredEngine(this) ?: t?.defaultEngine
+        val engines = enginesCache
+        val current = Persona.preferredEngine(this) ?: runCatching { t?.defaultEngine }.getOrNull()
 
         c.addView(hudLabel("Moteur de voix", Palette.MUTED), matchWrap().margins(b = dp(6)))
         val er = vertical()
@@ -197,11 +200,11 @@ class JarvisSettingsActivity : Activity() {
         }
 
         c.addView(hudLabel("Voix française", Palette.MUTED), matchWrap().margins(t = dp(16), b = dp(6)))
-        val voices = if (t != null) Persona.frenchVoices(t) else emptyList()
+        val voices = voicesCache.orEmpty()
         if (voices.isEmpty()) {
-            c.addView(label(if (t == null) "Chargement…" else "Aucune voix française dans ce moteur. Ouvrez ses réglages pour en télécharger une.", 13f, Palette.MUTED))
+            c.addView(label(if (voicesCache == null) "Chargement des voix…" else "Aucune voix française dans ce moteur. Ouvrez ses réglages pour en télécharger une.", 13f, Palette.MUTED))
         } else {
-            val chosen = Persona.voiceName(this) ?: t?.voice?.name
+            val chosen = Persona.voiceName(this) ?: currentVoice
             voices.take(10).forEachIndexed { i, v ->
                 c.addView(chip(Persona.describe(v, i), v.name == chosen) {
                     Persona.setVoiceName(this, v.name); t?.voice = v
@@ -215,7 +218,7 @@ class JarvisSettingsActivity : Activity() {
         val rr = horizontal()
         listOf("Posé", "Naturel", "Rapide").forEachIndexed { i, l ->
             rr.addView(chip(l, Persona.rate(this) == i) {
-                Persona.setRate(this, i); t?.let { Persona.applyVoice(this, it) }; speakTest("Tous les systèmes sont opérationnels.")
+                Persona.setRate(this, i); speakTest("Tous les systèmes sont opérationnels.")
                 render()
             }, wrapWrap().margins(r = dp(8)))
         }
@@ -229,17 +232,35 @@ class JarvisSettingsActivity : Activity() {
         }, wrapWrap().margins(t = dp(8)))
     }
 
+    /** Voix et moteurs lus hors du fil principal (certains moteurs mettent plusieurs secondes à répondre). */
+    @Volatile private var voicesCache: List<android.speech.tts.Voice>? = null
+    @Volatile private var enginesCache: List<TextToSpeech.EngineInfo> = emptyList()
+    @Volatile private var currentVoice: String? = null
+
+    private fun loadVoices(t: TextToSpeech) {
+        voicesCache = null
+        Thread {
+            runCatching { Persona.applyVoice(this, t) }
+            enginesCache = runCatching { t.engines }.getOrDefault(emptyList())
+            voicesCache = runCatching { Persona.frenchVoices(t) }.getOrDefault(emptyList())
+            currentVoice = runCatching { t.voice?.name }.getOrNull()
+            runOnUiThread { render() }
+        }.start()
+    }
+
     private fun speakTest(text: String) {
         val t = tts ?: return
-        Persona.applyVoice(this, t)
-        t.speak(Persona.spoken(text), TextToSpeech.QUEUE_FLUSH, null, "test")
+        Thread {
+            runCatching { Persona.applyVoice(this, t) }
+            t.speak(Persona.spoken(text), TextToSpeech.QUEUE_FLUSH, null, "test")
+        }.start()
     }
 
     private fun restartTts() {
         tts?.shutdown()
         tts = null
         render()
-        tts = Persona.newTts(this) { t, ok -> if (ok) runOnUiThread { Persona.applyVoice(this, t); render() } }
+        tts = Persona.newTts(this) { t, ok -> if (ok) loadVoices(t) }
     }
 
     override fun onResume() {

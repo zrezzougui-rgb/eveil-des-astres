@@ -41,8 +41,13 @@ class JarvisService : Service() {
             ACTION_PAUSE -> { paused = true; stopListening(); return START_STICKY }
             ACTION_RESUME -> { paused = false }
         }
-        if (!canRun(this)) { stopSelf(); return START_NOT_STICKY }
-        goForeground()
+        // Android exige startForeground() rapidement après startForegroundService(), même si on s'arrête aussitôt.
+        val fg = runCatching { goForeground() }
+        if (fg.isFailure) {
+            Diag.log(this, "Service : impossible de passer au premier plan : ${fg.exceptionOrNull()?.message}")
+            stopSelf(); return START_NOT_STICKY
+        }
+        if (!canRun(this)) { stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); return START_NOT_STICKY }
         running = true
         if (!paused) startListening()
         return START_STICKY
@@ -68,11 +73,13 @@ class JarvisService : Service() {
                 val e = engine ?: WakeWordEngine(this).also { engine = it }
                 main.post {
                     if (!listening || paused) return@post
+                    Diag.log(this, "Écoute « Hey Jarvis » démarrée (seuil $threshold)")
                     e.start(threshold,
-                        onWake = { main.post { heard() } },
-                        onError = { main.post { retryLater() } })
+                        onWake = { score -> main.post { Diag.log(this, "« Hey Jarvis » entendu (score %.2f)".format(score)); heard() } },
+                        onError = { err -> main.post { Diag.log(this, "Micro : ${err.message}"); retryLater() } })
                 }
-            } catch (_: Exception) {
+            } catch (t: Throwable) {
+                Diag.log(this, "Chargement du détecteur impossible : ${t.javaClass.simpleName} ${t.message}")
                 main.post { retryLater() }
             }
         }.start()
@@ -109,11 +116,35 @@ class JarvisService : Service() {
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             )
         }
+        // Android peut bloquer l'ouverture depuis l'arrière-plan : notification de secours à toucher.
+        main.postDelayed({
+            if (!AssistantActivity.visible) {
+                Diag.log(this, "Ouverture de l'assistant bloquée par Android : notification de secours")
+                wakeNotification()
+            }
+        }, 1500)
         // Filet de sécurité : si l'assistant n'a pas repris la main, on réécoute.
         main.postDelayed({ if (paused && !AssistantActivity.listeningNow) { paused = false; startListening() } }, 8000)
     }
 
     // ------------------------------------------------------------------ notification
+
+    private fun wakeNotification() {
+        val nm = getSystemService(NotificationManager::class.java) ?: return
+        nm.createNotificationChannel(NotificationChannel(CHANNEL_WAKE, "Jarvis réveillé", NotificationManager.IMPORTANCE_HIGH))
+        val open = PendingIntent.getActivity(this, 3,
+            Intent(this, AssistantActivity::class.java).putExtra(AssistantActivity.EXTRA_VOICE, true).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val n = Notification.Builder(this, CHANNEL_WAKE)
+            .setSmallIcon(android.R.drawable.ic_btn_speak_now)
+            .setContentTitle("Oui ?")
+            .setContentText("Touchez pour parler à Jarvis. Autorisez « Afficher par-dessus les autres applis » pour qu'il s'ouvre seul.")
+            .setContentIntent(open)
+            .setAutoCancel(true)
+            .setTimeoutAfter(15_000)
+            .build()
+        nm.notify(NOTIF_WAKE, n)
+    }
 
     private fun goForeground() {
         val nm = getSystemService(NotificationManager::class.java)
@@ -135,6 +166,8 @@ class JarvisService : Service() {
     companion object {
         private const val CHANNEL = "jarvis_ecoute"
         private const val NOTIF_ID = 77
+        private const val CHANNEL_WAKE = "jarvis_reveil"
+        private const val NOTIF_WAKE = 78
         const val ACTION_START = "orbite.jarvis.START"
         const val ACTION_STOP = "orbite.jarvis.STOP"
         const val ACTION_PAUSE = "orbite.jarvis.PAUSE"
@@ -155,6 +188,7 @@ class JarvisService : Service() {
 
         /** À appeler quand Orbite est à l'écran (Android interdit de lancer le micro depuis l'arrière-plan). */
         fun start(ctx: Context) {
+            Diag.install(ctx)
             if (!canRun(ctx)) return
             runCatching { ctx.startForegroundService(Intent(ctx, JarvisService::class.java).setAction(ACTION_START)) }
         }

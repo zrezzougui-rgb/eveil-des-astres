@@ -103,6 +103,12 @@
             android:label="Réglages Jarvis"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".jarvis.DiagActivity"
+            android:exported="false"
+            android:label="Diagnostic"
+            android:screenOrientation="portrait" />
+
         <service
             android:name=".jarvis.JarvisService"
             android:exported="false"

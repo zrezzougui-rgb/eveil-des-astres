@@ -66,26 +66,28 @@ class AssistantActivity : Activity() {
     private lateinit var sendButton: View
     private lateinit var assistant: Assistant
     private var tts: TextToSpeech? = null
-    private var ttsReady = false
+    @Volatile private var ttsReady = false
     private var muted = false
     private var recognizer: SpeechRecognizer? = null
     private var listening = false
     private var pendingQuery: String? = null
     private var pendingListen = false
+    private var useOnDevice = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         edgeToEdge()
+        com.zrezzougui.orbite.jarvis.Diag.install(this)
         assistant = Assistant(this)
         tts = Persona.newTts(this) { t, ok ->
             if (!ok) return@newTts
-            Persona.applyVoice(this, t)
+            // La liste des voix peut être longue à obtenir (certains moteurs chargent leurs modèles) : hors du fil principal.
+            Thread { runCatching { Persona.applyVoice(this, t) }; ttsReady = true }.start()
             t.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                 override fun onStart(id: String?) { runOnUiThread { reactor.state = ArcReactorView.State.SPEAKING } }
                 override fun onDone(id: String?) { runOnUiThread { afterSpeaking() } }
                 @Deprecated("API") override fun onError(id: String?) { runOnUiThread { afterSpeaking() } }
             })
-            ttsReady = true
         }
 
         val frame = android.widget.FrameLayout(this).apply { background = hudBackground(0.16f) }
@@ -318,7 +320,7 @@ class AssistantActivity : Activity() {
         tts?.stop()
         JarvisService.send(this, JarvisService.ACTION_PAUSE)
         stopListening()
-        val r = if (Build.VERSION.SDK_INT >= 31 && SpeechRecognizer.isOnDeviceRecognitionAvailable(this))
+        val r = if (useOnDevice && Build.VERSION.SDK_INT >= 31 && SpeechRecognizer.isOnDeviceRecognitionAvailable(this))
             SpeechRecognizer.createOnDeviceSpeechRecognizer(this) else SpeechRecognizer.createSpeechRecognizer(this)
         recognizer = r
         r.setRecognitionListener(object : RecognitionListener {
@@ -334,7 +336,15 @@ class AssistantActivity : Activity() {
             override fun onBufferReceived(buffer: ByteArray?) {}
             override fun onEndOfSpeech() { reactor.state = ArcReactorView.State.IDLE; setState("Traitement") }
             override fun onError(error: Int) {
+                val onDevice = useOnDevice && Build.VERSION.SDK_INT >= 31
                 endListening()
+                com.zrezzougui.orbite.jarvis.Diag.log(this@AssistantActivity, "Reconnaissance vocale : erreur $error" + if (onDevice) " (sur l'appareil)" else "")
+                // Langue française absente du moteur hors ligne : on repasse sur la reconnaissance standard.
+                if (onDevice && error in intArrayOf(5, 12, 13, 14)) {
+                    useOnDevice = false
+                    listen()
+                    return
+                }
                 setState("En veille")
                 live.text = when (error) {
                     SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "Je n'ai rien entendu. Touchez le réacteur pour réessayer."
