@@ -23,6 +23,8 @@ data class Reply(
     val actions: List<Action> = emptyList(),
     /** Permission Android à demander avant de relancer la même question. */
     val needPermission: String? = null,
+    /** Réécouter juste après avoir parlé (ex. « Oui ? » après « Jarvis » seul). */
+    val listen: Boolean = false,
 )
 
 /**
@@ -37,12 +39,14 @@ class Assistant(private val ctx: Context) {
     private val apps = AppSkill(ctx)
 
     fun answer(raw: String): Reply {
-        val q = raw.trim().trimEnd('?', '!', '.', ' ')
+        val q = stripWake(raw).trimEnd('?', '!', '.', ' ')
         val n = normalize(q)
+        // « Jarvis » seul (ou « Hey Jarvis ») : il attend la suite.
+        if (n.isEmpty() && raw.isNotBlank()) return Reply("Oui${com.zrezzougui.orbite.jarvis.Persona.suffix(ctx)} ?", listen = true)
         if (n.isEmpty() || n.matches(Regex("(aide|help|que sais[- ]tu faire|que peux[- ]tu faire)( .*)?"))) {
             return help(false)
         }
-        if (n.matches(Regex("(bonjour|bonsoir|salut|coucou|hello|hey)( jarvis)?|jarvis|briefing|(fais|donne)[- ]moi (le|un) (point|briefing|resume)|point du jour|resume (de )?(ma|la) journee|quoi de neuf|mon briefing|programme du jour"))) {
+        if (n.matches(Regex("(bonjour|bonsoir|salut|coucou|hello|hey)|briefing|(fais|donne)[- ]moi (le|un) (point|briefing|resume)|point du jour|resume (de )?(ma|la) journee|quoi de neuf|mon briefing|programme du jour"))) {
             return briefing()
         }
         return try {
@@ -101,6 +105,19 @@ class Assistant(private val ctx: Context) {
         val pct = bm?.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: -1
         if (pct in 0..100) parts += "Batterie à $pct %." + if (pct < 20) " Je vous conseille de la recharger." else ""
         return Reply(parts.joinToString("\n"))
+    }
+
+    /**
+     * Retire le mot d'appel en tête de phrase : la reconnaissance vocale entend souvent « Hey Jarvis » comme
+     * « et Jarvis », « é Jarvis », « hé Jarvis »… (journal : « et Jarvis ouvre message »). Retire aussi les politesses.
+     */
+    private fun stripWake(raw: String): String {
+        var t = raw.trim()
+        val wake = Regex("^(?:(?:hey|hé|he|eh|et|é|ey|ok|okay|dis|salut|allez|bon|alors|oui)[\\s,]+)?(?:jarvis|jervis|travis|jar vis|j\\.a\\.r\\.v\\.i\\.s)[\\s,.!?:]*", RegexOption.IGNORE_CASE)
+        repeat(2) { t = t.replace(wake, "").trim() }
+        t = t.replace(Regex("[\\s,]*(?:s'il te pla[iî]t|s'il vous pla[iî]t|stp|svp|merci)[\\s.!?]*$", RegexOption.IGNORE_CASE), "").trim()
+        t = t.replace(Regex("^(?:est-ce que tu peux|tu peux|peux-tu|pourrais-tu|tu pourrais|je veux que tu|j'aimerais que tu)\\s+", RegexOption.IGNORE_CASE), "").trim()
+        return t
     }
 
     private fun has(n: String, vararg words: String) = words.any { n.contains(it) }
@@ -482,8 +499,15 @@ class Assistant(private val ctx: Context) {
 
     // ---------------------------------------------------------------- recherche web
 
+    private val questionStart = Regex("^(?:qui|que|quoi|quel|quelle|quels|quelles|qu'est|qu est|c'est quoi|c est quoi|comment|pourquoi|combien|ou |quand|est-ce|definition|definis|explique|parle-moi|parle moi|dis-moi|dis moi|cherche|recherche|sais-tu|sais tu|peux-tu me dire)")
+
     private fun search(q: String): Reply {
         val n = normalize(q)
+        val webAction0 = Action("Rechercher sur le web", web("https://duckduckgo.com/?q=" + Http.enc(q)))
+        // Une commande non reconnue n'est pas une question : on ne va pas chercher n'importe quoi sur Wikipédia.
+        if (!questionStart.containsMatchIn(n) && !n.endsWith("?") && n.split(" ").size > 2) {
+            return Reply("Je n'ai pas compris « $q ». Dites « aide » pour voir ce que je sais faire.", listOf(webAction0))
+        }
         val prefix = Regex(
             "^(?:(?:dis[- ]moi|peux[- ]tu me dire|sais[- ]tu|explique[- ]moi|parle[- ]moi de|cherche|recherche|definition de|definis|c'est quoi|c est quoi|qu'est[- ]ce que|qu'est[- ]ce qu'|qu est ce que|qui est|qui etait|qui sont|qu'est-ce qu'un|quelle est|quel est|ou se trouve|ou est)\\s*)+" +
                 "(?:(?:c'est|c est|un|une|le|la|les|l'|des|du|de|d')\\s*)*"
@@ -506,6 +530,10 @@ class Assistant(private val ctx: Context) {
             val hits = s.getJSONObject("query").getJSONArray("search")
             if (hits.length() > 0) {
                 val title = hits.getJSONObject(0).getString("title")
+                val words = normalize(subject).split(Regex("[^a-z0-9]+")).filter { it.length >= 4 }
+                if (words.isNotEmpty() && words.none { normalize(title).contains(it) || normalize(hits.getJSONObject(0).optString("snippet")).contains(it) }) {
+                    return Reply("Je n'ai pas trouvé de réponse fiable pour « $subject ».", listOf(webAction0))
+                }
                 val sum = JSONObject(Http.get("https://fr.wikipedia.org/api/rest_v1/page/summary/" + Http.enc(title.replace(' ', '_')).replace("+", "%20")))
                 val extract = sum.optString("extract")
                 if (extract.isNotEmpty()) {

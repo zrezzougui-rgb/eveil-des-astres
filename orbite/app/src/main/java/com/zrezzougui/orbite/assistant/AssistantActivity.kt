@@ -245,6 +245,7 @@ class AssistantActivity : Activity() {
         val autoStart = reply.actions.firstOrNull()?.intent?.getBooleanExtra(Assistant.AUTO_START, false) == true
         val spoken = (if (autoStart) Persona.ack(this) + " " else "") + reply.text
         bubble(spoken, mine = false)
+        listenAfterSpeech = reply.listen
         speak(spoken)
         if (reply.actions.isNotEmpty()) {
             val row = horizontal()
@@ -272,8 +273,11 @@ class AssistantActivity : Activity() {
     }
 
     private fun afterSpeaking() {
+        if (listenAfterSpeech) { listenAfterSpeech = false; listen(); return }
         if (!listening) { reactor.state = ArcReactorView.State.IDLE; setState("En veille") }
     }
+
+    private var listenAfterSpeech = false
 
     private fun setState(s: String) {
         if (!::stateLabel.isInitialized) return

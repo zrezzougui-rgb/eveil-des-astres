@@ -25,7 +25,8 @@ object Persona {
     fun sensitivity(ctx: Context): Int = prefs(ctx).getInt("sensibilite", 1) // 0 faible, 1 normale, 2 forte
     fun setSensitivity(ctx: Context, v: Int) = prefs(ctx).edit().putInt("sensibilite", v).apply()
     // Seuils ajustés après mesure sur téléphone : « Hey Jarvis » prononcé à la française plafonnait vers 0,48.
-    fun threshold(ctx: Context): Float = when (sensitivity(ctx)) { 0 -> 0.5f; 2 -> 0.2f; else -> 0.35f }
+    // Bruit de fond mesuré sur 10 min : score max 0,10 ; « Hey Jarvis » réel : 0,24 à 0,71.
+    fun threshold(ctx: Context): Float = when (sensitivity(ctx)) { 0 -> 0.45f; 2 -> 0.18f; else -> 0.28f }
 
     fun voiceName(ctx: Context): String? = prefs(ctx).getString("voix", null)
     fun setVoiceName(ctx: Context, v: String?) = prefs(ctx).edit().putString("voix", v).apply()
