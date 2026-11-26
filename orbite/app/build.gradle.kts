@@ -11,9 +11,9 @@ android {
         applicationId = "com.zrezzougui.orbite"
         minSdk = 29
         targetSdk = 35
-        versionCode = 2
-        versionName = "0.2.0"
-        // Téléphones actuels uniquement : garde l'APK léger (la reconnaissance vocale embarque du code natif).
+        versionCode = 3
+        versionName = "0.3.0"
+        // Téléphones actuels uniquement : garde l'APK léger (la détection de « Hey Jarvis » embarque du code natif).
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
     }
 
@@ -43,7 +43,6 @@ android {
 }
 
 dependencies {
-    // Vosk (Apache 2.0) : reconnaissance vocale hors ligne pour le mot « Jarvis ».
-    implementation("net.java.dev.jna:jna:5.13.0@aar")
-    implementation("com.alphacephei:vosk-android:0.3.47@aar")
+    // TensorFlow Lite (Apache 2.0) : exécute les modèles openWakeWord pour entendre « Hey Jarvis ».
+    implementation("org.tensorflow:tensorflow-lite:2.16.1")
 }

@@ -62,7 +62,7 @@ class AppsActivity : Activity() {
         intent.getStringExtra(EXTRA_SORT)?.let { s -> Sort.entries.firstOrNull { it.name == s }?.let { sort = it } }
         folder = intent.getStringExtra(EXTRA_FOLDER)
 
-        val root = vertical().apply { setBackgroundColor(Palette.BG) }
+        val root = vertical().apply { background = com.zrezzougui.orbite.hud.HudBackgroundDrawable(resources.displayMetrics.density, 0.05f) }
         root.padForSystemBars()
 
         val header = horizontal().apply { setPadding(dp(16), dp(12), dp(16), dp(4)) }
@@ -77,7 +77,7 @@ class AppsActivity : Activity() {
         val searchBox = EditText(this).apply {
             hint = "Filtrer par nom…"
             setHintTextColor(Palette.MUTED); setTextColor(Palette.TEXT); textSize = 16f
-            background = rounded(Palette.SURFACE, dpf(Radius.PILL), dp(1), Palette.LINE_STRONG)
+            background = com.zrezzougui.orbite.hud.HudPanelDrawable(resources.displayMetrics.density)
             setPadding(dp(18), dp(10), dp(18), dp(10)); isSingleLine = true
             addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
@@ -118,7 +118,7 @@ class AppsActivity : Activity() {
         banner.removeAllViews()
         if (!usageOk) {
             val b = vertical().apply {
-                background = rounded(Palette.SURFACE, dpf(Radius.LG))
+                background = com.zrezzougui.orbite.hud.HudPanelDrawable(resources.displayMetrics.density)
                 setPadding(dp(16), dp(12), dp(16), dp(12))
                 addView(label("Pour voir quelles applis vous utilisez, autorisez Orbite dans « Accès aux données d'utilisation ». Rien ne quitte le téléphone.", 14f, Palette.TEXT))
                 addView(pill("Autoriser") { actions.safeStart(AppStats.usageAccessIntent()) }, wrapWrap().margins(t = dp(8)))
@@ -165,7 +165,7 @@ class AppsActivity : Activity() {
             }
         }.joinToString(" · ")
         return horizontal().apply {
-            background = rounded(Palette.SURFACE, dpf(Radius.LG))
+            background = com.zrezzougui.orbite.hud.HudPanelDrawable(resources.displayMetrics.density)
             setPadding(dp(12), dp(10), dp(8), dp(10))
             addView(ImageView(context).apply { setImageDrawable(e.iconCopy()) }, LinearLayout.LayoutParams(dp(44), dp(44)))
             addView(vertical().apply {

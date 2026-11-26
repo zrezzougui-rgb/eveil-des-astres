@@ -63,65 +63,77 @@ class ArcReactorView(ctx: Context) : View(ctx) {
         if (isVisible) { if (!anim.isStarted) anim.start() } else anim.cancel()
     }
 
+    private val tickMajor = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; color = Palette.PRIMARY; alpha = 200 }
+    private val halo = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; color = Palette.PRIMARY; strokeCap = Paint.Cap.BUTT }
+
     override fun onDraw(c: Canvas) {
         super.onDraw(c)
         val cx = width / 2f; val cy = height / 2f
         val r = min(width, height) / 2f - 4 * d
         val speed = when (state) { State.IDLE -> 1f; State.LISTENING -> 3f; State.SPEAKING -> 2f }
         val pulse = when (state) {
-            State.IDLE -> 0.5f + 0.5f * sin(t * 1.5f)
-            State.LISTENING -> 0.4f + 0.6f * level
+            State.IDLE -> 0.5f + 0.5f * sin(t * 1.2f)
+            State.LISTENING -> 0.35f + 0.65f * level
             State.SPEAKING -> 0.5f + 0.5f * sin(t * 9f)
         }
 
-        // Halo
-        glow.shader = RadialGradient(cx, cy, r, intArrayOf(Palette.GLOW, 0x00000000), floatArrayOf(0.35f + 0.1f * pulse, 1f), Shader.TileMode.CLAMP)
+        // Halo général
+        glow.shader = RadialGradient(cx, cy, r, intArrayOf(0x594FD8FF, 0x144FD8FF, 0x00000000),
+            floatArrayOf(0f, 0.5f + 0.08f * pulse, 1f), Shader.TileMode.CLAMP)
         c.drawCircle(cx, cy, r, glow)
 
-        // Anneau extérieur : fin + graduations
-        ring.strokeWidth = 1.2f * d; ring.alpha = 160
+        // Cercle extérieur + 72 graduations (une majeure sur six)
+        ring.strokeWidth = d; ring.alpha = 130
         c.drawCircle(cx, cy, r * 0.98f, ring)
-        dim.strokeWidth = 2f * d
-        for (i in 0 until 60) {
-            val a = Math.toRadians(i * 6.0 + t * 4 * speed)
-            val inner = if (i % 5 == 0) 0.90f else 0.93f
-            c.drawLine(
-                cx + (r * inner * Math.cos(a)).toFloat(), cy + (r * inner * Math.sin(a)).toFloat(),
-                cx + (r * 0.96f * Math.cos(a)).toFloat(), cy + (r * 0.96f * Math.sin(a)).toFloat(), dim,
-            )
+        dim.strokeWidth = 1.2f * d
+        tickMajor.strokeWidth = 1.8f * d
+        val rot = t * 3 * speed
+        for (i in 0 until 72) {
+            val a = Math.toRadians(i * 5.0 + rot)
+            val major = i % 6 == 0
+            val inner = if (major) 0.87f else 0.91f
+            val cos = Math.cos(a).toFloat(); val sin = Math.sin(a).toFloat()
+            c.drawLine(cx + r * inner * cos, cy + r * inner * sin, cx + r * 0.95f * cos, cy + r * 0.95f * sin, if (major) tickMajor else dim)
         }
 
-        // Anneau segmenté (sens horaire)
-        ring.strokeWidth = 6f * d; ring.alpha = 230
-        val r2 = r * 0.80f
+        // Six segments cyan lumineux (sens horaire) : halo large puis trait net
+        val r2 = r * 0.78f
         oval.set(cx - r2, cy - r2, cx + r2, cy + r2)
-        for (i in 0 until 8) c.drawArc(oval, i * 45f + t * 30 * speed, 30f, false, ring)
+        halo.strokeWidth = r * 0.11f; halo.alpha = (40 + 50 * pulse).toInt()
+        ring.strokeWidth = r * 0.055f; ring.alpha = 255
+        val segRot = t * 25 * speed
+        for (i in 0 until 6) {
+            c.drawArc(oval, i * 60f + 10f + segRot, 38f, false, halo)
+            c.drawArc(oval, i * 60f + 10f + segRot, 38f, false, ring)
+        }
 
-        // Arcs dorés (sens inverse)
-        gold.strokeWidth = 3f * d
-        val r3 = r * 0.68f
+        // Trois arcs dorés (sens inverse)
+        gold.strokeWidth = r * 0.025f
+        val r3 = r * 0.66f
         oval.set(cx - r3, cy - r3, cx + r3, cy + r3)
-        for (i in 0 until 3) c.drawArc(oval, i * 120f - t * 45 * speed, 70f, false, gold)
+        for (i in 0 until 3) c.drawArc(oval, i * 120f + 200f - t * 40 * speed, 70f, false, gold)
 
-        // Anneau intérieur fin
-        ring.strokeWidth = 1.5f * d; ring.alpha = 200
-        c.drawCircle(cx, cy, r * 0.58f, ring)
+        // Anneau intérieur
+        ring.strokeWidth = 1.2f * d; ring.alpha = 160
+        c.drawCircle(cx, cy, r * 0.57f, ring)
 
         // Cœur
-        val rc = r * (0.50f + 0.04f * pulse)
-        core.shader = RadialGradient(cx, cy, rc, intArrayOf(0xCC0E3550.toInt(), 0xEE050B14.toInt()), null, Shader.TileMode.CLAMP)
+        val rc = r * (0.49f + 0.02f * pulse)
+        core.shader = RadialGradient(cx, cy, rc, intArrayOf(0xE60E3550.toInt(), 0xF203070D.toInt()), null, Shader.TileMode.CLAMP)
         c.drawCircle(cx, cy, rc, core)
-        ring.strokeWidth = 2f * d; ring.alpha = (140 + 115 * pulse).toInt()
+        halo.strokeWidth = r * 0.06f; halo.alpha = (60 + 80 * pulse).toInt()
+        c.drawCircle(cx, cy, rc, halo)
+        ring.strokeWidth = 2f * d; ring.alpha = 255
         c.drawCircle(cx, cy, rc, ring)
 
         // Textes
         if (centerText.isNotEmpty()) {
-            text.textSize = r * (if (centerText.length > 5) 0.20f else 0.30f)
-            c.drawText(centerText, cx, cy + text.textSize * 0.35f, text)
+            text.textSize = r * (if (centerText.length > 5) 0.2f else 0.29f)
+            c.drawText(centerText, cx, cy + text.textSize * 0.36f, text)
         }
         if (subText.isNotEmpty()) {
-            sub.textSize = r * 0.085f
-            c.drawText(subText.uppercase(), cx, cy + r * 0.30f, sub)
+            sub.textSize = r * 0.075f
+            c.drawText(subText.uppercase(), cx, cy + r * 0.29f, sub)
         }
     }
 }

@@ -21,6 +21,11 @@ object Persona {
     fun onlyCharging(ctx: Context) = prefs(ctx).getBoolean("en_charge", false)
     fun setOnlyCharging(ctx: Context, on: Boolean) = prefs(ctx).edit().putBoolean("en_charge", on).apply()
 
+    /** Sensibilité du mot d'éveil : plus le seuil est bas, plus Jarvis réagit (et se trompe parfois). */
+    fun sensitivity(ctx: Context): Int = prefs(ctx).getInt("sensibilite", 1) // 0 faible, 1 normale, 2 forte
+    fun setSensitivity(ctx: Context, v: Int) = prefs(ctx).edit().putInt("sensibilite", v).apply()
+    fun threshold(ctx: Context): Float = when (sensitivity(ctx)) { 0 -> 0.7f; 2 -> 0.3f; else -> 0.5f }
+
     fun voiceName(ctx: Context): String? = prefs(ctx).getString("voix", null)
     fun setVoiceName(ctx: Context, v: String?) = prefs(ctx).edit().putString("voix", v).apply()
 

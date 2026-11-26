@@ -31,6 +31,13 @@ import com.zrezzougui.orbite.dpf
 import com.zrezzougui.orbite.edgeToEdge
 import com.zrezzougui.orbite.horizontal
 import com.zrezzougui.orbite.hud.ArcReactorView
+import com.zrezzougui.orbite.hud.HudIcon
+import com.zrezzougui.orbite.hud.hudBackground
+import com.zrezzougui.orbite.hud.hudLabel
+import com.zrezzougui.orbite.hud.hudPanel
+import com.zrezzougui.orbite.hud.icon
+import com.zrezzougui.orbite.hud.iconButton
+import com.zrezzougui.orbite.hud.micButton
 import com.zrezzougui.orbite.jarvis.JarvisService
 import com.zrezzougui.orbite.jarvis.Persona
 import com.zrezzougui.orbite.label
@@ -55,6 +62,8 @@ class AssistantActivity : Activity() {
     private lateinit var input: EditText
     private lateinit var reactor: ArcReactorView
     private lateinit var live: TextView
+    private lateinit var stateLabel: TextView
+    private lateinit var sendButton: View
     private lateinit var assistant: Assistant
     private var tts: TextToSpeech? = null
     private var ttsReady = false
@@ -80,40 +89,44 @@ class AssistantActivity : Activity() {
             }
         }
 
-        val root = vertical().apply { setBackgroundColor(Palette.BG) }
+        val frame = android.widget.FrameLayout(this).apply { background = hudBackground(0.16f) }
+        val root = vertical()
         root.padForSystemBars()
+        frame.addView(root)
 
-        // En-tête HUD
-        val header = horizontal().apply { setPadding(dp(16), dp(8), dp(16), dp(0)) }
-        header.addView(label("‹", 28f, Palette.MUTED).apply { setPadding(0, 0, dp(12), 0); setOnClickListener { finish() } })
-        header.addView(label("J.A.R.V.I.S", 18f, Palette.PRIMARY).apply {
-            typeface = Fonts.hudBold(context); letterSpacing = 0.2f
+        // Barre du haut
+        val header = horizontal().apply { setPadding(dp(6), dp(4), dp(6), 0) }
+        header.addView(iconButton(HudIcon.Kind.BACK, "Retour") { finish() })
+        header.addView(hudLabel("J.A.R.V.I.S", Palette.PRIMARY, 12f).apply {
+            typeface = Fonts.hudBold(context); letterSpacing = 0.3f; gravity = Gravity.CENTER
         }, weighted())
-        header.addView(label("🔊", 20f).apply {
-            setPadding(dp(12), dp(4), 0, dp(4))
-            setOnClickListener {
-                muted = !muted; text = if (muted) "🔇" else "🔊"
-                if (muted) tts?.stop()
-            }
-        })
+        val speaker = iconButton(HudIcon.Kind.SPEAKER, "Couper la voix") {}
+        speaker.setOnClickListener {
+            muted = !muted
+            speaker.setImageDrawable(icon(if (muted) HudIcon.Kind.MUTE else HudIcon.Kind.SPEAKER, Palette.MUTED))
+            speaker.contentDescription = if (muted) "Réactiver la voix" else "Couper la voix"
+            if (muted) tts?.stop()
+        }
+        header.addView(speaker)
         root.addView(header, matchWrap())
 
         reactor = ArcReactorView(this).apply {
-            subText = "Touchez pour parler"
             setOnClickListener { if (listening) stopListening() else listen() }
             contentDescription = "Parler à Jarvis"
         }
         root.addView(reactor, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(190)))
-        live = label("", 15f, Palette.MUTED).apply { gravity = Gravity.CENTER; setPadding(dp(24), 0, dp(24), dp(4)) }
+        stateLabel = hudLabel("En veille", Palette.PRIMARY, 10f).apply { gravity = Gravity.CENTER; letterSpacing = 0.3f }
+        root.addView(stateLabel, matchWrap())
+        live = label("", 16f, Palette.TEXT).apply { gravity = Gravity.CENTER; setPadding(dp(24), dp(6), dp(24), dp(4)) }
         root.addView(live, matchWrap())
 
-        scroll = ScrollView(this).apply { isFillViewport = true }
-        chat = vertical().apply { setPadding(dp(12), dp(4), dp(12), dp(8)) }
+        scroll = ScrollView(this).apply { isFillViewport = true; isVerticalScrollBarEnabled = false }
+        chat = vertical().apply { setPadding(dp(16), dp(8), dp(16), dp(8)) }
         scroll.addView(chat)
         root.addView(scroll, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
 
         // Suggestions rapides
-        val chips = horizontal().apply { setPadding(dp(12), dp(4), dp(12), dp(4)) }
+        val chips = horizontal().apply { setPadding(dp(16), dp(4), dp(16), dp(4)) }
         listOf("Briefing", "Météo demain", "Mes rendez-vous", "Prendre un RDV", "Mes applis", "Aide").forEach { s ->
             chips.addView(pill(s) {
                 when (s) {
@@ -124,24 +137,34 @@ class AssistantActivity : Activity() {
         }
         root.addView(HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false; addView(chips) }, matchWrap())
 
-        val bar = horizontal().apply { setPadding(dp(12), dp(8), dp(12), dp(12)) }
+        val bar = horizontal().apply { setPadding(dp(16), dp(8), dp(16), dp(12)) }
         input = EditText(this).apply {
-            hint = "Écrivez, ou dites « Jarvis »…"
-            setHintTextColor(Palette.MUTED); setTextColor(Palette.TEXT); textSize = 16f
-            background = rounded(Palette.SURFACE, dpf(Radius.PILL), dp(1), Palette.LINE_STRONG)
-            setPadding(dp(18), dp(12), dp(18), dp(12))
+            hint = "Écrivez une commande…"
+            setHintTextColor(Palette.MUTED); setTextColor(Palette.TEXT); textSize = 15f
+            typeface = Fonts.body(context)
+            background = hudPanel()
+            setPadding(dp(16), dp(12), dp(16), dp(12))
             imeOptions = EditorInfo.IME_ACTION_SEND
             isSingleLine = true
             setOnEditorActionListener { _, id, ev ->
                 if (id == EditorInfo.IME_ACTION_SEND || ev?.keyCode == KeyEvent.KEYCODE_ENTER) { send(text.toString()); true } else false
             }
+            addTextChangedListener(object : android.text.TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+                override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+                override fun afterTextChanged(s: android.text.Editable?) {
+                    val typing = !s.isNullOrBlank()
+                    sendButton.visibility = if (typing) View.VISIBLE else View.GONE
+                }
+            })
         }
         bar.addView(input, weighted())
-        bar.addView(roundButton("➤") { send(input.text.toString()) }, wrapWrap().margins(l = dp(8)))
-        bar.addView(roundButton("🎤") { listen() }, wrapWrap().margins(l = dp(8)))
+        sendButton = iconButton(HudIcon.Kind.SEND, "Envoyer", Palette.PRIMARY) { send(input.text.toString()) }.apply { visibility = View.GONE }
+        bar.addView(sendButton)
+        bar.addView(micButton { if (listening) stopListening() else listen() }, LinearLayout.LayoutParams(dp(48), dp(48)).margins(l = dp(8)))
         root.addView(bar, matchWrap())
 
-        setContentView(root)
+        setContentView(frame)
         handleIntent(intent)
     }
 
@@ -172,7 +195,7 @@ class AssistantActivity : Activity() {
                 listen()
             }
             chat.childCount == 0 -> bubble("${Persona.greeting(this)}. Que puis-je faire pour vous ? " +
-                "Touchez le réacteur ou dites « Jarvis ». Je fonctionne sans IA : rien n'est envoyé à un modèle de langage.", mine = false)
+                "Touchez le réacteur ou dites « Hey Jarvis ». Je fonctionne sans IA : rien n'est envoyé à un modèle de langage.", mine = false)
         }
     }
 
@@ -193,7 +216,8 @@ class AssistantActivity : Activity() {
         input.setText("")
         live.text = ""
         bubble(q, mine = true)
-        val typing = bubble("…", mine = false)
+        val typing = bubble("Analyse…", mine = false)
+        setState("Traitement")
         Thread {
             val reply = assistant.answer(q)
             runOnUiThread {
@@ -211,7 +235,8 @@ class AssistantActivity : Activity() {
         if (reply.actions.isNotEmpty()) {
             val row = horizontal()
             reply.actions.forEachIndexed { i, a ->
-                row.addView(pill(a.label, filled = i == 0) { launch(a.intent) }, wrapWrap().margins(r = dp(8)))
+                val clean = a.label.replace(Regex("^[\\p{So}\\p{Cs}\\uFE0F]+\\s*"), "")
+                row.addView(pill(clean, filled = i == 0) { launch(a.intent) }, wrapWrap().margins(r = dp(8)))
             }
             chat.addView(HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false; addView(row) },
                 matchWrap().margins(t = dp(2), b = dp(10)))
@@ -228,12 +253,23 @@ class AssistantActivity : Activity() {
     private fun speak(text: String) {
         if (muted || !ttsReady) { afterSpeaking(); return }
         val clean = text.replace(Regex("[\\p{So}\\p{Cs}\\uFE0F•]"), "").replace("°", " degrés").replace(" — ", ", ")
-        JarvisService.send(this, JarvisService.ACTION_PAUSE)
+        setState("Réponse")
         tts?.speak(clean, TextToSpeech.QUEUE_FLUSH, null, "jarvis")
     }
 
     private fun afterSpeaking() {
-        if (!listening) reactor.state = ArcReactorView.State.IDLE
+        if (!listening) { reactor.state = ArcReactorView.State.IDLE; setState("En veille") }
+    }
+
+    private fun setState(s: String) { if (::stateLabel.isInitialized) stateLabel.text = s.uppercase() }
+
+    /** Fin d'une écoute (résultat, silence ou erreur) : « Hey Jarvis » redevient disponible tout de suite. */
+    private fun endListening() {
+        listening = false
+        listeningNow = false
+        reactor.state = ArcReactorView.State.IDLE
+        destroyRecognizer()
+        JarvisService.send(this, JarvisService.ACTION_RESUME)
     }
 
     private fun launch(i: Intent) {
@@ -246,22 +282,29 @@ class AssistantActivity : Activity() {
         }
     }
 
+    /** Entrée du journal : « VOUS · 18:41 » à droite en gris, « JARVIS · 18:41 » à gauche avec un filet cyan. */
     private fun bubble(text: String, mine: Boolean): View {
-        val t = label(text, 16f, if (mine) Palette.ON_PRIMARY else Palette.TEXT).apply {
+        val time = java.text.SimpleDateFormat("HH:mm", java.util.Locale.FRENCH).format(java.util.Date())
+        val entry = vertical().apply { gravity = if (mine) Gravity.END else Gravity.START }
+        entry.addView(hudLabel((if (mine) "Vous" else "Jarvis") + " · " + time, if (mine) Palette.MUTED else Palette.PRIMARY, 9f).apply {
+            setPadding(0, 0, 0, dp(4))
+        })
+        val t = label(text, 15f, if (mine) Palette.MUTED else Palette.TEXT).apply {
             setTextIsSelectable(!mine)
-            setPadding(dp(14), dp(10), dp(14), dp(10))
-            background = if (mine) rounded(Palette.PRIMARY, dpf(Radius.LG))
-            else rounded(Palette.SURFACE, dpf(Radius.LG), dp(1), Palette.LINE_STRONG)
-            setLineSpacing(0f, 1.15f)
-        }
-        val wrap = LinearLayout(this).apply {
+            setLineSpacing(0f, 1.2f)
             gravity = if (mine) Gravity.END else Gravity.START
-            setPadding(if (mine) dp(48) else 0, dp(4), if (mine) 0 else dp(48), dp(4))
-            addView(t, wrapWrap())
         }
-        chat.addView(wrap, matchWrap())
+        if (mine) {
+            entry.addView(t, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).margins(l = dp(48)))
+        } else {
+            val row = horizontal().apply { gravity = Gravity.TOP }
+            row.addView(View(this).apply { setBackgroundColor(Palette.PRIMARY) }, LinearLayout.LayoutParams(dp(2), LinearLayout.LayoutParams.MATCH_PARENT))
+            row.addView(t, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).margins(l = dp(10)))
+            entry.addView(row, matchWrap())
+        }
+        chat.addView(entry, matchWrap().margins(t = dp(8), b = dp(8)))
         scroll.post { scroll.fullScroll(View.FOCUS_DOWN) }
-        return wrap
+        return entry
     }
 
     // ------------------------------------------------------------------ écoute de la demande
@@ -282,28 +325,27 @@ class AssistantActivity : Activity() {
         r.setRecognitionListener(object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
                 listening = true
+                listeningNow = true
+                setState("En écoute")
                 reactor.state = ArcReactorView.State.LISTENING
                 if (live.text.isNullOrEmpty()) live.text = "Je vous écoute…"
             }
             override fun onBeginningOfSpeech() {}
             override fun onRmsChanged(rmsdB: Float) { reactor.level = (rmsdB + 2f) / 12f }
             override fun onBufferReceived(buffer: ByteArray?) {}
-            override fun onEndOfSpeech() { reactor.state = ArcReactorView.State.IDLE }
+            override fun onEndOfSpeech() { reactor.state = ArcReactorView.State.IDLE; setState("Traitement") }
             override fun onError(error: Int) {
-                listening = false
-                reactor.state = ArcReactorView.State.IDLE
+                endListening()
+                setState("En veille")
                 live.text = when (error) {
                     SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "Je n'ai rien entendu. Touchez le réacteur pour réessayer."
                     SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Autorisez le micro pour parler à Jarvis."
                     else -> "Écoute interrompue. Touchez le réacteur pour réessayer."
                 }
-                destroyRecognizer()
             }
             override fun onResults(results: Bundle?) {
-                listening = false
-                reactor.state = ArcReactorView.State.IDLE
                 val text = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()
-                destroyRecognizer()
+                endListening()
                 if (!text.isNullOrBlank()) send(text) else live.text = "Je n'ai rien entendu."
             }
             override fun onPartialResults(partial: Bundle?) {
@@ -319,10 +361,13 @@ class AssistantActivity : Activity() {
     }
 
     private fun stopListening() {
+        val was = listening
         if (listening) runCatching { recognizer?.stopListening() }
         listening = false
+        listeningNow = false
         destroyRecognizer()
-        if (::reactor.isInitialized) reactor.state = ArcReactorView.State.IDLE
+        if (::reactor.isInitialized) { reactor.state = ArcReactorView.State.IDLE; setState("En veille") }
+        if (was) JarvisService.send(this, JarvisService.ACTION_RESUME)
     }
 
     private fun destroyRecognizer() {
@@ -388,6 +433,10 @@ class AssistantActivity : Activity() {
 
         /** Vrai quand l'écran de Jarvis est affiché (le service d'écoute s'en sert). */
         @Volatile var visible = false
+            private set
+
+        /** Vrai pendant que l'assistant écoute la demande (le micro lui est réservé). */
+        @Volatile var listeningNow = false
             private set
 
         fun open(ctx: Context, query: String? = null, voice: Boolean = false) {

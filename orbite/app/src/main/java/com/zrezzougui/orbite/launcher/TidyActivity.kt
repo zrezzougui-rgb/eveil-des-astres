@@ -21,6 +21,7 @@ import com.zrezzougui.orbite.dp
 import com.zrezzougui.orbite.dpf
 import com.zrezzougui.orbite.edgeToEdge
 import com.zrezzougui.orbite.heading
+import com.zrezzougui.orbite.hud.hudLabel
 import com.zrezzougui.orbite.horizontal
 import com.zrezzougui.orbite.label
 import com.zrezzougui.orbite.margins
@@ -53,7 +54,7 @@ class TidyActivity : Activity() {
         repo = AppRepository(this)
         NewAppsJob.schedule(this)
 
-        val root = vertical().apply { setBackgroundColor(Palette.BG) }
+        val root = vertical().apply { background = com.zrezzougui.orbite.hud.HudBackgroundDrawable(resources.displayMetrics.density, 0.05f) }
         root.padForSystemBars()
         val header = horizontal().apply { setPadding(dp(16), dp(12), dp(16), dp(4)) }
         header.addView(label("‹", 28f, Palette.MUTED).apply { setPadding(0, 0, dp(16), 0); setOnClickListener { finish() } })
@@ -94,10 +95,10 @@ class TidyActivity : Activity() {
 
     private fun card(step: String, title: String, text: String): LinearLayout {
         val c = vertical().apply {
-            background = rounded(Palette.SURFACE, dpf(Radius.LG))
+            background = com.zrezzougui.orbite.hud.HudPanelDrawable(resources.displayMetrics.density)
             setPadding(dp(16), dp(14), dp(16), dp(16))
         }
-        c.addView(label(step, 12f, Palette.PRIMARY, bold = true).apply { letterSpacing = 0.06f })
+        c.addView(hudLabel(step))
         c.addView(heading(title, 18f), matchWrap().margins(t = dp(2)))
         c.addView(label(text, 14f, Palette.MUTED), matchWrap().margins(t = dp(4), b = dp(10)))
         body.addView(c, matchWrap().margins(b = dp(12)))
@@ -172,7 +173,7 @@ class TidyActivity : Activity() {
                 "Paramètres de l'écran d'accueil → désactivez « Ajouter les nouvelles applis à l'écran d'accueil ».",
         )
         val on = NewAppsJob.notifyEnabled(this)
-        c.addView(chip(if (on) "🔔 Me prévenir quand une appli est rangée ✔" else "🔕 Me prévenir quand une appli est rangée", on) {
+        c.addView(chip(if (on) "Me prévenir quand une appli est rangée ✔" else "Me prévenir quand une appli est rangée", on) {
             val next = !NewAppsJob.notifyEnabled(this)
             NewAppsJob.setNotifyEnabled(this, next)
             if (next && Build.VERSION.SDK_INT >= 33 &&

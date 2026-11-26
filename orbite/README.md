@@ -40,13 +40,16 @@ l'ancienne sans perdre vos dossiers. Pour une publication sur le Play Store, il 
   Une appli ne peut pas déplacer elle-même les icônes ou dossiers de l'écran du fabricant : c'est une limite d'Android.
 
 ### Jarvis
-- **Look HUD** : réacteur animé au centre de l'accueil (heure, date), capteurs météo / énergie / agenda, tons cyan et or.
-  Touchez le réacteur pour parler, appui long pour les réglages.
-- **« Jarvis » mains libres** (facultatif, menu ⋮ → Réglages Jarvis) : le mot est reconnu sur le téléphone par
-  [Vosk](https://alphacephei.com/vosk/) (libre, Apache 2.0, modèle de 40 Mo téléchargé une fois), aucun son n'est envoyé.
-  Demande l'autorisation du micro et « Afficher par-dessus les autres applis » ; option « seulement en charge ».
-- **Réponses parlées** : toujours lues à voix haute, avec une formule (« Tout de suite, monsieur. »), forme d'adresse
-  au choix (rien, monsieur, madame, prénom) et choix de la voix. « Bonjour Jarvis » ou « briefing » : heure, météo, agenda, batterie.
+- **Interface HUD** : réacteur animé (heure, date), capteurs météo / énergie / agenda, actions rapides, modules (dossiers)
+  en panneaux à coins coupés, icônes au trait, journal de conversation. Tout est dessiné dans l'appli (aucune image).
+- **« Hey Jarvis » mains libres** (Réglages Jarvis) : détection sur le téléphone avec
+  [openWakeWord](https://github.com/dscripka/openWakeWord) (le moteur libre utilisé par Home Assistant) et TensorFlow Lite.
+  Pipeline vérifié contre l'implémentation de référence (scores identiques). Sensibilité réglable, option « seulement en charge ».
+  Rien n'est enregistré ni envoyé.
+- **Réponses parlées** : toujours lues à voix haute, formule d'accueil, forme d'adresse (rien, monsieur, madame, prénom),
+  choix de la voix. « Bonjour Jarvis » ou « briefing » : heure, météo, agenda, batterie.
+- Licences : code openWakeWord Apache 2.0 ; **modèles pré-entraînés CC BY-NC-SA 4.0 (usage non commercial)**,
+  voir `app/src/main/assets/wake/NOTICE.txt`.
 
 ### Assistant (sans IA, sans jeton)
 Fonctionne par règles en français. Seules la météo et la recherche utilisent internet, via des services gratuits sans clé ni compte.
@@ -81,7 +84,7 @@ Orbite est écrit de zéro (aucun code copié), en reprenant les approches de ce
 - [KISS Launcher](https://github.com/Neamar/KISS) et [Olauncher](https://github.com/tanujnotes/Olauncher) : lanceur léger, recherche d'applis au clavier.
 - [Dicio](https://github.com/Stypox/dicio-android) : assistant libre par « compétences » et phrases-types, sans service cloud.
 - [Open Camera](https://opencamera.org.uk) : réglages manuels Camera2, grille, niveau à bulle.
-- Les assistants libres « Jarvis » (mot d'éveil, réponses parlées, interface tête haute) et [Vosk](https://github.com/alphacep/vosk-api) pour l'écoute hors ligne.
+- [openWakeWord](https://github.com/dscripka/openWakeWord) (modèle « hey jarvis ») et les assistants libres « Jarvis » pour le principe mot d'éveil + réponses parlées + interface tête haute.
 - Données : [Open-Meteo](https://open-meteo.com) (CC BY 4.0), Wikipédia, API instantanée DuckDuckGo.
 
 ## Structure
@@ -89,7 +92,7 @@ Orbite est écrit de zéro (aucun code copié), en reprenant les approches de ce
 - `app/src/main/java/com/zrezzougui/orbite/launcher/` : écran d'accueil et classement (`AppCatalog.kt`).
 - `app/src/main/java/com/zrezzougui/orbite/assistant/` : assistant, dates en français, météo.
 - `app/src/main/java/com/zrezzougui/orbite/camera/` : caméra manuelle et calibration.
-- Une seule bibliothèque externe : Vosk (reconnaissance du mot « Jarvis »). Le reste : SDK Android et Kotlin.
+- Une seule bibliothèque externe : TensorFlow Lite (détection de « Hey Jarvis »). Le reste : SDK Android et Kotlin.
 
 ## Design
 

@@ -17,12 +17,14 @@ import android.widget.TextView
  */
 object Palette {
     // Thème « Jarvis » : interface tête haute, cyan lumineux sur nuit profonde, or et rouge en accents.
-    const val BG = 0xFF050B14.toInt()
-    const val SURFACE = 0xFF0B1726.toInt()
+    const val BG = 0xFF03070D.toInt()
+    const val SURFACE = 0xFF0A1622.toInt()
+    const val PANEL = 0xD90A1622.toInt()       // panneau HUD (85 %)
+    const val LINE = 0x594FD8FF                 // contour cyan 35 %
     const val SURFACE_2 = 0xFF122338.toInt()
     const val LINE_STRONG = 0xFF2C5873.toInt()
     const val TEXT = 0xFFE4F6FF.toInt()         // ink
-    const val MUTED = 0xFF8DB2C8.toInt()        // ink-muted
+    const val MUTED = 0xFF7FA3B8.toInt()        // ink-muted
     const val PRIMARY = 0xFF4FD8FF.toInt()      // cyan HUD
     const val ON_PRIMARY = 0xFF031220.toInt()
     const val PRIMARY_SOFT = 0xFF0E3550.toInt()
@@ -80,20 +82,22 @@ fun Context.heading(text: CharSequence, size: Float = 22f, color: Int = Palette.
     label(text, size, color).apply { typeface = Fonts.display(context) }
 
 /**
- * Pilule touchable. `filled` = bouton primaire (48dp, fond primary) ;
- * sinon puce / bouton secondaire (36dp, fond surface-2).
+ * Bouton du HUD. `filled` = action principale (cyan plein, 44dp) ;
+ * sinon bouton secondaire / puce (panneau à coins coupés, 38dp).
  */
 fun Context.pill(text: String, filled: Boolean = false, onClick: (View) -> Unit): TextView =
     label(text, if (filled) 15f else 14f, if (filled) Palette.ON_PRIMARY else Palette.TEXT, bold = true).apply {
         gravity = Gravity.CENTER
+        val d = resources.displayMetrics.density
         if (filled) {
-            minHeight = dp(Space.TOUCH)
-            setPadding(dp(Space.XL), dp(Space.M), dp(Space.XL), dp(Space.M))
+            minHeight = dp(44)
+            setPadding(dp(Space.L + 2), dp(Space.S + 2), dp(Space.L + 2), dp(Space.S + 2))
+            background = com.zrezzougui.orbite.hud.HudPanelDrawable(d, fill = Palette.PRIMARY, stroke = 0, brackets = false, cut = 8f)
         } else {
-            minHeight = dp(36)
+            minHeight = dp(38)
             setPadding(dp(Space.L), dp(Space.S), dp(Space.L), dp(Space.S))
+            background = com.zrezzougui.orbite.hud.HudPanelDrawable(d, cut = 8f)
         }
-        background = rounded(if (filled) Palette.PRIMARY else Palette.SURFACE_2, dpf(Radius.PILL))
         isClickable = true
         isFocusable = true
         setOnClickListener(onClick)
@@ -156,8 +160,10 @@ fun android.app.Activity.edgeToEdge() {
     }
 }
 
-/** Puce sélectionnable : sélectionnée = fond primary-soft + contour primary (pas seulement une couleur). */
+/** Puce sélectionnable : sélectionnée = fond cyan sombre + contour cyan plein (pas seulement une couleur). */
 fun Context.chip(text: String, selected: Boolean, onClick: (View) -> Unit): TextView =
     pill(text, filled = false, onClick = onClick).apply {
-        if (selected) background = rounded(Palette.PRIMARY_SOFT, dpf(Radius.PILL), dp(2), Palette.PRIMARY)
+        if (selected) background = com.zrezzougui.orbite.hud.HudPanelDrawable(
+            resources.displayMetrics.density, fill = Palette.PRIMARY_SOFT, stroke = Palette.PRIMARY, cut = 8f,
+        )
     }

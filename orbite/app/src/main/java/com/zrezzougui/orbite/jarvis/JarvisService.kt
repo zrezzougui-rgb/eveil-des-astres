@@ -19,24 +19,17 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import com.zrezzougui.orbite.assistant.AssistantActivity
-import org.json.JSONObject
-import org.vosk.LibVosk
-import org.vosk.LogLevel
-import org.vosk.Model
-import org.vosk.Recognizer
-import org.vosk.android.RecognitionListener
-import org.vosk.android.SpeechService
 
 /**
- * Écoute en continu le mot « Jarvis », entièrement sur le téléphone (Vosk, hors ligne).
- * Seul le mot-clé est reconnu : la grammaire est limitée à quelques mots, rien n'est enregistré ni envoyé.
- * Quand il est entendu, l'assistant s'ouvre et écoute la demande.
+ * Écoute en continu « Hey Jarvis », entièrement sur le téléphone (openWakeWord + TensorFlow Lite).
+ * Seul un score de détection est calculé : rien n'est enregistré ni envoyé.
+ * Quand la phrase est entendue, l'assistant s'ouvre et écoute la demande.
  */
-class JarvisService : Service(), RecognitionListener {
+class JarvisService : Service() {
 
     private val main = Handler(Looper.getMainLooper())
-    private var model: Model? = null
-    private var speech: SpeechService? = null
+    private var engine: WakeWordEngine? = null
+    private var listening = false
     private var paused = false
     private var lastWake = 0L
 
@@ -58,28 +51,26 @@ class JarvisService : Service(), RecognitionListener {
     override fun onDestroy() {
         running = false
         stopListening()
-        runCatching { model?.close() }
-        model = null
+        runCatching { engine?.close() }
+        engine = null
         super.onDestroy()
     }
 
     // ------------------------------------------------------------------ écoute
 
     private fun startListening() {
-        if (speech != null) return
+        if (listening) return
+        listening = true
+        val threshold = Persona.threshold(this)
+        // Chargement des modèles (quelques centaines de ms) hors du fil principal.
         Thread {
             try {
-                LibVosk.setLogLevel(LogLevel.WARNINGS)
-                val m = model ?: Model(WakeModel.dir(this).absolutePath).also { model = it }
-                // Mots absents du vocabulaire : ignorés par Vosk. [unk] absorbe tout le reste.
-                val rec = Recognizer(m, 16000f, "[\"jarvis\", \"jervis\", \"travis\", \"[unk]\"]")
+                val e = engine ?: WakeWordEngine(this).also { engine = it }
                 main.post {
-                    if (paused || speech != null) { rec.close(); return@post }
-                    try {
-                        speech = SpeechService(rec, 16000f).also { it.startListening(this) }
-                    } catch (_: Exception) {
-                        retryLater()
-                    }
+                    if (!listening || paused) return@post
+                    e.start(threshold,
+                        onWake = { main.post { heard() } },
+                        onError = { main.post { retryLater() } })
                 }
             } catch (_: Exception) {
                 main.post { retryLater() }
@@ -89,22 +80,19 @@ class JarvisService : Service(), RecognitionListener {
 
     private fun stopListening() {
         main.removeCallbacksAndMessages(null)
-        runCatching { speech?.stop() }
-        runCatching { speech?.shutdown() }
-        speech = null
+        listening = false
+        runCatching { engine?.stop() }
     }
 
     /** Micro occupé (appel, autre appli) : on réessaie un peu plus tard. */
     private fun retryLater() {
         stopListening()
-        main.postDelayed({ if (!paused) startListening() }, 20_000)
+        main.postDelayed({ if (!paused) startListening() }, 15_000)
     }
 
-    private fun heard(json: String?, key: String) {
-        val words = runCatching { JSONObject(json ?: return).optString(key) }.getOrNull() ?: return
-        if (!Regex("\\b(jarvis|jervis|travis)\\b").containsMatchIn(words)) return
+    private fun heard() {
         val now = System.currentTimeMillis()
-        if (now - lastWake < 3000) return
+        if (now - lastWake < 2500) return
         lastWake = now
         paused = true
         stopListening()
@@ -121,27 +109,21 @@ class JarvisService : Service(), RecognitionListener {
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             )
         }
-        // Si l'assistant ne s'est pas ouvert (autorisation manquante), on reprend l'écoute.
-        main.postDelayed({ if (paused && !AssistantActivity.visible) { paused = false; startListening() } }, 4000)
+        // Filet de sécurité : si l'assistant n'a pas repris la main, on réécoute.
+        main.postDelayed({ if (paused && !AssistantActivity.listeningNow) { paused = false; startListening() } }, 8000)
     }
-
-    override fun onPartialResult(hypothesis: String?) = heard(hypothesis, "partial")
-    override fun onResult(hypothesis: String?) = heard(hypothesis, "text")
-    override fun onFinalResult(hypothesis: String?) = heard(hypothesis, "text")
-    override fun onError(exception: Exception?) = retryLater()
-    override fun onTimeout() = retryLater()
 
     // ------------------------------------------------------------------ notification
 
     private fun goForeground() {
         val nm = getSystemService(NotificationManager::class.java)
-        nm?.createNotificationChannel(NotificationChannel(CHANNEL, "Écoute « Jarvis »", NotificationManager.IMPORTANCE_MIN))
+        nm?.createNotificationChannel(NotificationChannel(CHANNEL, "Écoute « Hey Jarvis »", NotificationManager.IMPORTANCE_MIN))
         val stop = PendingIntent.getService(this, 1, Intent(this, JarvisService::class.java).setAction(ACTION_STOP), PendingIntent.FLAG_IMMUTABLE)
         val open = PendingIntent.getActivity(this, 2, Intent(this, AssistantActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_IMMUTABLE)
         val n = Notification.Builder(this, CHANNEL)
             .setSmallIcon(android.R.drawable.ic_btn_speak_now)
             .setContentTitle("Jarvis vous écoute")
-            .setContentText("Dites « Jarvis » puis votre demande. Rien ne quitte le téléphone.")
+            .setContentText("Dites « Hey Jarvis » puis votre demande. Rien ne quitte le téléphone.")
             .setContentIntent(open)
             .addAction(Notification.Action.Builder(null, "Arrêter", stop).build())
             .setOngoing(true)
@@ -159,7 +141,7 @@ class JarvisService : Service(), RecognitionListener {
         const val ACTION_RESUME = "orbite.jarvis.RESUME"
 
         fun canRun(ctx: Context): Boolean {
-            if (!Persona.wakeEnabled(ctx) || !WakeModel.isReady(ctx)) return false
+            if (!Persona.wakeEnabled(ctx)) return false
             if (ctx.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) return false
             if (Persona.onlyCharging(ctx) && !isCharging(ctx)) return false
             return true
