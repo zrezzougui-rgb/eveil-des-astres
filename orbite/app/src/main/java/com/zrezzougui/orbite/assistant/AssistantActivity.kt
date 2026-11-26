@@ -77,16 +77,15 @@ class AssistantActivity : Activity() {
         super.onCreate(savedInstanceState)
         edgeToEdge()
         assistant = Assistant(this)
-        tts = TextToSpeech(this) { status ->
-            if (status == TextToSpeech.SUCCESS) {
-                tts?.let { Persona.applyVoice(this, it) }
-                tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-                    override fun onStart(id: String?) { runOnUiThread { reactor.state = ArcReactorView.State.SPEAKING } }
-                    override fun onDone(id: String?) { runOnUiThread { afterSpeaking() } }
-                    @Deprecated("API") override fun onError(id: String?) { runOnUiThread { afterSpeaking() } }
-                })
-                ttsReady = true
-            }
+        tts = Persona.newTts(this) { t, ok ->
+            if (!ok) return@newTts
+            Persona.applyVoice(this, t)
+            t.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                override fun onStart(id: String?) { runOnUiThread { reactor.state = ArcReactorView.State.SPEAKING } }
+                override fun onDone(id: String?) { runOnUiThread { afterSpeaking() } }
+                @Deprecated("API") override fun onError(id: String?) { runOnUiThread { afterSpeaking() } }
+            })
+            ttsReady = true
         }
 
         val frame = android.widget.FrameLayout(this).apply { background = hudBackground(0.16f) }
@@ -252,7 +251,7 @@ class AssistantActivity : Activity() {
 
     private fun speak(text: String) {
         if (muted || !ttsReady) { afterSpeaking(); return }
-        val clean = text.replace(Regex("[\\p{So}\\p{Cs}\\uFE0F•]"), "").replace("°", " degrés").replace(" — ", ", ")
+        val clean = Persona.spoken(text)
         setState("Réponse")
         tts?.speak(clean, TextToSpeech.QUEUE_FLUSH, null, "jarvis")
     }

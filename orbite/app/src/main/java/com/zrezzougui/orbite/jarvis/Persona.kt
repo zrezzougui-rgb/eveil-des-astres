@@ -41,18 +41,81 @@ object Persona {
     private val acks = listOf("Tout de suite", "Bien", "C'est parti", "Entendu", "Avec plaisir")
     fun ack(ctx: Context): String = acks.random() + suffix(ctx) + "."
 
-    /** Voix française la plus soignée disponible (ou celle choisie dans les réglages). */
+    // ------------------------------------------------------------------ voix
+
+    const val SHERPA = "org.woheller69.ttsengine"     // SherpaTTS : voix neuronales Piper, libres, hors ligne
+    const val GOOGLE = "com.google.android.tts"       // Services vocaux Google
+
+    fun engine(ctx: Context): String? = prefs(ctx).getString("moteur", null)
+    fun setEngine(ctx: Context, pkg: String?) = prefs(ctx).edit().putString("moteur", pkg).remove("voix").apply()
+
+    /** 0 lente, 1 normale, 2 rapide */
+    fun rate(ctx: Context): Int = prefs(ctx).getInt("debit", 1)
+    fun setRate(ctx: Context, v: Int) = prefs(ctx).edit().putInt("debit", v).apply()
+
+    fun isInstalled(ctx: Context, pkg: String) =
+        runCatching { ctx.packageManager.getPackageInfo(pkg, 0); true }.getOrDefault(false)
+
+    /**
+     * Moteur de voix à utiliser : celui choisi, sinon SherpaTTS (voix Piper naturelles) s'il est installé,
+     * sinon les services vocaux Google, sinon le moteur par défaut du téléphone.
+     */
+    fun preferredEngine(ctx: Context): String? =
+        engine(ctx)?.takeIf { isInstalled(ctx, it) }
+            ?: SHERPA.takeIf { isInstalled(ctx, it) }
+            ?: GOOGLE.takeIf { isInstalled(ctx, it) }
+
+    fun newTts(ctx: Context, onReady: (TextToSpeech, Boolean) -> Unit): TextToSpeech {
+        var tts: TextToSpeech? = null
+        val listener = TextToSpeech.OnInitListener { status -> tts?.let { onReady(it, status == TextToSpeech.SUCCESS) } }
+        tts = preferredEngine(ctx)?.let { TextToSpeech(ctx, listener, it) } ?: TextToSpeech(ctx, listener)
+        return tts
+    }
+
+    /** Voix française de meilleure qualité (ou celle choisie), débit naturel. */
     fun applyVoice(ctx: Context, tts: TextToSpeech) {
         tts.language = Locale.FRANCE
-        val voices = runCatching { tts.voices }.getOrNull().orEmpty().filter { it.locale.language == "fr" }
+        val voices = frenchVoices(tts)
         val chosen = voiceName(ctx)?.let { n -> voices.firstOrNull { it.name == n } }
-            ?: voices.filter { !it.isNetworkConnectionRequired && TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED !in it.features }
-                .maxByOrNull { it.quality }
+            ?: voices.filter { TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED !in it.features }
+                .maxWithOrNull(compareBy<Voice>({ it.quality }, { !it.isNetworkConnectionRequired }))
         if (chosen != null) tts.voice = chosen
-        tts.setSpeechRate(1.05f)
-        tts.setPitch(0.92f)
+        tts.setSpeechRate(when (rate(ctx)) { 0 -> 0.9f; 2 -> 1.15f; else -> 1.0f })
+        tts.setPitch(1.0f)
     }
 
     fun frenchVoices(tts: TextToSpeech): List<Voice> =
-        runCatching { tts.voices }.getOrNull().orEmpty().filter { it.locale.language == "fr" }.sortedBy { it.name }
+        runCatching { tts.voices }.getOrNull().orEmpty()
+            .filter { it.locale.language == "fr" }
+            .sortedWith(compareByDescending<Voice> { it.quality }.thenBy { it.isNetworkConnectionRequired }.thenBy { it.name })
+
+    fun describe(v: Voice, index: Int): String {
+        val q = when {
+            v.quality >= Voice.QUALITY_VERY_HIGH -> "très haute qualité"
+            v.quality >= Voice.QUALITY_HIGH -> "haute qualité"
+            else -> "standard"
+        }
+        val region = v.locale.country.takeIf { it.isNotEmpty() && it != "FR" }?.let { " ($it)" } ?: ""
+        return "Voix ${index + 1}$region · $q" + if (v.isNetworkConnectionRequired) " · internet" else ""
+    }
+
+    /** Rend le texte agréable à l'oreille : heures, unités, abréviations, symboles. */
+    fun spoken(text: String): String = text
+        .replace("°", " degrés")
+        .replace(Regex("[\\p{So}\\p{Cs}\\uFE0F•]"), "")
+        .replace(Regex("\\b1 h\\b"), "1 heure")
+        .replace(Regex("(\\d+) h\\b")) { "${it.groupValues[1]} heures" }
+        .replace(Regex("(\\d+) degrés / (\\d+) degrés")) { "de ${it.groupValues[1]} à ${it.groupValues[2]} degrés" }
+        .replace(Regex("(\\d{1,2})h(\\d{2})")) { "${it.groupValues[1]} heures ${it.groupValues[2]}" }
+        .replace(Regex("(\\d{1,2})h\\b")) { "${it.groupValues[1]} heures" }
+        .replace(Regex("(\\d{1,2}):(\\d{2})")) { "${it.groupValues[1]} heures ${it.groupValues[2]}" }
+        .replace("km/h", "kilomètres heure")
+        .replace(" %", " pour cent").replace("%", " pour cent")
+        .replace(Regex("\\bRDV\\b"), "rendez-vous")
+        .replace(" — ", ", ").replace(" · ", ", ")
+        .replace("«", "").replace("»", "")
+        .replace(Regex("\\s*\\n+\\s*"), ". ")
+        .replace(Regex("([.!?:])\\.\\s"), "$1 ")
+        .replace(Regex("\\s+"), " ")
+        .trim()
 }

@@ -46,8 +46,10 @@ l'ancienne sans perdre vos dossiers. Pour une publication sur le Play Store, il 
   [openWakeWord](https://github.com/dscripka/openWakeWord) (le moteur libre utilisé par Home Assistant) et TensorFlow Lite.
   Pipeline vérifié contre l'implémentation de référence (scores identiques). Sensibilité réglable, option « seulement en charge ».
   Rien n'est enregistré ni envoyé.
-- **Réponses parlées** : toujours lues à voix haute, formule d'accueil, forme d'adresse (rien, monsieur, madame, prénom),
-  choix de la voix. « Bonjour Jarvis » ou « briefing » : heure, météo, agenda, batterie.
+- **Réponses parlées** : toujours lues à voix haute, formule d'accueil, forme d'adresse (rien, monsieur, madame, prénom).
+  Choix du moteur et de la voix : Orbite utilise en priorité [SherpaTTS](https://f-droid.org/fr/packages/org.woheller69.ttsengine/)
+  (libre, voix neuronales Piper, hors ligne) s'il est installé, sinon les voix Google. Texte adapté à l'oral
+  (« 14h30 » → « 14 heures 30 », « 8° » → « 8 degrés »…), débit posé / naturel / rapide. « Bonjour Jarvis » ou « briefing » : heure, météo, agenda, batterie.
 - Licences : code openWakeWord Apache 2.0 ; **modèles pré-entraînés CC BY-NC-SA 4.0 (usage non commercial)**,
   voir `app/src/main/assets/wake/NOTICE.txt`.
 

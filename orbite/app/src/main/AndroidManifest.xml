@@ -25,6 +25,9 @@
 
     <!-- Android 11+ : rendre visibles les applis installées pour pouvoir les ranger. -->
     <queries>
+        <!-- Moteurs de voix proposés : SherpaTTS (voix Piper) et services vocaux Google. -->
+        <package android:name="org.woheller69.ttsengine" />
+        <package android:name="com.google.android.tts" />
         <intent>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />

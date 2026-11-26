@@ -40,11 +40,12 @@ class JarvisSettingsActivity : Activity() {
 
     private lateinit var body: LinearLayout
     private var tts: TextToSpeech? = null
+    private var resumedOnce = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         edgeToEdge()
-        tts = TextToSpeech(this) { if (it == TextToSpeech.SUCCESS) runOnUiThread { tts?.let { t -> Persona.applyVoice(this, t) }; render() } }
+        tts = Persona.newTts(this) { t, ok -> if (ok) runOnUiThread { Persona.applyVoice(this, t); render() } }
         val root = vertical().apply { background = com.zrezzougui.orbite.hud.HudBackgroundDrawable(resources.displayMetrics.density, 0.05f) }
         root.padForSystemBars()
         val header = horizontal().apply { setPadding(dp(16), dp(12), dp(16), dp(4)) }
@@ -54,11 +55,6 @@ class JarvisSettingsActivity : Activity() {
         body = vertical().apply { setPadding(dp(16), dp(8), dp(16), dp(24)) }
         root.addView(ScrollView(this).apply { addView(body) }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
         setContentView(root)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        render()
     }
 
     override fun onDestroy() {
@@ -169,29 +165,88 @@ class JarvisSettingsActivity : Activity() {
     }
 
     private fun voiceCard() {
-        val c = card("Voix", "Voix de synthèse française installée sur le téléphone. D'autres voix s'ajoutent dans les réglages Android « Synthèse vocale ».")
+        val c = card(
+            "Voix",
+            "Pour une voix fluide et naturelle, installez SherpaTTS : une appli libre qui fait parler le téléphone " +
+                "avec les voix neuronales Piper, sans internet et sans compte. Choisissez-y une voix française " +
+                "(par exemple « fr_FR-tom » ou « fr_FR-siwis »), puis sélectionnez-la ici.",
+        )
         val t = tts
+        val engines = t?.engines.orEmpty()
+        val current = Persona.preferredEngine(this) ?: t?.defaultEngine
+
+        c.addView(hudLabel("Moteur de voix", Palette.MUTED), matchWrap().margins(b = dp(6)))
+        val er = vertical()
+        engines.forEach { e ->
+            val tag = when (e.name) { Persona.SHERPA -> " · voix neuronales"; Persona.GOOGLE -> " · Google"; else -> "" }
+            er.addView(chip(e.label + tag, e.name == current) {
+                Persona.setEngine(this, e.name)
+                restartTts()
+            }, wrapWrap().margins(b = dp(6)))
+        }
+        c.addView(er, matchWrap())
+        if (!Persona.isInstalled(this, Persona.SHERPA)) {
+            c.addView(pill("Installer SherpaTTS (F-Droid)", filled = true) {
+                runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://f-droid.org/fr/packages/org.woheller69.ttsengine/"))) }
+            }, wrapWrap().margins(t = dp(6)))
+        }
+        if (!Persona.isInstalled(this, Persona.GOOGLE)) {
+            c.addView(pill("Installer les voix Google") {
+                runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=${Persona.GOOGLE}"))) }
+            }, wrapWrap().margins(t = dp(8)))
+        }
+
+        c.addView(hudLabel("Voix française", Palette.MUTED), matchWrap().margins(t = dp(16), b = dp(6)))
         val voices = if (t != null) Persona.frenchVoices(t) else emptyList()
         if (voices.isEmpty()) {
-            c.addView(label("Chargement des voix…", 13f, Palette.MUTED))
+            c.addView(label(if (t == null) "Chargement…" else "Aucune voix française dans ce moteur. Ouvrez ses réglages pour en télécharger une.", 13f, Palette.MUTED))
         } else {
-            val chosen = Persona.voiceName(this)
-            voices.take(8).forEachIndexed { i, v ->
-                val name = "Voix ${i + 1}" + (if (v.isNetworkConnectionRequired) " · internet" else "")
-                c.addView(chip(name, v.name == chosen) {
+            val chosen = Persona.voiceName(this) ?: t?.voice?.name
+            voices.take(10).forEachIndexed { i, v ->
+                c.addView(chip(Persona.describe(v, i), v.name == chosen) {
                     Persona.setVoiceName(this, v.name); t?.voice = v
-                    t?.speak("Bonjour${Persona.suffix(this)}. Je suis Jarvis.", TextToSpeech.QUEUE_FLUSH, null, "test")
+                    speakTest("Bonjour${Persona.suffix(this)}. Je suis Jarvis. Il fait 8 degrés à Lyon.")
                     render()
                 }, wrapWrap().margins(b = dp(6)))
             }
         }
+
+        c.addView(hudLabel("Débit", Palette.MUTED), matchWrap().margins(t = dp(16), b = dp(6)))
+        val rr = horizontal()
+        listOf("Posé", "Naturel", "Rapide").forEachIndexed { i, l ->
+            rr.addView(chip(l, Persona.rate(this) == i) {
+                Persona.setRate(this, i); t?.let { Persona.applyVoice(this, it) }; speakTest("Tous les systèmes sont opérationnels.")
+                render()
+            }, wrapWrap().margins(r = dp(8)))
+        }
+        c.addView(rr, matchWrap())
+
         c.addView(pill("Tester la voix", filled = true) {
-            t?.let { Persona.applyVoice(this, it) }
-            t?.speak("${Persona.greeting(this)}. Tous les systèmes sont opérationnels.", TextToSpeech.QUEUE_FLUSH, null, "test")
-        }, wrapWrap().margins(t = dp(6)))
-        c.addView(pill("Réglages de synthèse vocale d'Android") {
+            speakTest("${Persona.greeting(this)}. Il est ${java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)} heures. Tous les systèmes sont opérationnels.")
+        }, wrapWrap().margins(t = dp(14)))
+        c.addView(pill("Réglages de la synthèse vocale d'Android") {
             runCatching { startActivity(Intent("com.android.settings.TTS_SETTINGS")) }
         }, wrapWrap().margins(t = dp(8)))
+    }
+
+    private fun speakTest(text: String) {
+        val t = tts ?: return
+        Persona.applyVoice(this, t)
+        t.speak(Persona.spoken(text), TextToSpeech.QUEUE_FLUSH, null, "test")
+    }
+
+    private fun restartTts() {
+        tts?.shutdown()
+        tts = null
+        render()
+        tts = Persona.newTts(this) { t, ok -> if (ok) runOnUiThread { Persona.applyVoice(this, t); render() } }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Retour des réglages d'un moteur (voix téléchargée) : on recharge la liste.
+        if (resumedOnce && tts != null) restartTts() else render()
+        resumedOnce = true
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
