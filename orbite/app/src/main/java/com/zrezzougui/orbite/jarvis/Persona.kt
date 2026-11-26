@@ -24,7 +24,8 @@ object Persona {
     /** Sensibilité du mot d'éveil : plus le seuil est bas, plus Jarvis réagit (et se trompe parfois). */
     fun sensitivity(ctx: Context): Int = prefs(ctx).getInt("sensibilite", 1) // 0 faible, 1 normale, 2 forte
     fun setSensitivity(ctx: Context, v: Int) = prefs(ctx).edit().putInt("sensibilite", v).apply()
-    fun threshold(ctx: Context): Float = when (sensitivity(ctx)) { 0 -> 0.7f; 2 -> 0.3f; else -> 0.5f }
+    // Seuils ajustés après mesure sur téléphone : « Hey Jarvis » prononcé à la française plafonnait vers 0,48.
+    fun threshold(ctx: Context): Float = when (sensitivity(ctx)) { 0 -> 0.5f; 2 -> 0.2f; else -> 0.35f }
 
     fun voiceName(ctx: Context): String? = prefs(ctx).getString("voix", null)
     fun setVoiceName(ctx: Context, v: String?) = prefs(ctx).edit().putString("voix", v).apply()

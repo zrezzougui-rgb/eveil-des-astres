@@ -49,9 +49,10 @@ class WakeWordEngine(ctx: Context) : AutoCloseable {
     @Volatile var maxLevel = 0f; private set
     @Volatile var maxScore = 0f; private set
     @Volatile var silentFrames = 0; private set
+    @Volatile var sourceName = "?"; private set
     fun resetStats() { frames = 0; maxLevel = 0f; maxScore = 0f; silentFrames = 0 }
-    fun statsText(): String = "%d extraits de 80 ms (%d muets), volume max %.3f, score max %.4f"
-        .format(frames, silentFrames, maxLevel, maxScore)
+    fun statsText(): String = "source %s, %d extraits de 80 ms (%d muets), volume max %.3f, score max %.4f"
+        .format(sourceName, frames, silentFrames, maxLevel, maxScore)
     private var thread: Thread? = null
 
     init {
@@ -100,16 +101,17 @@ class WakeWordEngine(ctx: Context) : AutoCloseable {
         running = true
         thread = Thread({
             val minBuf = AudioRecord.getMinBufferSize(16000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
-            // Certaines surcouches refusent la source « reconnaissance vocale » : on essaie ensuite le micro brut.
+            // Micro standard d'abord : il applique le gain automatique du téléphone. La source « reconnaissance vocale »
+            // capte sans amplification et donnait un son trop faible sur certains Xiaomi (score plafonné sous le seuil).
             var rec: AudioRecord? = null
             var lastError: Exception? = null
-            for (source in intArrayOf(MediaRecorder.AudioSource.VOICE_RECOGNITION, MediaRecorder.AudioSource.MIC)) {
+            for (source in intArrayOf(MediaRecorder.AudioSource.MIC, MediaRecorder.AudioSource.VOICE_RECOGNITION)) {
                 try {
                     val r = AudioRecord(source, 16000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, maxOf(minBuf, CHUNK * 4))
                     if (r.state != AudioRecord.STATE_INITIALIZED) { r.release(); throw IllegalStateException("micro indisponible (source $source)") }
                     r.startRecording()
                     if (r.recordingState != AudioRecord.RECORDSTATE_RECORDING) { r.release(); throw IllegalStateException("micro occupé (source $source)") }
-                    rec = r; break
+                    rec = r; sourceName = if (source == MediaRecorder.AudioSource.MIC) "micro standard" else "reconnaissance vocale"; break
                 } catch (e: Exception) { lastError = e }
             }
             if (rec == null) { running = false; onError(lastError ?: IllegalStateException("micro indisponible")); return@Thread }
