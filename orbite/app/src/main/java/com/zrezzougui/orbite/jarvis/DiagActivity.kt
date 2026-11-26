@@ -48,6 +48,8 @@ class DiagActivity : Activity() {
     private var engine: WakeWordEngine? = null
     private var peak = 0f
     private var detections = 0
+    private var testStart = 0L
+    private var lastStats = "pas encore lancé"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -160,6 +162,9 @@ class DiagActivity : Activity() {
                     return@runOnUiThread
                 }
                 engine = eng
+                eng.resetStats()
+                testStart = System.currentTimeMillis()
+                Diag.log(this, "Test : démarré")
                 testButton.text = "Arrêter le test"
                 eng.start(Persona.threshold(this),
                     onWake = { sc -> runOnUiThread { detections++; Diag.log(this, "Test : détecté (%.2f)".format(sc)) } },
@@ -168,7 +173,7 @@ class DiagActivity : Activity() {
                         if (engine == null) return@runOnUiThread
                         peak = maxOf(peak, sc)
                         setBar(scoreBar, sc); setBar(levelBar, lv)
-                        scoreText.text = "Score %.2f · meilleur %.2f · détections : %d".format(sc, peak, detections)
+                        scoreText.text = "Score %.3f · meilleur %.3f · détections : %d\nVolume %.2f · max %.2f".format(sc, peak, detections, lv, eng.maxLevel)
                     } })
             }
         }.start()
@@ -177,6 +182,8 @@ class DiagActivity : Activity() {
     private fun stopTest() {
         val e = engine ?: return
         engine = null
+        lastStats = "%d s, ".format((System.currentTimeMillis() - testStart) / 1000) + e.statsText() + ", détections $detections"
+        Diag.log(this, "Test : arrêté — $lastStats")
         Thread { runCatching { e.close() } }.start()
         if (::testButton.isInitialized) { testButton.text = "Lancer le test"; scoreText.text = "Test arrêté. Meilleur score : %.2f, détections : %d".format(peak, detections) }
         JarvisService.send(this, JarvisService.ACTION_RESUME)
@@ -187,7 +194,7 @@ class DiagActivity : Activity() {
             appendLine("ORBITE / JARVIS — rapport")
             appendLine("Android ${Build.VERSION.RELEASE} (${Build.VERSION.SDK_INT}) · ${Build.MANUFACTURER} ${Build.MODEL}")
             status().forEach { (ok, t) -> appendLine((if (ok) "[OK] " else "[NON] ") + t) }
-            appendLine("Test : meilleur score %.2f, détections %d".format(peak, detections))
+            appendLine("Test : " + (engine?.let { "en cours, " + it.statsText() } ?: lastStats))
             appendLine("\n-- Fermetures --\n" + Diag.exits(this@DiagActivity))
             appendLine("\n-- Journal --\n" + Diag.journal(this@DiagActivity))
         }

@@ -43,6 +43,15 @@ class WakeWordEngine(ctx: Context) : AutoCloseable {
     private val wwOut = arrayOf(FloatArray(1))
 
     @Volatile private var running = false
+
+    /** Mesures depuis le dernier `resetStats()` : pour le Diagnostic. */
+    @Volatile var frames = 0; private set
+    @Volatile var maxLevel = 0f; private set
+    @Volatile var maxScore = 0f; private set
+    @Volatile var silentFrames = 0; private set
+    fun resetStats() { frames = 0; maxLevel = 0f; maxScore = 0f; silentFrames = 0 }
+    fun statsText(): String = "%d extraits de 80 ms (%d muets), volume max %.3f, score max %.4f"
+        .format(frames, silentFrames, maxLevel, maxScore)
     private var thread: Thread? = null
 
     init {
@@ -119,7 +128,12 @@ class WakeWordEngine(ctx: Context) : AutoCloseable {
                     var energy = 0.0
                     for (i in 0 until CHUNK) { chunk[i] = pcm[i].toFloat(); energy += chunk[i] * chunk[i] }
                     val score = step(chunk)
-                    onScore?.invoke(score, (Math.sqrt(energy / CHUNK) / 6000.0).coerceAtMost(1.0).toFloat())
+                    val level = (Math.sqrt(energy / CHUNK) / 6000.0).coerceAtMost(1.0).toFloat()
+                    frames++
+                    if (energy == 0.0) silentFrames++
+                    if (level > maxLevel) maxLevel = level
+                    if (score > maxScore) maxScore = score
+                    onScore?.invoke(score, level)
                     val now = System.currentTimeMillis()
                     if (score >= threshold && now - lastWake > 2000) {
                         lastWake = now

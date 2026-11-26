@@ -74,6 +74,8 @@ class JarvisService : Service() {
                 main.post {
                     if (!listening || paused) return@post
                     Diag.log(this, "Écoute « Hey Jarvis » démarrée (seuil $threshold)")
+                    e.resetStats()
+                    scheduleReport(e, 1)
                     e.start(threshold,
                         onWake = { score -> main.post { Diag.log(this, "« Hey Jarvis » entendu (score %.2f)".format(score)); heard() } },
                         onError = { err -> main.post { Diag.log(this, "Micro : ${err.message}"); retryLater() } })
@@ -89,6 +91,17 @@ class JarvisService : Service() {
         main.removeCallbacksAndMessages(null)
         listening = false
         runCatching { engine?.stop() }
+    }
+
+    /** Bilan de l'écoute en arrière-plan dans le journal : à 1, 2, 5 et 10 minutes. */
+    private fun scheduleReport(e: WakeWordEngine, n: Int) {
+        val delays = longArrayOf(60_000, 60_000, 180_000, 300_000)
+        if (n > delays.size) return
+        main.postDelayed({
+            if (!listening) return@postDelayed
+            Diag.log(this, "Écoute de fond : " + e.statsText())
+            scheduleReport(e, n + 1)
+        }, delays[n - 1])
     }
 
     /** Micro occupé (appel, autre appli) : on réessaie un peu plus tard. */
